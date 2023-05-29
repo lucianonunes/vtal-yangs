@@ -1,0 +1,13 @@
+# Summary
+This is a generated NSO function pack in Python.
+It contains a YANG model which implements the following:
+1. A secure store for device credentials in NCS operational database.
+2. Actions to manage the credentials.
+
+# Details
+Crosswork Change Automation device authorization module provides action endpoints
+to manage user provided device credentials while executing a playbook job in Change Automation.
+The intent is to use these user provided credentials at runtime instead of the device credentials
+defined in any device authgroup. This will be achieved by configuring a special user in NSO
+with a umap that can invoke the credential retrieval action below to get these user provided
+device credentials.

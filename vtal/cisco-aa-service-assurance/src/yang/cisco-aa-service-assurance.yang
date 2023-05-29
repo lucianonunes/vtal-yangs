@@ -1,0 +1,59 @@
+module cisco-aa-service-assurance {
+  namespace "http://cisco.com/ns/aa/cisco-aa-service-assurance";
+  prefix cisco-aa-service-assurance;
+ 
+  import ietf-inet-types { prefix inet; }
+
+  import ietf-yang-types { prefix yang; }
+
+  import tailf-common { prefix tailf; }
+
+  import tailf-ncs { prefix ncs; }
+
+  import tailf-kicker { prefix kicker; }
+
+  description "Cisco AA service assurance monitoring configurations";
+ 
+  revision 2021-03-18 {
+      description "initial revision.";
+  }
+ 
+  list service-path-for-subscription {
+    tailf:hidden tsdn;
+    tailf:info "List of service xpath to be subscribed for notif";
+    uses ncs:service-data;
+    ncs:servicepoint "cisco-aa-service-assurance-subscription-servicepoint";
+    key service-path;
+    leaf service-path {
+      tailf:info "Full path for a service type";
+      type tailf:node-instance-identifier;
+    }
+    leaf-list service-key-elements {
+      tailf:info "List of yang key elements for the service.
+                  To be defined in order of composite-key";
+      ordered-by user;
+      type string;
+    }
+  }
+
+  container service-assurance {
+    tailf:hidden tsdn;
+    tailf:action service-assurance-action {
+      tailf:actionpoint cisco-aa-service-assurance-actionpoint;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      }
+    }
+  }
+
+  notification service-assurance-config-change {
+    leaf service {                                                                               
+      type string;                                                                            
+    }                                                                                           
+    leaf operation {                                                                                   
+      type string;                                                                            
+    }
+  } 
+}

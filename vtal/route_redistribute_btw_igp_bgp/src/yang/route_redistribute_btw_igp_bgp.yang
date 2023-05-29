@@ -1,0 +1,60 @@
+module route_redistribute_btw_igp_bgp {
+  namespace "http://com/example/route_redistribute_btw_igp_bgp";
+  prefix route_redistribute_btw_igp_bgp;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  typedef igp-type {
+    type enumeration {
+      enum OSPF;
+      enum ISIS;
+    }
+    description
+      "IGP Type: OSPF or ISIS";
+  }
+
+  list route_redistribute_btw_igp_bgp {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "route_redistribute_btw_igp_bgp";
+
+    leaf name {
+      tailf:info "Service Name for Router Distribution Between IGP and BGP";
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select an IOS XR Device";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf IGP_TYPE {
+      tailf:info "Select igp type";
+      type igp-type;
+    }
+
+    leaf igp_id {
+      tailf:info "Enter IGP ID Name";
+      type string;
+    }
+
+    leaf local_bgp_as {
+      tailf:info "Enter BGP AS ID";
+      type string;
+    }
+
+  }
+}

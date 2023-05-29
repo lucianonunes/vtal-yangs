@@ -1,0 +1,61 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <?macro intf-description?>
+    <?if {$IF_DESC=''}?>
+      <description>{$DEFAULT_INTF_DESC}</description>
+    <?else?>
+      <description>{$IF_DESC}</description>
+    <?end?>
+  <?endmacro?>
+  <?macro intf-desc-shut?>
+    <?expand intf-description?>
+    <shutdown tags="delete"/>
+  <?endmacro?>
+  <?macro intf-encapsulation?>
+    <encapsulation>
+      <dot1q>
+        <vlan-id>{vlan-id}</vlan-id>
+      </dot1q>
+    </encapsulation>
+  <?endmacro?>
+  <?macro intf-ip-vrf-mtu?>
+    <vrf when="{vrf/vrf-definition!=''}">{vrf/vrf-definition}</vrf>
+    <ipv4 when="{$IPV4_ADDR!=''}">
+      <address>
+        <ip>{$IPV4_ADDR}</ip>
+        <mask>{$IPV4_MASK}</mask>
+      </address>
+    </ipv4>
+    <ipv6 when="{pe-ipv6-addr!=''}">
+      <address>
+        <prefix-list>
+          <prefix>{pe-ipv6-addr}</prefix>
+        </prefix-list>
+      </address>
+    </ipv6>
+    <mtu when="mtu!=''">{mtu}</mtu>
+  <?endmacro?>
+  <?macro subintf-ip-encap-vrf-mtu?>
+    <?expand intf-encapsulation?>
+    <?expand intf-ip-vrf-mtu?> 
+  <?endmacro?>
+  <?macro subintf-encap-rewrite-mtu-mode?>
+    <?expand intf-encapsulation?>
+    <mode>l2transport</mode>
+    <mtu when="mtu!=''">{mtu}</mtu>
+    <rewrite when="{rewrite/ingress}">
+      <ingress>
+        <tag>
+          <pop when="{rewrite/ingress/pop}">{rewrite/ingress/pop}</pop>
+          <push when="{rewrite/ingress/push}" />
+          <translate when="{rewrite/ingress/translate}">{rewrite/ingress/translate}</translate>
+          <mode when="{rewrite/ingress/mode}">{rewrite/ingress/mode}</mode>
+          <dot1q when="{not(rewrite/ingress/pop)}">{rewrite/ingress/dot1q}</dot1q>
+        </tag>
+      </ingress>
+    </rewrite>
+  <?endmacro?>
+  <?macro intf-mtu-transport?>
+    <l2transport />
+    <mtu when="mtu!=''">{mtu}</mtu>
+  <?endmacro?>
+</config-template>

@@ -1,0 +1,38 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <!-- L3 IP Configuration -->
+        <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+          <interface-configuration>
+            <active>act</active>
+            <interface-name>{$NAME}</interface-name>
+            <interface-virtual when="{starts-with($NAME, 'Bundle-Ether')}"></interface-virtual>
+            <description when="{$DESCRIPTION!=''}">{$DESCRIPTION}</description>
+            <shutdown tags="delete"/>
+            <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg" when="{$IPV4_ADDR!=''}">
+              <addresses>
+                <primary>
+                  <address>{$IPV4_ADDR}</address>
+                  <netmask>{$IPV4_MASK}</netmask>
+                </primary>
+              </addresses>
+            </ipv4-network>
+            <ipv6-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv6-ma-cfg" when="{$IPV6_ADDR!=''}">
+              <addresses>
+                <regular-addresses>
+                  <regular-address>
+                    <address>{$IPV6_ADDR}</address>
+                    <prefix-length>{$IPV6_PREFIX_LENGTH}</prefix-length>
+                    <zone>0</zone>
+                  </regular-address>
+                </regular-addresses>
+              </addresses>
+            </ipv6-network>
+          </interface-configuration>
+        </interface-configurations>
+      </config>
+    </device>
+  </devices>
+</config>

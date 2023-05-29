@@ -1,0 +1,165 @@
+module: cisco-ron-cfp
+  +--rw ron
+  |  +--rw ron-ml* [name]
+  |  |  +--rw name                        string
+  |  |  +--rw mode                        enumeration
+  |  |  +--rw bandwidth                   string
+  |  |  +--rw circuit-id?                 string
+  |  |  +--rw grid-type?                  enumeration
+  |  |  +--rw frequency?                  uint32
+  |  |  +--rw dac-rate?                   string
+  |  |  +--rw ols-domain!
+  |  |  |  +--rw service-state?     administrative-state-type
+  |  |  |  +--rw custom-template* [name]
+  |  |  |     +--rw name         -> /ct-info:custom-template-info/template-name
+  |  |  |     +--rw variable* [name]
+  |  |  |     |  +--rw name     -> deref(../../name)/../ct-info:variables
+  |  |  |     |  +--rw value    string
+  |  |  |     +--rw iteration* [number]
+  |  |  |        +--rw number      uint16
+  |  |  |        +--rw variable* [name]
+  |  |  |           +--rw name     -> deref(../../../name)/../ct-info:variables
+  |  |  |           +--rw value    string
+  |  |  +--rw end-point* [end-point-device]
+  |  |  |  +--rw end-point-device           string
+  |  |  |  +--rw terminal-device-optical
+  |  |  |  |  +--rw line-port         string
+  |  |  |  |  +--rw transmit-power?   int32
+  |  |  |  +--rw ols-domain
+  |  |  |  |  +--rw end-point-state?          administrative-state-type
+  |  |  |  |  +--rw transceiver-capability    -> ../../../../transceiver-capability[mode=current()/../../../mode][bandwidth=current()/../../../bandwidth]/pid
+  |  |  |  +--rw terminal-device-packet!
+  |  |  |     +--rw bundle* [id]
+  |  |  |     |  +--rw id             uint16
+  |  |  |     |  +--rw description?   string
+  |  |  |     |  +--rw ip-address!
+  |  |  |     |     +--rw v4?   tailf:ipv4-address-and-prefix-length
+  |  |  |     |     +--rw v6?   tailf:ipv6-address-and-prefix-length
+  |  |  |     +--rw interface* [index]
+  |  |  |     |  +--rw index         uint8
+  |  |  |     |  +--rw membership!
+  |  |  |     |  |  +--rw bundle-id    -> ../../../bundle/id
+  |  |  |     |  |  +--rw mode?        enumeration
+  |  |  |     |  +--rw ip-address!
+  |  |  |     |     +--rw v4?   tailf:ipv4-address-and-prefix-length
+  |  |  |     |     +--rw v6?   tailf:ipv6-address-and-prefix-length
+  |  |  |     +--rw custom-template* [name]
+  |  |  |        +--rw name         -> /ct-info:custom-template-info/template-name
+  |  |  |        +--rw variable* [name]
+  |  |  |        |  +--rw name     -> deref(../../name)/../ct-info:variables
+  |  |  |        |  +--rw value    string
+  |  |  |        +--rw iteration* [number]
+  |  |  |           +--rw number      uint16
+  |  |  |           +--rw variable* [name]
+  |  |  |              +--rw name     -> deref(../../../name)/../ct-info:variables
+  |  |  |              +--rw value    string
+  |  |  +--rw clear-rollback?             int32
+  |  |  +--ro ron-data
+  |  |     +--ro frequency?     uint32
+  |  |     +--ro end-point* [end-point-device]
+  |  |     |  +--ro end-point-device         string
+  |  |     |  +--ro transceiver-pid?         string
+  |  |     |  +--ro flexport-linecard-pid?   string
+  |  |     |  +--ro sip?                     string
+  |  |     |  +--ro transmit-power?          int32
+  |  |     |  +--ro end-point-interface* [index]
+  |  |     |     +--ro index    uint8
+  |  |     |     +--ro name?    string
+  |  |     +--ro do-rollback?   empty
+  |  +--ro ron-ml-plan* [name]
+  |  |  +--ro name            string
+  |  |  +--ro plan
+  |  |  |  +--ro component* [type name]
+  |  |  |  |  +--ro name                string
+  |  |  |  |  +--ro type                plan-component-type-t
+  |  |  |  |  +--ro state* [name]
+  |  |  |  |  |  +--ro name                   plan-state-name-t
+  |  |  |  |  |  +--ro status?                plan-state-status-t
+  |  |  |  |  |  +--ro when?                  yang:date-and-time
+  |  |  |  |  +--ro back-track?         boolean
+  |  |  |  |  +--ro back-track-goal?    plan-state-name-t
+  |  |  |  |  +--ro status-code?        string
+  |  |  |  +--ro commit-queue!
+  |  |  |  |  +--ro queue-item* [id]
+  |  |  |  |     +--ro id    uint64
+  |  |  |  +--ro failed?               empty
+  |  |  |  +--ro error-info!
+  |  |  |  |  +--ro message?     string
+  |  |  |  |  +--ro log-entry?   instance-identifier
+  |  |  |  +--ro status-code-detail* [type name]
+  |  |  |     +--ro type                  ncs:plan-component-type-t
+  |  |  |     +--ro name                  string
+  |  |  |     +--ro code?                 string
+  |  |  |     +--ro context* [context-name]
+  |  |  |     |  +--ro context-name    string
+  |  |  |     |  +--ro context-msg?    string
+  |  |  |     +--ro severity?             enumeration
+  |  |  |     +--ro recommended-action?   string
+  |  +--ro ron-service-lookup* [service]
+  |  |  +--ro service               string
+  |  |  +--ro ron-ml-service?       string
+  |  |  +--ro optical-controller?   string
+  |  +--rw inter-layer-link* [end-point-device line-port]
+  |  |  +--rw end-point-device            string
+  |  |  +--rw line-port                   string
+  |  |  +--rw site?                       string
+  |  |  +--rw ols-domain
+  |  |     +--rw (optical-service-interface)?
+  |  |     |  +--:(add-drop)
+  |  |     |  |  +--rw network-element     string
+  |  |     |  |  +--rw optical-add-drop    string
+  |  |     |  +--:(sip)
+  |  |     |     +--rw optical-sip         string
+  |  |     +--rw optical-controller?       string
+  |  +--ro inter-layer-link-oper* [end-point-device line-port]
+  |  |  +--ro end-point-device    string
+  |  |  +--ro line-port           string
+  |  |  +--ro ron-ml-service?     string
+  |  +--rw transceiver-capability* [pid mode bandwidth]
+  |  |  +--rw pid               string
+  |  |  +--rw mode              enumeration
+  |  |  +--rw bandwidth         string
+  |  |  +--rw fec               enumeration
+  |  |  +--rw modulation        enumeration
+  |  |  +--rw baud-rate         string
+  |  |  +--rw dac-rate*         string
+  |  |  +--rw transmit-power    int32
+  |  +--rw default-optical-controller?   -> /core-fp-common:dispatch-map/device
+  |  +---x cleanup
+  |  |  +---w input
+  |  |  |  +---w service          string
+  |  |  |  +---w no-networking    boolean
+  |  |  +--ro output
+  |  |     +--ro success    boolean
+  |  |     +--ro detail?    string
+  |  +---x error-recovery
+  |  |  +---w input
+  |  |  |  +---w service           string
+  |  |  |  +---w sync-direction    enumeration
+  |  |  |  +---w device?           -> /core-fp-common:dispatch-map/device
+  |  |  +--ro output
+  |  |     +--ro success    boolean
+  |  |     +--ro detail?    string
+  |  +---x redeploy-kicker-callback
+  |  |  +---w input
+  |  |     +---w kicker-id?   string
+  |  |     +---w path?        tailf:node-instance-identifier
+  |  |     +---w tid?         uint32
+  |  +---x process-failure
+  |  |  +---w input
+  |  |     +---w kicker-id?   string
+  |  |     +---w path?        tailf:node-instance-identifier
+  |  |     +---w tid?         uint32
+  +--rw cfp-configurations
+     +--rw router
+     |  +--rw dynamic-device-mapping* [ned-id]
+     |  |  +--rw ned-id                    string
+     |  |  +--rw python-impl-class-name    string
+     |  +--rw iosxr-default-ned-id?     string
+     +--rw optical-controller
+        +--rw dynamic-device-mapping* [ned-id]
+        |  +--rw ned-id                    string
+        |  +--rw python-impl-class-name    string
+        |  +--rw vendor?                   string
+        +--rw controller-default-ned-id?   string
+        +--rw controller-default-vendor?   string

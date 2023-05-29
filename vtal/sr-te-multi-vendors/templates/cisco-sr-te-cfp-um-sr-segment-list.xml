@@ -1,0 +1,34 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$device}</name>
+      <config>
+        <!-- UMXR is not used by any current iosxr version
+        <segment-routing xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-segment-routing-cfg">
+          <traffic-eng xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-segment-routing-traffic-eng-cfg">
+            <segment-lists>
+              <?set REAL_NAME={$name}?>
+              <?set REAL_NAME_PREFIX='-discovered-'?>
+              <?if {contains(string($name), $REAL_NAME_PREFIX)}?>
+                <?set REAL_NAME={substring-after(string($name), $REAL_NAME_PREFIX)}?>
+              <?end?>
+              <segment-list tags="merge">
+                <segment-list-name>{$REAL_NAME}</segment-list-name>
+                <indexes>
+                  <index>
+                    <index-number>{$index}</index-number>
+                    <mpls>
+                      <label>{$label}</label>
+                      <adjacency>{$ipv4}</adjacency>
+                    </mpls>
+                  </index>
+                </indexes>
+              </segment-list>
+            </segment-lists>
+          </traffic-eng>
+        </segment-routing>
+        -->
+      </config>
+    </device>
+  </devices>
+</config>

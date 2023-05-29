@@ -1,0 +1,45 @@
+module create-loopback-intf {
+  namespace "http://com/example/createloopbackintf";
+  prefix create-loopback-intf;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  list create-loopback-intf {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "create-loopback-intf";
+
+    leaf name {
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select Device";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf loopback_id {
+      tailf:info "Enter Loopback Interface ID number";
+      type uint32;
+    }            
+
+    leaf loopback_ipv4_address {
+      tailf:info "Enter IPv4 Address for Loopback Interface";
+      type inet:ipv4-address;
+    }
+
+  }
+}

@@ -1,0 +1,43 @@
+module pcc_config {
+  namespace "http://com/example/pcc_config";
+  prefix pcc_config;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  list pcc_config {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "pcc_config";
+
+    leaf name {
+      tailf:info "Enter PCC Config Service Name";
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select Device";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    // replace with your own stuff here
+    leaf source-ipv4-address {
+      tailf:info "Enter Source IPv4 Address";
+      type inet:ipv4-address;
+    }
+    leaf pce-ipv4-address {
+      tailf:info "Enter PCE IPv4 Address";
+      type inet:ipv4-address;
+    }
+  }
+}

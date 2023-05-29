@@ -1,0 +1,28 @@
+module cisco-sr-te-cfp-sr-types {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-types";
+  prefix cisco-sr-te-cfp-sr-types;
+
+  description "SR function pack types";
+
+  revision 2019-02-05 {
+    description "Initial revision.";
+  }
+  typedef label {
+    type uint64 {
+      range "16..1048575";
+    }
+    description "LSP label";
+  }
+
+  typedef service-name {
+    type string {
+      pattern "[a-zA-Z0-9\\-_]+";
+    }
+  }
+
+  typedef Cisco-ios-xr-string {
+    type string {
+      pattern '[\w\-\.:,_@#%$\+=\|;]+';
+    }
+  }
+}

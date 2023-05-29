@@ -1,0 +1,32 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-internal">
+    <odn xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn-internal">
+      <odn-template>
+        <name>{$ODN_NAME}</name>
+        <head-end>{$HEAD_END}</head-end>
+        <?foreach {custom-template}?>
+          <custom-template>
+              <name>{name}</name>
+              <?copy-tree {.}?>
+          </custom-template>
+        <?end?>
+        <?foreach {head-end[name=$HEAD_END]/custom-template}?>
+          <custom-template>
+              <name>{name}</name>
+              <?copy-tree {.}?>
+          </custom-template>
+        <?end?>
+        <color>{color}</color>
+        <maximum-sid-depth>{maximum-sid-depth}</maximum-sid-depth>
+        <bandwidth>{bandwidth}</bandwidth>
+        <dynamic when="{dynamic}">
+          <?copy-tree {/dynamic}?>
+        </dynamic>
+        <srv6 when="{srv6}">
+          <?copy-tree {/srv6}?>
+        </srv6>
+        <source-address>{source-address}</source-address>
+      </odn-template>
+    </odn>
+  </sr-te>
+</config>

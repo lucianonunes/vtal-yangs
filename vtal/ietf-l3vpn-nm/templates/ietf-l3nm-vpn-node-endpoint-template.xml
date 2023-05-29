@@ -1,0 +1,142 @@
+<flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+  <name>L3NM-{$VPN_ID}-internal</name>
+  <endpoint>
+    <endpoint-name>{ne-id}_{$VPN_NETWORK_ACCESS_ID}</endpoint-name>
+    <access-pe>{ne-id}</access-pe>
+    <if-type>{$IF_TYPE}</if-type>
+    <if-id>{$IF_ID}</if-id>
+    <?foreach {custom-template}?>
+      <custom-template>
+        <name>{name}</name>
+        <?copy-tree {.}?>
+      </custom-template>
+    <?end?>
+    <?save-context vpn-node?>
+    <!-- deviations module restricts vpn-network-access to one entry-->
+    <?set-context-node {vpn-network-accesses/vpn-network-access[id=$VPN_NETWORK_ACCESS_ID]}?>
+    <?save-context vpn-network-access?>
+    <!-- primary-address must be defined to activate corresponding address -->
+    <?if {ip-connection/ipv4/static-addresses/primary-address}?>
+      <?set ADDRESS_ID={ip-connection/ipv4/static-addresses/primary-address}?>
+      <?set-context-node {ip-connection/ipv4/static-addresses/address[address-id=$ADDRESS_ID]}?>
+      <pe-ip-addr>{provider-address}/{prefix-length}</pe-ip-addr>
+      <?switch-context vpn-network-access?>
+    <?end?>
+    <?if {ip-connection/ipv6/static-addresses/primary-address}?>
+      <?set ADDRESS_ID={ip-connection/ipv6/static-addresses/primary-address}?>
+      <?set-context-node {ip-connection/ipv6/static-addresses/address[address-id=$ADDRESS_ID]}?>
+      <pe-ipv6-addr>{provider-address}/{prefix-length}</pe-ipv6-addr>
+      <?switch-context vpn-network-access?>
+    <?end?>
+    <?if {connection/tagged-interface/dot1q-vlan-tagged/cvlan-id}?>
+      <?set-context-node {connection/tagged-interface/dot1q-vlan-tagged}?>
+      <vlan-id>{cvlan-id}</vlan-id>
+      <BDI>{BDI}</BDI>
+      <?switch-context vpn-network-access?>
+    <?end?>
+    <!-- deviations module restricts routing protocol to bgp -->
+    <?foreach {routing-protocols/routing-protocol}?>
+      <?set-context-node {bgp}?>
+      <?save-context bgp?>
+      <as-no>{../../../../../local-autonomous-system}</as-no>
+      <ce-pe-prot>
+        <e-bgp>
+          <?if {$IPV4_BGP_NEIGHBOR!=''}?>
+            <neighbor-ipv4>{$IPV4_BGP_NEIGHBOR}</neighbor-ipv4>
+            <remote-as-ipv4>{peer-autonomous-system}</remote-as-ipv4>
+          <?end?>
+          <?if {$IPV6_BGP_NEIGHBOR!=''}?>
+            <neighbor-ipv6>{$IPV6_BGP_NEIGHBOR}</neighbor-ipv6>
+            <remote-as-ipv6>{peer-autonomous-system}</remote-as-ipv6>
+          <?end?>
+          <ebgp-multihop when="{multihop or mpls-deactivation='true'}">
+            <ttl-value>{multihop}</ttl-value>
+            <mpls-deactivation>{mpls-deactivation}</mpls-deactivation>
+          </ebgp-multihop>
+          <update-source when="{update-source}">
+            <?copy-tree {update-source}?>
+          </update-source>
+        </e-bgp>
+      </ce-pe-prot>
+    <?end?>
+    <?switch-context vpn-node?>
+    <vrf>
+      <vrf-definition>{../../vpn-id}</vrf-definition>
+      <?if {not(rd) and node-ie-profile!=''}?>
+        <?set NODE_IE_PROFILE={node-ie-profile}?>
+        <?set-context-node {../../ie-profiles/ie-profile[ie-profile-id=$NODE_IE_PROFILE]}?>
+      <?end?>
+      <route-distinguisher when="{rd}">{substring-after(rd, ':')}</route-distinguisher>
+      <?switch-context vpn-node?>
+      <?if {vpn-network-accesses/vpn-network-access/routing-protocols/routing-protocol}?>
+        <?switch-context bgp?>
+        <?foreach {address-family}?>
+          <?set ADDRESS_FAMILY={.}?>
+          <address-family>
+            <address-family>{.}</address-family>
+            <?if {(.='ipv4' and ../redistribute-connected-ipv4-af)}?>
+              <redistribute-connected/>
+              <metric>
+                {../redistribute-connected-ipv4-af/metric}
+              </metric>
+            <?end?>
+            <?if {(.='ipv6' and ../redistribute-connected-ipv6-af)}?>
+              <redistribute-connected/>
+              <metric>
+                {../redistribute-connected-ipv6-af/metric}
+              </metric>
+            <?end?>
+            <?switch-context vpn-node?>
+            <?if {not(vpn-targets/vpn-target) and node-ie-profile!=''}?>
+              <?set NODE_IE_PROFILE={node-ie-profile}?>
+              <?set-context-node {../../ie-profiles/ie-profile[ie-profile-id=$NODE_IE_PROFILE]}?>
+            <?end?>
+            <?foreach {vpn-targets/vpn-target}?>
+              <?foreach {route-targets}?>
+                <vpn-target>
+                  <rt-value>{substring-after(route-target, ':')}</rt-value>
+                  <rt-type>{../route-target-type}</rt-type>
+                </vpn-target>
+              <?end?>
+            <?end?>
+            <?switch-context vpn-node?>
+            <?if {not(srv6) and node-ie-profile!=''}?>
+              <?set NODE_IE_PROFILE={node-ie-profile}?>
+              <?set-context-node {../../ie-profiles/ie-profile[ie-profile-id=$NODE_IE_PROFILE]}?>
+            <?end?>
+            <?if {srv6/address-family[name=$ADDRESS_FAMILY]}?>
+              <srv6>
+                <locator-name>{srv6/address-family[name=$ADDRESS_FAMILY]/locator-name}</locator-name>
+              </srv6>
+            <?end?>
+          </address-family>
+        <?end?>
+        <?switch-context bgp?>
+        <?foreach {srv6/address-family}?>
+          <address-family>
+            <address-family>{.}</address-family>
+            <srv6>
+              <locator-name>{locator-name}</locator-name>
+            </srv6>
+          </address-family>
+        <?end?>
+      <?end?>
+    </vrf>
+    <?switch-context vpn-node?>
+    <?if {not(vpn-targets/vpn-policies/export-policy) and node-ie-profile!=''}?>
+      <?set NODE_IE_PROFILE={node-ie-profile}?>
+      <?set-context-node {../../ie-profiles/ie-profile[ie-profile-id=$NODE_IE_PROFILE]}?>
+    <?end?>
+    <sr-te when="{vpn-targets/vpn-policies/export-policy}">
+      <export-route-policy>{vpn-targets/vpn-policies/export-policy}</export-route-policy>
+    </sr-te>
+    <?switch-context vpn-node?>
+    <?if {not(vpn-targets/vpn-policies/import-policy) and node-ie-profile!=''}?>
+      <?set NODE_IE_PROFILE={node-ie-profile}?>
+      <?set-context-node {../../ie-profiles/ie-profile[ie-profile-id=$NODE_IE_PROFILE]}?>
+    <?end?>
+    <sr-te when="{vpn-targets/vpn-policies/import-policy}">
+      <import-route-policy>{vpn-targets/vpn-policies/import-policy}</import-route-policy>
+    </sr-te>
+  </endpoint>
+</flat-L3vpn>

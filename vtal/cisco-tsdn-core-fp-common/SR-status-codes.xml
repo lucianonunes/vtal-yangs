@@ -1,0 +1,118 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <status-code-cfp xmlns="http://com/cisco/cfp-common-status-codes">
+    <name>SR</name>
+  </status-code-cfp>
+  <status-codes xmlns="http://com/cisco/cfp-common-status-codes">
+    <core-function-pack>
+      <name>SR</name>
+      <status-code-enum-path>cisco-tsdn-core-fp-common/python/cisco_tsdn_core_fp_common/status_codes/sr_te_status_codes</status-code-enum-path>
+      <status-code>
+        <code>503</code>
+        <reason>Cleanup failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>303</code>
+        <reason>Config push failed</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Device configuration rejected, fix the service payload and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>301</code>
+        <reason>Device unreachable</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Check device connectivity from NSO and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>870</code>
+        <reason>Custom Template apply failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>302</code>
+        <reason>Device out of sync</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Check sync between device and NSO, and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>407</code>
+        <reason>Dynamic class for device not found</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Load correct classpath for the ned-id in CFP dynamic device mapping list</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>409</code>
+        <reason>Dynamic class method for device not found</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure dynamic method is implemented in multi-vendor implementation</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>404</code>
+        <reason>Total paths configured exceeds Maximum Segment Depth for device</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify total paths configured is within device MSD limits</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>408</code>
+        <reason>Router NED not supported</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure dynamic device mapping is set for the ned-id</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>410</code>
+        <reason>PCEP and Sid algorithm cannot be configured together on XR devices below 7.2.1</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure that only PCEP or Sid algorithm either one is present.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>504</code>
+        <reason>Service Recovery failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>501</code>
+        <reason>Self test failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>502</code>
+        <reason>Unsupported status returned for self test</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>411</code>
+        <reason>SRv6 is not supported with current device or NED</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure that the device is synced         and running the required version of image and correct NED is used.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>400</code>
+        <reason>Status code mapping has not been loaded for function pack during install</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Bootstrap status code mapping</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>406</code>
+        <reason>Input element's value is not supported</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify that input element's value is supported in the payload</recommended-actions>
+      </status-code>
+    </core-function-pack>
+  </status-codes>
+</config>

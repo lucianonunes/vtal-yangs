@@ -1,0 +1,136 @@
+module ietf-l2vpn-ntw-nano-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-l2vpn-ntw-nano-services";
+  prefix ietf-l2vpn-ntw-nano-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+  import ietf-l2vpn-ntw {prefix l2vpn-ntw; }
+
+  description "Models for IETF L2vpn nano plan.";
+
+  revision 2022-02-15 {
+    description
+      "Added: EVPN Multipoint Support";
+  }
+
+  revision 2021-09-17 {
+    description
+      "Removed: create callback for component vpn-node -> state ncs:init";
+  }
+
+  revision 2020-10-05 {
+    description
+      "Added: container resource-allocation-data to display allocated id-pool values of evi-id, evi-source and evi-target";
+  }
+
+  revision 2020-09-11 {
+    description
+      "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity vpn-node {
+    base ncs:plan-component-type;
+  }
+
+  ncs:plan-outline ietf-l2vpn-ntw-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // this checks if there are errors in another components, show it in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "ietf-l2vpn-ntw-nano-services:vpn-node" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          // marks failure - internal plan failures
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ietf-l2vpn-ntw-nano-services:config-apply" {
+        ncs:create {
+          // create flat-L2vpn internal service for this device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan
+          ncs:nano-callback;
+        }
+      }
+
+    }
+
+  }
+
+  ncs:service-behavior-tree ietf-l2vpn-ntw-servicepoint {
+    ncs:plan-outline-ref "ietf-l2vpn-ntw-nano-services:ietf-l2vpn-ntw-nano-plan";
+    ncs:plan-location "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service-plan";
+
+    ncs:selector {
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:selector {
+        ncs:pre-condition {
+          ncs:monitor "$SERVICE/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node" {
+            ncs:trigger-expr "not(l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb')";
+          }
+        }
+        ncs:multiplier {
+          ncs:foreach "vpn-nodes/vpn-node" {
+            ncs:variable "VPN_NODE"  {
+              ncs:value-expr "vpn-node-id";
+            }
+            ncs:variable "NE_ID" {
+              ncs:value-expr "ne-id";
+            }
+
+            ncs:create-component "$VPN_NODE" {
+              ncs:component-type-ref "ietf-l2vpn-ntw-nano-services:vpn-node";
+            }
+          }
+        }
+      }
+      ncs:selector {
+        ncs:pre-condition {
+          ncs:monitor "$SERVICE/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node" {
+            ncs:trigger-expr "l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb'";
+          }
+        }
+        ncs:multiplier {
+          ncs:foreach "vpn-nodes/vpn-node/vpn-network-accesses/vpn-network-access" {
+            ncs:variable "VPN_NODE"  {
+              ncs:value-expr "../../vpn-node-id";
+            }
+            ncs:variable "NE_ID" {
+              ncs:value-expr "../../ne-id";
+            }
+            ncs:variable "VPN_NETWORK_ACCESS_ID"  {
+              ncs:value-expr "id";
+            }
+            ncs:create-component "concat($NE_ID, '_', $VPN_NETWORK_ACCESS_ID)" {
+              ncs:component-type-ref "ietf-l2vpn-ntw-nano-services:vpn-node";
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,422 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0"
+                 servicepoint="xr_snmp_trap_logging">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <!--
+          Select the devices from some data structure in the service
+          model. In this skeleton the devices are specified in a leaf-list.
+          Select all devices in that leaf-list:
+      -->
+      <name>{/device}</name>
+      <config>
+      <clock xmlns="http://tail-f.com/ned/cisco-ios-xr">
+        <timezone>
+          <zone>{/time_zone}</zone>
+          <region>{/time_zone_region}</region>
+        </timezone>
+      </clock>
+      <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+        <trap>informational</trap>
+        <events>
+          <level>informational</level>
+          <link-status>software-interfaces</link-status>
+        </events>
+        <buffered>
+          <size>125000000</size>
+        </buffered>
+        <facility>local7</facility>
+        <host>
+          <address>{/epnm_ip_address}</address>
+          <vrf>default</vrf>
+          <port>default</port>
+        </host>
+        <host>
+          <address>{/cdg_ip_address}</address>
+          <vrf>default</vrf>
+          <port>1062</port>
+        </host>
+        <source-interface>
+          <MgmtEth>0/RP0/CPU0/0</MgmtEth>
+        </source-interface>
+        <console>disable</console>
+      </logging>
+      <ntp xmlns="http://tail-f.com/ned/cisco-ios-xr">
+        <server>
+          <server-list>
+            <name>{/ntp_server_host}</name>
+          </server-list>
+        </server>
+        <update-calendar/>
+      </ntp>
+      <line xmlns="http://tail-f.com/ned/cisco-ios-xr">
+        <console>
+          <session-timeout>
+            <minutes>720</minutes>
+          </session-timeout>
+        </console>
+        <default>
+          <exec-timeout>
+            <minutes>720</minutes>
+          </exec-timeout>
+          <session-timeout>
+            <minutes>720</minutes>
+          </session-timeout>
+        </default>
+      </line>
+      <xxml xmlns="http://tail-f.com/ned/cisco-ios-xr">
+        <tty-agent>
+          <agent>
+            <tty/>
+          </agent>
+        </tty-agent>
+      </xxml>
+      <snmp-server xmlns="http://tail-f.com/ned/cisco-ios-xr">
+        <ifmib>
+          <stats>
+            <cache/>
+          </stats>
+        </ifmib>
+        <ifindex>persist</ifindex>
+        <host>
+          <address>{/epnm_ip_address}</address>
+          <type>traps</type>
+          <community-string>public</community-string>
+          <version>2c</version>
+        </host>
+        <host>
+          <address>{/cdg_ip_address}</address>
+          <type>traps</type>
+          <community-string>public</community-string>
+          <version>2c</version>
+          <udp-port>1062</udp-port>
+        </host>
+        <queue-length>1000</queue-length>
+        <traps>
+          <traps-list>
+            <name>addrpool high</name>
+          </traps-list>
+          <traps-list>
+            <name>addrpool low</name>
+          </traps-list>
+          <traps-list>
+            <name>bfd</name>
+          </traps-list>
+          <traps-list>
+            <name>bgp</name>
+          </traps-list>
+          <traps-list>
+            <name>bgp cbgp2</name>
+          </traps-list>
+          <traps-list>
+            <name>bridgemib</name>
+          </traps-list>
+          <traps-list>
+            <name>cisco-entity-ext</name>
+          </traps-list>
+          <traps-list>
+            <name>config</name>
+          </traps-list>
+          <traps-list>
+            <name>copy-complete</name>
+          </traps-list>
+          <traps-list>
+            <name>diameter peerdown</name>
+          </traps-list>
+          <traps-list>
+            <name>diameter peerup</name>
+          </traps-list>
+          <traps-list>
+            <name>diameter permanentfail</name>
+          </traps-list>
+          <traps-list>
+            <name>diameter protocolerror</name>
+          </traps-list>
+          <traps-list>
+            <name>diameter transientfail</name>
+          </traps-list>
+          <traps-list>
+            <name>entity</name>
+          </traps-list>
+          <traps-list>
+            <name>entity-redundancy all</name>
+          </traps-list>
+          <traps-list>
+            <name>entity-redundancy status</name>
+          </traps-list>
+          <traps-list>
+            <name>entity-redundancy switchover</name>
+          </traps-list>
+          <traps-list>
+            <name>entity-state operstatus</name>
+          </traps-list>
+          <traps-list>
+            <name>entity-state switchover</name>
+          </traps-list>
+          <traps-list>
+            <name>flash insertion</name>
+          </traps-list>
+          <traps-list>
+            <name>flash removal</name>
+          </traps-list>
+          <traps-list>
+            <name>fru-ctrl</name>
+          </traps-list>
+          <traps-list>
+            <name>hsrp</name>
+          </traps-list>
+          <traps-list>
+            <name>ipsec tunnel start</name>
+          </traps-list>
+          <traps-list>
+            <name>ipsec tunnel stop</name>
+          </traps-list>
+          <traps-list>
+            <name>ipsla</name>
+          </traps-list>
+          <traps-list>
+            <name>isakmp tunnel start</name>
+          </traps-list>
+          <traps-list>
+            <name>isakmp tunnel stop</name>
+          </traps-list>
+          <traps-list>
+            <name>isis all</name>
+          </traps-list>
+          <traps-list>
+            <name>l2tun pseudowire status</name>
+          </traps-list>
+          <traps-list>
+            <name>l2tun sessions</name>
+          </traps-list>
+          <traps-list>
+            <name>l2tun tunnel-down</name>
+          </traps-list>
+          <traps-list>
+            <name>l2tun tunnel-up</name>
+          </traps-list>
+          <traps-list>
+            <name>l2vpn all</name>
+          </traps-list>
+          <traps-list>
+            <name>l2vpn vc-down</name>
+          </traps-list>
+          <traps-list>
+            <name>l2vpn vc-up</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls frr all</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls frr protected</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls frr unprotected</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls l3vpn all</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls l3vpn max-threshold-cleared</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls l3vpn max-threshold-exceeded</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls l3vpn max-threshold-reissue-notif-time 1</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls l3vpn mid-threshold-exceeded</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls l3vpn vrf-down</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls l3vpn vrf-up</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls ldp down</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls ldp threshold</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls ldp up</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls traffic-eng down</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls traffic-eng p2mp down</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls traffic-eng p2mp up</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls traffic-eng reoptimize</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls traffic-eng reroute</name>
+          </traps-list>
+          <traps-list>
+            <name>mpls traffic-eng up</name>
+          </traps-list>
+          <traps-list>
+            <name>msdp peer-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ntp</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf errors authentication-failure</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf errors bad-packet</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf errors config-error</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf errors virt-authentication-failure</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf errors virt-bad-packet</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf errors virt-config-error</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf lsa lsa-maxage</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf lsa lsa-originate</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf retransmit packets</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf retransmit virt-packets</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf state-change if-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf state-change neighbor-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf state-change virtif-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospf state-change virtneighbor-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 errors bad-packet</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 errors config-error</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 errors virt-bad-packet</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 state-change if-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 state-change neighbor-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 state-change restart-status-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 state-change restart-virtual-helper-status-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 state-change virtif-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>ospfv3 state-change virtneighbor-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>pim interface-state-change</name>
+          </traps-list>
+          <traps-list>
+            <name>pim invalid-message-received</name>
+          </traps-list>
+          <traps-list>
+            <name>pim neighbor-change</name>
+          </traps-list>
+          <traps-list>
+            <name>pim rp-mapping-change</name>
+          </traps-list>
+          <traps-list>
+            <name>pki</name>
+          </traps-list>
+          <traps-list>
+            <name>power</name>
+          </traps-list>
+          <traps-list>
+            <name>rf</name>
+          </traps-list>
+          <traps-list>
+            <name>rsvp all</name>
+          </traps-list>
+          <traps-list>
+            <name>rsvp lost-flow</name>
+          </traps-list>
+          <traps-list>
+            <name>rsvp new-flow</name>
+          </traps-list>
+          <traps-list>
+            <name>selective-vrf-download role-change</name>
+          </traps-list>
+          <traps-list>
+            <name>sensor</name>
+          </traps-list>
+          <traps-list>
+            <name>snmp</name>
+          </traps-list>
+          <traps-list>
+            <name>snmp authentication</name>
+          </traps-list>
+          <traps-list>
+            <name>snmp coldstart</name>
+          </traps-list>
+          <traps-list>
+            <name>snmp linkdown</name>
+          </traps-list>
+          <traps-list>
+            <name>snmp linkup</name>
+          </traps-list>
+          <traps-list>
+            <name>snmp warmstart</name>
+          </traps-list>
+          <traps-list>
+            <name>syslog</name>
+          </traps-list>
+          <traps-list>
+            <name>system</name>
+          </traps-list>
+          <traps-list>
+            <name>vpls all</name>
+          </traps-list>
+          <traps-list>
+            <name>vpls full-clear</name>
+          </traps-list>
+          <traps-list>
+            <name>vpls full-raise</name>
+          </traps-list>
+          <traps-list>
+            <name>vpls status</name>
+          </traps-list>
+          <traps-list>
+            <name>vrrp events</name>
+          </traps-list>
+        </traps>
+      </snmp-server>
+      <lldp xmlns="http://tail-f.com/ned/cisco-ios-xr"/>
+      <mpls xmlns="http://tail-f.com/ned/cisco-ios-xr">
+        <oam/>
+      </mpls>
+     </config>
+    </device>
+  </devices>
+</config-template>

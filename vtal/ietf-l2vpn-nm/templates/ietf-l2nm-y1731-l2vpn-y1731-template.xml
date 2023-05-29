@@ -1,0 +1,8 @@
+<y-1731-profile xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+  <name>{name}</name>
+  <!-- we need to push this config first; since, 'copy-tree' pushes config in the wrong order causing 'when' conditions to failed -->
+  <probe>
+    <measurement-interval>{probe/measurement-interval}</measurement-interval>
+  </probe>
+  <?copy-tree {.}?>
+</y-1731-profile>

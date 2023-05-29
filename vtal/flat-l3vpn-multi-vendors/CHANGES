@@ -1,0 +1,5 @@
+flat-l3vpn-multi-vendors [Jan 08, 2020]
+=============================================
+    
+    1. Updated the following templates to handle new interfaces
+        a. cisco-flat-L3vpn-fp-cli-template.xml

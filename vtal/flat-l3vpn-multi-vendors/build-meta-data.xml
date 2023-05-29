@@ -1,0 +1,15 @@
+<ncs-pkg-build xmlns='http://tail-f.com/ns/ncs-pkg-build'>
+    <date>2022-10-19 20:56:32</date>
+    <file>ncs-5.7.6-flat-l3vpn-multi-vendors-EXAMPLE-4.1.0.tar.gz</file>
+    <arch></arch>
+    <java></java>
+    <package>
+        <name>flat-l3vpn-multi-vendors</name>
+        <version>4.1.0</version>
+        <ref>4.1.0</ref>
+        <sha1>35d6f392</sha1>
+    </package>
+    <ncs>
+        <version>5.7.6</version>
+    </ncs>
+</ncs-pkg-build>

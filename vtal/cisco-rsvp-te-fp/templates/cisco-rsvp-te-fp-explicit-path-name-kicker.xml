@@ -1,0 +1,11 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <kickers xmlns="http://tail-f.com/ns/kicker">
+    <data-kicker>
+      <id>rsvp-te-tunnel-{$NAME}-{$HEADEND}-explicit-path-name-{$PATHNAME}-init-create</id>
+      <monitor>/cisco-rsvp-te-fp:rsvp-te/cisco-rsvp-te-fp:explicit-path/cisco-rsvp-te-fp:name[id='{$PATHNAME}']</monitor>
+      <kick-node>/cisco-rsvp-te-fp:rsvp-te/cisco-rsvp-te-fp:tunnel-te[name='{$NAME}']</kick-node>
+      <action-name>reactive-re-deploy</action-name>
+    </data-kicker>
+  </kickers>
+</config>
+

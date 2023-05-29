@@ -1,0 +1,554 @@
+module ietf-l2vpn-ntw-cisco-augmentations {
+
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-l2vpn-ntw-cisco-augmentations";
+  prefix l2vpn-ntw-augmentations;
+
+  import ietf-l2vpn-ntw { prefix l2vpn-ntw; }
+  import cisco-tsdn-core-fp-common { prefix tsdn-core-fp-common; }
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+  import lsa-utils { prefix lsa-utils; }
+
+  description "IETF L2VPN NTW Cisco NSO Augmentations";
+
+  revision 2022-06-13 {
+    description
+       "Modified: pattern under l2vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes -> vpn-node ->
+                 te-service-mapping -> srv6 -> locator -> type";
+  }
+
+  revision 2022-04-15 {
+    description
+       "Modified: description under l2vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes -> vpn-node ->
+                 te-service-mapping -> srv6 -> locator
+        Added: pattern under l2vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes -> vpn-node ->
+              te-service-mapping -> srv6 -> locator -> type";
+  }
+
+  revision 2022-03-10 {
+    description
+      "Modified: when condition under l2vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes
+                 -> vpn-node -> te-service-mapping -> srv6";
+  }
+
+  revision 2022-02-15 {
+    description
+      "Added: EVPN Multipoint Support
+       Added: leaf bridge-group under l2vpn-ntw -> vpn-services -> vpn-service
+       Added: leaf control-word-disable under l2vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes -> vpn-node
+       Added: leaf pe under l2vpn-ntw -> vpn-services -> vpn-service-plan -> plan -> component
+       Added: leaf pe under l2vpn-ntw -> vpn-services -> vpn-service-plan -> plan-history -> plan -> component";
+  }
+
+  revision 2022-01-13 {
+    description
+      "Added: srv6 container to l2vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes -> vpn-node -> te-service-mapping";
+  }
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified: Read dispatch-map using lsa-utils";
+  }
+
+  revision 2021-11-17 {
+    description
+      "Modified: changed type to union for y-1731-profile -> probe -> measurement-interval
+       Added: when condition to grouping y-1731-profile-schedule -> schedule -> duration";
+  }
+
+  revision 2021-09-28 {
+    description
+      "Removed: leaf delay-type under list y-1731-profile -> delay-params
+       Removed: leaf cos under list y-1731-profile -> delay-params -> statistic
+       Removed: leaf cos list y-1731-profile -> loss-params -> statistic
+       Removed: list statistic under vpn-services -> vpn-service -> vpn-nodes -> vpn-node -> vpn-network-accesses ->
+                vpn-network-access -> ethernet-service-oam -> y-1731 -> y-1731-profile";
+  }
+
+  revision 2021-09-24 {
+    description
+      "Added: must condition to y-1731-profile -> measurment-internal to y-1731-profile -> probe -> type";
+   }
+
+  revision 2021-09-17 {
+    description
+      "Added: hidden leaf local-site in vpn-service-plan -> plan -> component";
+  }
+
+  revision 2021-09-14 {
+    description
+      "Modified: description/tailf:info for y-1731-profile -> message-period
+       Modified: range for leaf interval in vpn-services -> vpn-service -> vpn-nodes -> vpn-node -> vpn-network-accesses ->
+                 vpn-network-access -> ethernet-service-oam -> y-1731 -> y-1731-profile -> schedule";
+  }
+
+  revision 2021-08-31 {
+    description
+      "Added: Augmentation for vpn-services -> vpn-service -> vpn-nodes -> vpn-node -> vpn-network-accesses ->
+        vpn-network-access -> ethernet-service-oam -> y-1731 -> id-type -> id-type enum (icc-based|number)";
+  }
+
+  revision 2021-08-27 {
+    description
+      "Added: container probe in list y-1731-profile
+       Added: leaf message-count in y-1731-profile -> probe
+       Moved: y-1731-profile -> measurment-internal to y-1731-profile -> probe -> measurement-interval
+       Moved: y-1731-profile -> message-period to y-1731-profile -> probe -> burst -> message-period
+       Moved: y-1731-profile -> frame-size to y-1731-profile -> probe -> frame-size
+       Moved: y-1731-profile -> priority to y-1731-profile -> probe -> priority
+       Added: grouping y-1731-profile-schedule
+       Added: uses y-1731-profile-schedule to l2vpn-ntw -> y-1731-profile
+       Added: uses y-1731-profile-schedule to l2vpn-ntw -> vpn-services -> vpn-service
+                -> vpn-nodes -> vpn-node -> vpn-network-accesses -> vpn-network-access
+                -> ethernet-service-oam -> y-1731-profile
+       Added: container bucket-details under list y-1731-profile";
+  }
+
+  revision 2021-06-25 {
+    description
+      "Added: list y-1731-profile augmenting l2vpn-ntw
+       Added: leaf y-1731-profile augmenting l2vpn-ntw -> vpn-services -> vpn-service
+                -> vpn-nodes -> vpn-node -> vpn-network-accesses -> vpn-network-access
+                -> ethernet-service-oam -> y-1731";
+  }
+  revision 2021-05-11 {
+      description "Initial revision.";
+  }
+
+  grouping y-1731-profile-schedule {
+    container schedule {
+      description
+          "Schedule Parameters";
+      tailf:info
+          "Schedule Parameters";
+
+      leaf interval {
+        description
+          "<1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90>;;
+            Interval between operations expressed in minute. Must be a factor of 1440.
+            Only applicable for Cisco XR devices.";
+        tailf:info
+          "<1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90>;;
+            Interval between operations expressed in minutes. Must be a factor of 1440.
+            Only applicable for Cisco XR devices.";
+        type uint8 {
+          range "1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90";
+        }
+      }
+      leaf duration {
+        when "/l2vpn-ntw:l2vpn-ntw/y-1731-profile[name=current()/../../name]/probe/measurement-interval != 'once'";
+
+        description
+          "<1-1440>;;Duration of operations expressed in minutes.
+            The 'forever' option will try to schedule infinitely if supported; otherwise,
+            maximum number of allowed minutes will be used";
+        tailf:info
+          "<1-1440>;;Duration of operations expressed in minutes.
+            The 'forever' option will try to schedule infinitely if supported; otherwise,
+            maximum number of allowed minutes will be used";
+        type union {
+          type uint16 {
+            range "1..1440";
+          }
+          type enumeration {
+            enum forever;
+          }
+        }
+      }
+    }
+  }
+
+  augment "/l2vpn-ntw:l2vpn-ntw" {
+    list y-1731-profile {
+      description "L2NM Y-1731 profile.
+                Can be standard profile or customized profile.";
+      tailf:info "L2NM Y-1731 profile.
+                  Can be standard profile or customized profile.";
+
+      uses ncs:service-data;
+      ncs:servicepoint "l2vpn-ntw-augmentations-y1731-servicepoint";
+
+      uses y-1731-profile-schedule {
+        refine schedule/interval {
+          default 60;
+        }
+        refine schedule/duration {
+          default 60;
+        }
+      }
+
+      key name;
+      leaf name {
+        type string;
+        description
+          "Unique name for y-1731-profile";
+        tailf:info
+          "Unique name for y-1731-profile";
+      }
+      leaf type {
+        type enumeration {
+          enum 'delay';
+          enum 'loss';
+          enum 'synthetic-loss';
+        }
+        mandatory true;
+        description
+          "Performance monitor types";
+        tailf:info "Performance monitor types";
+      }
+      container probe {
+        description
+          "SLA Profile Probe. Only applicable to Cisco XR devices.";
+        tailf:info
+          "SLA Profile Probe. Only applicable to Cisco XR devices.";
+
+        leaf type {
+          description "Probe Type";
+          tailf:info  "Probe Type";
+          type enumeration {
+            enum burst;
+            enum packet;
+          }
+          default burst;
+
+          must ". = 'burst' or (. = 'packet' and ../../type != 'loss')" {
+            error-message "probe type cannot be set to packet for loss profile";
+            tailf:dependency "../../type";
+          }
+        }
+        container burst {
+          when "../type = 'burst'";
+
+          description "Burst Parameters";
+          tailf:info  "Burst Parameters";
+
+          leaf message-count {
+            description
+              "<2-1200>;;Defines number of OAM messages sent per interval";
+            tailf:info
+              "<2-1200>;;Defines number of OAM messages sent per interval";
+            type uint16 {
+              range "2..1200";
+            }
+            default 60;
+          }
+          leaf message-period {
+            type uint32 {
+              range "50..30000";
+            }
+            default 1000;
+            description
+              "<50-30000>;;Defines the interval between OAM messages. The message
+                period is expressed in milliseconds";
+            tailf:info  "<50-30000>;;Defines the interval between OAM messages. The message
+                period is expressed in milliseconds";
+          }
+          must "(message-period * message-count) <= (../measurement-interval * 1000)" {
+            error-message "The measurement time (message-period * message-count / 1000)"
+                          + " must be less than or equal to the measurement-interval time.";
+          }
+        }
+        leaf measurement-interval {
+          type union {
+            type uint32 {
+              range "1..3600";
+            }
+            type enumeration {
+              enum once;
+            }
+          }
+          default 60;
+          description
+            "<1-3600>;;Specifies the measurement interval for statistics. The
+              measurement interval is expressed in seconds";
+          tailf:info "<1-3600>;;Specifies the measurement interval for statistics. The
+              measurement interval is expressed in seconds";
+          must "(. = 'once' and ../type = 'packet') or (. != 'once')" {
+            error-message "measurement-interval 'once' is only supported with probe type 'packet'";
+            tailf:dependency "../type";
+          }
+          must "not(../../type = 'synthetic-loss' and . = 'once')" {
+            error-message "measurement-interval 'once' not supported with synthetic-loss profile type";
+            tailf:dependency "../../type";
+          }
+        }
+        leaf frame-size {
+          when "../../type != 'loss'";
+          type uint16 {
+            range "1..9000";
+          }
+          default 1000;
+          description
+            "<1-9000>;;Frame size";
+          tailf:info "<1-9000>;;Frame size";
+        }
+        leaf priority {
+          description "<0-7>;;Specify the priority to use when sending OAM messages";
+          tailf:info "<0-7>;;Specify the priority to use when sending OAM messages";
+          type uint8 {
+            range "0..7";
+          }
+        }
+      }
+      container delay-params {
+        when "../type = 'delay'";
+        description
+          "Delay Parameters";
+        tailf:info
+          "Delay Parameters";
+        list statistic {
+          description
+            "Statistic";
+          tailf:info
+            "Statistic";
+          key type;
+          leaf type {
+            description
+              "Statistics Type. Jitter type only applicable for Cisco XR devices.";
+            tailf:info
+              "Statistics Type. Jitter type only applicable for Cisco XR devices.";
+            type enumeration {
+              enum 'delay-two-way';
+              enum 'delay-sd';
+              enum 'delay-ds';
+              enum 'jitter-two-way';
+              enum 'jitter-sd';
+              enum 'jitter-ds';
+            }
+          }
+          // leaf cos {
+          //   description
+          //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+          //   tailf:info
+          //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+          //   type uint8 {
+          //     range "0..7";
+          //   }
+          //   default 0;
+          // }
+        }
+        leaf version {
+          description
+            "Delay Version";
+          tailf:info
+            "Delay Version";
+          type enumeration {
+            enum 0;
+            enum 1;
+          }
+          default 1;
+        }
+        // leaf delay-type {
+        //   description
+        //     "Delay type. Only applicable for Cisco XE devices.";
+        //   tailf:info
+        //     "Delay type. Only applicable for Cisco XE devices.";
+        //   type enumeration {
+        //     enum 'delay';
+        //     enum 'delay-variation';
+        //     enum 'both';
+        //   }
+        //   default "delay";
+        // }
+      }
+      container loss-params {
+        when "../type = 'loss' or ../type = 'synthetic-loss'";
+        description
+          "Loss Parameters";
+        tailf:info
+          "Loss Parameters";
+        list statistic {
+          description
+            "Statistic";
+          tailf:info
+            "Statistic";
+          key type;
+          leaf type {
+            description
+              "Statistics Type";
+            tailf:info
+              "Statistics Type";
+            type enumeration {
+              enum 'loss-sd';
+              enum 'loss-ds';
+            }
+          }
+          // leaf cos {
+          //   description
+          //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+          //   tailf:info
+          //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+          //   type uint8 {
+          //     range "0..7";
+          //   }
+          //   default 0;
+          // }
+        }
+      }
+      container bucket-details {
+        description
+          "Configuration for buckets in which statistics are collected. Only applicable for Cisco XR devices.";
+        leaf bucket-size {
+          description
+            "<1-100>;;Specifies the size of each bucket.
+             The number of probes that each buckets may contain. Only applicable for Cisco XR devices.";
+          tailf:info
+            "<1-100>;;Specifies the size of each bucket.
+             The number of probes that each buckets may contain. Only applicable for Cisco XR devices.";
+          type uint8 {
+            range "1..100";
+          }
+          default 1;
+        }
+        leaf bucket-archive {
+          description "<1-100>;;Number of buckets to store. Only applicable for Cisco XR devices.";
+          tailf:info "<1-100>;;Number of buckets to store. Only applicable for Cisco XR devices.";
+          type uint8 {
+            range "1..100";
+          }
+          default 100;
+        }
+      }
+    }
+  }
+  augment "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service" {
+    uses tsdn-core-fp-common:service-assurance-grouping {
+      when "/tsdn-core-fp-common:enable-service-assurance = 'true'";
+    }
+    leaf bridge-group {
+      when "../l2vpn-ntw:vpn-svc-type = 'vpn-common:evpn-bgp'";
+      tailf:info "Bridge group";
+      description "Bridge group";
+      type string {
+        pattern "[a-zA-Z0-9\\-_]+";
+        length "1..17";
+      }
+      must "../l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node[1]/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb'" {
+        error-message "Only configurable with signaling-option 'evpn-pbb'";
+      }
+    }
+  }
+  augment "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node" {
+    leaf control-word-disable {
+      when "../l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb'";
+      tailf:info "Disabling control-word";
+      description "Disabling control-word";
+      type boolean;
+      default "true";
+    }
+  }
+  augment "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731" {
+    leaf id-type {
+      tailf:info "SMAN ID Type";
+      description "SMAN ID Type";
+      default icc-based;
+      type enumeration {
+        enum icc-based;
+        enum number;
+      }
+      when "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../../../../../l2vpn-ntw:ne-id]/lsa-utils:ned-id,'cisco-ios-cli-'))";
+      must "(count(../../../../../../../l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731[id-type=current()])=2) or " +
+           "(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../../../../../../l2vpn-ntw:vpn-node[1]/l2vpn-ntw:ne-id]/lsa-utils:ned-id,'cisco-ios-cli-')) or " +
+           "(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../../../../../../l2vpn-ntw:vpn-node[2]/l2vpn-ntw:ne-id]/lsa-utils:ned-id,'cisco-ios-cli-'))" {
+            error-message "y-1731 (icc-based|number) type must be same for each vpn-node";
+          }
+    }
+    container sman-id-allocation-data {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      leaf icc-based-id {
+          tailf:info "icc-based SMAN ID allocated by resource-manager id-allocator";
+          description "icc-based SMAN ID allocated by resource-manager id-allocator";
+          type string;
+      }
+      leaf number-id {
+          tailf:info "number SMAN ID allocated by resource-manager id-allocator";
+          description "number SMAN ID allocated by resource-manager id-allocator";
+          type string;
+      }
+      tailf:info "SMAN ID resource allocations";
+      description "SMAN ID resource allocations";
+    }
+    list y-1731-profile  {
+      description "L2NM Y-1731 profile.";
+      tailf:info "L2NM Y-1731 profile.";
+
+      uses y-1731-profile-schedule;
+
+      key name;
+      leaf name {
+        type leafref {
+          path "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw-augmentations:y-1731-profile/l2vpn-ntw-augmentations:name";
+        }
+        description
+          "References L2NM y-1731-profile definition";
+        tailf:info
+          "References L2NM y-1731-profile definition";
+      }
+      // list statistic {
+      //   description
+      //     "Statistic";
+      //   tailf:info
+      //     "Statistic";
+      //   config false;
+      //   tailf:cdb-oper {
+      //     tailf:persistent true;
+      //   }
+      //   key type;
+      //   leaf type {
+      //     type string;
+      //   }
+      //   leaf statistic-id {
+      //     tailf:info "id allocated by resource-manager id-allocator";
+      //     description "id allocated by resource-manager id-allocator";
+      //     type uint32 {
+      //       range "1..2147483647";
+      //     }
+      //   }
+      // }
+    }
+  }
+  augment "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service-plan" {
+    leaf-list local-sites {
+      tailf:hidden full;
+      type string;
+    }
+  }
+  augment "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:te-service-mapping" {
+    container srv6 {
+      presence  "true";
+      tailf:info "SRv6 Options";
+      description "SRv6 Options";
+      when "../../../../l2vpn-ntw:vpn-svc-type = 'vpn-common:evpn-bgp' and not(../../l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb')";
+      must "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../../l2vpn-ntw:ne-id]/lsa-utils:ned-id,'cisco-ios-cli-'))" {
+        error-message "XE devices do not support SRv6.";
+      }
+      leaf locator {
+        tailf:info "SRv6 locator name (1-58 chars) at individual evi service level,
+                    leave it empty if evi or global level locator is used. Special characters are not allowed.";
+        description "SRv6 locator name (1-58 chars) at individual evi service level,
+                     leave it empty if evi or global level locator is used. Special characters are not allowed.";
+        type string {
+          pattern '[0-9a-zA-Z_]*';
+          length "1..58";
+        }
+      }
+    }
+  }
+  augment "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service-plan/l2vpn-ntw:plan/l2vpn-ntw:component" {
+    leaf pe {
+      tailf:hidden full;
+      type string;
+    }
+  }
+  augment "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service-plan/l2vpn-ntw:plan-history/l2vpn-ntw:plan/l2vpn-ntw:component" {
+    leaf pe {
+      tailf:hidden full;
+      type string;
+    }
+  }
+}

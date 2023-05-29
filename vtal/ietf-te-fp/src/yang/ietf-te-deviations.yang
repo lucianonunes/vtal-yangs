@@ -1,0 +1,47 @@
+module ietf-te-deviations {
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-te-deviations";
+  prefix "ietf-te-deviations";
+
+  import ietf-te { prefix te; }
+  
+  description "IETF TE Cisco NSO Deviations";
+
+  revision 2022-06-02 {
+    description
+      "Added: deviation range 1..65535 for te -> tunnels -> tunnel -> p2p-primary-paths -> p2p-primary-path -> explicit-route-objects-always -> route-object-include-exclude -> index";
+  }
+
+  revision 2020-09-04 {
+      description "Initial revision.";
+  }
+
+  deviation "/te:te/te:tunnels/te:tunnel/te:signaling-type" {
+    deviate replace {
+      type enumeration {
+        enum "te-types:path-setup-rsvp";
+      }
+    }
+  }
+
+  deviation "/te:te/te:tunnels/te:tunnel/te:p2p-primary-paths/te:p2p-primary-path/te:optimizations/"
+            +"te:algorithm/te:metric/te:optimization-metric/te:metric-type" {
+    deviate replace {
+      type enumeration {
+        enum "te-types:path-metric-te";
+        enum "te-types:path-metric-igp";
+        enum "te-types:path-metric-delay-minimum";
+        enum "te-types:path-metric-delay-average";
+      }
+    }
+  }
+
+  deviation "/te:te/te:tunnels/te:tunnel/te:p2p-primary-paths/te:p2p-primary-path/"
+            +"te:explicit-route-objects-always/te:route-object-include-exclude/te:index" {
+    deviate replace {
+      type uint32 {
+        range "1..65535";
+      }
+    }
+  }
+}

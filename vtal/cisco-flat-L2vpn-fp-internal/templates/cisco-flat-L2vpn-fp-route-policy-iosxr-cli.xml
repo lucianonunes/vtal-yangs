@@ -1,0 +1,13 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{device}</name>
+      <config>
+        <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <name>{name}</name>
+          <value>{$POLICY_BLOB}</value>
+        </route-policy>
+      </config>
+    </device>
+  </devices>
+</config>

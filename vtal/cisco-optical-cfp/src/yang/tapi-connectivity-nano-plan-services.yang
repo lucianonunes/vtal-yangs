@@ -1,0 +1,78 @@
+module tapi-connectivity-nano-plan-services {
+  yang-version 1.1;
+
+  namespace "http://cisco.com/ns/nso/cfp/tapi-connectivity-nano-plan-services";
+  prefix tapi-connectivity-nano-plan-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import tapi-common {prefix tapi-common; }
+  import tapi-connectivity {prefix tapi-connectivity; }
+
+  revision 2020-12-07 {
+    description "Initial version";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity installed {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline tapi-connectivity-service-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init" {
+        ncs:delete {
+          // remove oper if present.
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "tapi-connectivity-nano-plan-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "tapi-connectivity-nano-plan-services:installed" {
+        ncs:create {
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // TODO: need pre-condition when done with ONC operational data retrieval
+          // mark state as failed in case device transaction is invalidated
+          // this is needed due to CQ, where in device's last-transaction-id is set to INVALIDATED
+          // in case of CQ failures. During redeploy's we do not want the service to go to 'reached'
+          // state unless the device transaction is fixed.
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree tapi-connectivity-service-servicepoint {
+    ncs:plan-outline-ref "tapi-connectivity-nano-plan-services:tapi-connectivity-service-nano-plan";
+    ncs:plan-location "/tapi-common:context/tapi-connectivity:connectivity-context/tapi-connectivity:connectivity-service-plan";
+    ncs:selector {
+      ncs:variable "UUID" {
+        ncs:value-expr "uuid";
+      }
+
+      ncs:variable "CONTROLLER" {
+        ncs:value-expr "controller";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+    }
+  }
+}
+

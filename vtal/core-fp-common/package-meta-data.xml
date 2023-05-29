@@ -1,0 +1,48 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>core-fp-common</name>
+  <package-version>1.30.0</package-version>
+  <description>Core FP common yang models</description>
+  <ncs-min-version>5.3</ncs-min-version>
+  <component>
+    <name>Template Mapper Subscriber</name>
+    <application>
+      <java-class-name>com.cisco.corefpcommon.templateutils.TemplateMapperSub</java-class-name>
+    </application>
+  </component>
+  <component>
+    <name>Core-Fp-Common</name>
+    <application>
+      <java-class-name>com.cisco.corefpcommon.buildutil.BuildData</java-class-name>
+    </application>
+  </component>
+  <component>
+    <name>Provider HA mode validation point</name>
+    <callback>
+      <java-class-name>com.cisco.corefpcommon.validations.HAModeValidator</java-class-name>
+    </callback>
+  </component>
+  <component>
+    <name>global-var-upgrade</name>
+    <upgrade>
+      <java-class-name>com.cisco.corefpcommon.upgrade.GlobalVarUpgrade</java-class-name>
+    </upgrade>
+  </component>
+  <component>
+    <name>Status codes Subscriber</name>
+    <application>
+      <java-class-name>com.cisco.corefpcommon.statuscodes.StatusCodes</java-class-name>
+    </application>
+  </component>
+  <component>
+    <name>Status codes validation and completion</name>
+    <callback>
+      <java-class-name>com.cisco.corefpcommon.statuscodes.StatusCodeValidator</java-class-name>
+    </callback>
+  </component>
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>core_fp_common.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

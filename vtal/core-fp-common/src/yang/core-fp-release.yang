@@ -1,0 +1,134 @@
+module core-fp-release {
+
+    namespace "http://cisco.com/ns/corefp-release";
+    prefix corefp-release;
+    import ietf-yang-types { prefix "ietf-yang-types"; }
+    import tailf-common { prefix tailf; }
+    
+    organization "Cisco Systems";
+    description "Core Fp Revision Template ";
+
+    container core-fp-release {
+        container release {
+            config false;
+            tailf:info "Release data of cfp";
+            tailf:cdb-oper  {
+            tailf:persistent true;
+            }
+            uses corefp-release:core-fp-release-data;
+            uses corefp-release:common-function-pack-data;
+        }
+    }
+
+    grouping install-packages-data {
+        leaf name {
+            type string;
+            description "packages installed by packages.";
+        }
+
+        leaf nso-version {
+            type string;
+            description "packages installed by packages.";
+        }
+        leaf package-version {
+            type string;
+            description "packages installed by packages.";
+        }
+
+        leaf file-name {
+            type string;
+            description "Packages installed file-name.";
+        }
+        leaf-list function-pack-name {
+
+            type string;
+            description "Name of function pack";
+        }
+        leaf ref-count {
+            type string;
+            description "Packages installed file-name.";
+        }
+    }
+
+    grouping common-function-pack-data {
+        container common-packages {
+            list package{
+            key name;
+            uses install-packages-data;
+        }
+    }
+    }
+    grouping core-fp-release-data {
+
+        list function-pack-store {
+            key name;
+            leaf name {
+                type string;
+                description "Name of function pack";
+            }
+            leaf version {
+                type string;
+                description "Name of function pack";
+            }
+            leaf-list depends-on-function {
+
+                type string;
+                description "depends on function pack";
+            }
+            container build {
+                leaf date-time {
+                    type ietf-yang-types:date-and-time;
+                    description "build date and time";
+                }
+
+                leaf number {
+                    type string;
+                    description "build number from Jenkins";
+                }
+                leaf nso-version {
+                    type string;
+                }
+            }
+            container host {
+                leaf user {
+                    type string;
+                    description "The build user used for release";
+                }
+                leaf hostname {
+                    type string;
+                    description "hostname of the build host";
+                }
+                leaf uname {
+                    type string;
+                    description "uname -a output of the build host";
+                }
+                leaf java-version {
+                    type string;
+                    description "java version of the build host";
+                }
+                leaf python-version {
+                    type string;
+                    description "python version of the build host";
+                }
+            }
+
+            container git {
+                leaf revision {
+                    type string;
+                    description "The git revision at build time";
+                }
+                leaf branch {
+                    type string;
+                    description "The git branch used for build";
+                }
+            }
+
+            container fp-installed-packages {
+                list package {
+                    key name;
+                    uses install-packages-data;
+                }
+            }
+        }
+    }
+}

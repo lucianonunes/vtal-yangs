@@ -1,0 +1,62 @@
+module core-fp-plan-notif-generator {
+  namespace "http://com/cisco/core-fp-plan-notif-generator";
+  prefix core-fp-plan-notif-generator;
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-kicker {
+    prefix kicker;
+  }
+
+  revision 2020-02-05 {
+	  description "Initial revision.";
+  }
+
+  list plan-path-for-notification {
+    tailf:info "List of external plan xpath to generate 'service-state-changes'
+                notification for plan deletion.";
+    uses ncs:service-data;
+    ncs:servicepoint "plan-notification-servicepoint";
+    key path;
+    leaf path {
+      tailf:info "Full path for external plan.";
+      type tailf:node-instance-identifier;
+    }
+    leaf service-path {
+      tailf:info "Full path for service.";
+      type tailf:node-instance-identifier;
+      mandatory true;
+    }
+    leaf-list service-key-elements {
+      tailf:info "List of yang key elements for the service.
+                  To be defined in order if composite-key";
+      ordered-by user;
+      type string;
+    }
+  }
+
+  container action {
+    tailf:action generate-plan-notifications {
+      tailf:hidden debug;
+      tailf:actionpoint generate-plan-notifications;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      }
+    }
+    tailf:action generate-zombie-notifications {
+      tailf:hidden debug;
+      tailf:actionpoint generate-zombie-notifications;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      }
+    }
+  }
+}

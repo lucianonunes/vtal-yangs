@@ -1,0 +1,398 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+      <?set DEVICE_NAME={string(pe)}?>
+      <?set SERVICE_NAME={string(../../name)}?>
+      <?if {string-length($SERVICE_NAME)>14 and starts-with($SERVICE_NAME,'L2NM-') and (substring($SERVICE_NAME, (string-length($SERVICE_NAME) - 8))='-internal')}?>
+        <?set SERVICE_NAME={substring($SERVICE_NAME,6,string-length($SERVICE_NAME)-14)}?>
+      <?end?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set PW_CLS={pw-class}?>
+      <?set XC_ENP={xconnect-encapsulation}?>
+      <?set NEIGHBOR=?>
+      <?if {$LOCAL_NODE='true'}?>
+        <?set NEIGHBOR={xconnect-remote-ip}?>
+      <?else?>
+        <?set NEIGHBOR={../local-site/xconnect-local-ip}?>
+      <?end?>
+      <config>
+          <template xmlns="urn:ios">
+            <name>{$PW_CLS}</name>
+            <type>pseudowire</type>
+            <encapsulation>{$XC_ENP}</encapsulation>
+              <signaling>
+                <protocol>none</protocol>
+              </signaling>
+            <preferred-path when="{sr-te/preferred-path/policy or rsvp-te/preferred-path}">
+              <?if {sr-te/preferred-path/policy}?>
+                <segment-routing>
+                  <traffic-eng>
+                    <policy>{sr-te/preferred-path/policy}</policy>
+                  </traffic-eng>
+                </segment-routing>
+              <?else?>
+                <interface>Tunnel{rsvp-te/preferred-path/te-tunnel-id}</interface>
+                <disable-fallback when="{rsvp-te/preferred-path/fallback}"/>
+              <?end?>
+            </preferred-path>
+          </template>
+        <?set LOCAL_LABEL=?>
+        <?set REMOTE_LABEL=?>
+        <?if {$LOCAL_NODE='true'}?>
+          <?set LOCAL_LABEL={mpls-local-label}?>
+          <?set REMOTE_LABEL={mpls-remote-label}?>
+        <?else?>
+          <?set LOCAL_LABEL={../local-site/mpls-remote-label}?>
+          <?set REMOTE_LABEL={../local-site/mpls-local-label}?>
+        <?end?>
+        <interface xmlns="urn:ios">
+          <!-- if neighbor and label are missing we just allow pseudowire with source and encapsulation user
+          can set the neighbor and label in second commit ortherwise is shows as incomplete config on the device. -->
+            <pseudowire>
+              <name>{$PW_IF_ID}</name>
+              <source>
+                <template>
+                  <type>pseudowire</type>
+                  <name>{$PW_CLS}</name>
+                </template>
+              </source>
+              <encapsulation>{$XC_ENP}</encapsulation>
+              <neighbor when="{$NEIGHBOR!=''}">
+                <address>{$NEIGHBOR}</address>
+                <vcid>{../pw-id}</vcid>
+              </neighbor>
+              <control-word when="{control-word='yes'}">include</control-word>
+              <label when="{$LOCAL_LABEL!='' and $REMOTE_LABEL!=''}">
+                <local-pseudowire-label>{$LOCAL_LABEL}</local-pseudowire-label>
+                <remote-pseudowire-label>{$REMOTE_LABEL}</remote-pseudowire-label>
+              </label>
+            </pseudowire>
+          <Ethernet when="{if-type='Ethernet'}">
+            <name>{if-id}</name>
+            <?set IF_ID={if-id}?>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/ios:interface/Ethernet[name=$IF_ID]/description}?>
+            <?switch-context service?>
+            <?expand cli-intf-description-shut?>
+            <service when="{sub-if-id or vlan-id}">
+              <?set IF_SUB_ID=''?>
+              <?if {sub-if-id}?>
+                <?set IF_SUB_ID={sub-if-id}?>
+              <?else?>
+                <?set IF_SUB_ID={vlan-id}?>
+              <?end?>
+              <instance>
+                <id>{$IF_SUB_ID}</id>
+                <?expand cli-intf-instance-eth-rewrite?>
+                <encapsulation>
+                  <dot1q when="{if-encap='dot1q'}">
+                    <id>{$IF_SUB_ID}</id>
+                  </dot1q>
+                </encapsulation>
+              </instance>
+            </service>
+          </Ethernet>
+          <GigabitEthernet when="{if-type='GigabitEthernet'}">
+            <name>{if-id}</name>
+            <?set IF_ID={if-id}?>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/ios:interface/GigabitEthernet[name=$IF_ID]/description}?>
+            <?switch-context service?>
+            <?expand cli-intf-description-shut?> 
+            <mtu when="{mtu!=''}">{mtu}</mtu>
+            <service when="{sub-if-id or vlan-id}">
+              <?set IF_SUB_ID=''?>
+              <?if {sub-if-id}?>
+                <?set IF_SUB_ID={sub-if-id}?>
+              <?else?>
+                <?set IF_SUB_ID={vlan-id}?>
+              <?end?>
+              <instance>
+                <id>{$IF_SUB_ID}</id>
+                <?expand cli-intf-instance-eth-rewrite?> 
+                <encapsulation>
+                  <dot1q when="{if-encap='dot1q'}">
+                    <id>{$IF_SUB_ID}</id>
+                  </dot1q>
+                  <untagged when="{if-encap='untagged'}"/>
+                </encapsulation>
+              </instance>
+            </service>
+          </GigabitEthernet>
+          <TenGigabitEthernet when="{if-type='TenGigE'}">
+            <name>{if-id}</name>
+            <?set IF_ID={if-id}?>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/ios:interface/TenGigabitEthernet[name=$IF_ID]/description}?>
+            <?switch-context service?>
+            <?expand cli-intf-description-shut?> 
+            <mtu when="{mtu!=''}">{mtu}</mtu>
+            <service when="{sub-if-id or vlan-id}">
+              <?set IF_SUB_ID=''?>
+              <?if {sub-if-id}?>
+                <?set IF_SUB_ID={sub-if-id}?>
+              <?else?>
+                <?set IF_SUB_ID={vlan-id}?>
+              <?end?>
+              <instance>
+                <id>{$IF_SUB_ID}</id>
+                <?expand cli-intf-instance-eth-rewrite?> 
+                <encapsulation>
+                  <dot1q when="{if-encap='dot1q'}">
+                    <id>{$IF_SUB_ID}</id>
+                  </dot1q>
+                  <untagged when="{if-encap='untagged'}"/>
+                </encapsulation>
+              </instance>
+            </service>
+          </TenGigabitEthernet>
+          <FortyGigabitEthernet when="{if-type='FortyGigE'}">
+            <name>{if-id}</name>
+            <?set IF_ID={if-id}?>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/ios:interface/FortyGigabitEthernet[name=$IF_ID]/description}?>
+            <?switch-context service?>
+            <?expand cli-intf-description-shut?>
+            <mtu when="{mtu!=''}">{mtu}</mtu>
+            <service when="{sub-if-id or vlan-id}">
+              <?set IF_SUB_ID=''?>
+              <?if {sub-if-id}?>
+                <?set IF_SUB_ID={sub-if-id}?>
+              <?else?>
+                <?set IF_SUB_ID={vlan-id}?>
+              <?end?>
+              <instance>
+                <id>{$IF_SUB_ID}</id>
+                <?expand cli-intf-instance-eth-rewrite?>
+                <encapsulation>
+                  <dot1q when="{if-encap='dot1q'}">
+                    <id>{$IF_SUB_ID}</id>
+                  </dot1q>
+                  <untagged when="{if-encap='untagged'}"/>
+                </encapsulation>
+              </instance>
+            </service>
+          </FortyGigabitEthernet>
+          <HundredGigE when="{if-type='HundredGigE'}">
+            <name>{if-id}</name>
+            <?set IF_ID={if-id}?>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/ios:interface/HundredGigE[name=$IF_ID]/description}?>
+            <?switch-context service?>
+            <?expand cli-intf-description-shut?>
+            <mtu when="{mtu!=''}">{mtu}</mtu>
+            <service when="{sub-if-id or vlan-id}">
+              <?set IF_SUB_ID=''?>
+              <?if {sub-if-id}?>
+                <?set IF_SUB_ID={sub-if-id}?>
+              <?else?>
+                <?set IF_SUB_ID={vlan-id}?>
+              <?end?>
+              <instance>
+                <id>{$IF_SUB_ID}</id>
+                <?expand cli-intf-instance-eth-rewrite?>
+                <encapsulation>
+                  <dot1q when="{if-encap='dot1q'}">
+                    <id>{$IF_SUB_ID}</id>
+                  </dot1q>
+                  <untagged when="{if-encap='untagged'}"/>
+                </encapsulation>
+              </instance>
+            </service>
+          </HundredGigE>
+        </interface>
+        <l2vpn-xconnect xmlns="urn:ios">
+          <l2vpn>
+            <xconnect>
+              <context>
+                <name>{p2p-name}</name>
+                <member>
+                    <interface-list>
+                      <name>pseudowire{$PW_IF_ID}</name>
+                    </interface-list>
+                  <?if {sub-if-id or vlan-id}?>
+                    <?set IF_SUB_ID=''?>
+                    <?if {sub-if-id}?>
+                      <?set IF_SUB_ID={sub-if-id}?>
+                    <?else?>
+                      <?set IF_SUB_ID={vlan-id}?>
+                    <?end?>
+                    <member-list>
+                      <name>{if-type}{if-id}</name>
+                      <service-instance>{$IF_SUB_ID}</service-instance>
+                    </member-list>
+                  <?else?>
+                    <interface-list>
+                      <name>{if-type}{if-id}</name>
+                    </interface-list>
+                  <?end?>
+                </member>
+              </context>
+            </xconnect>
+          </l2vpn>
+        </l2vpn-xconnect>
+        <?if {ethernet-service-oam}?>
+          <?set MD_NAME={ethernet-service-oam/md-name}?>
+          <?set MD_LEVEL={ethernet-service-oam/md-level}?>
+          <ethernet xmlns="urn:ios">
+            <evc>
+              <name>evc_{$SERVICE_NAME}</name>
+            </evc>
+          </ethernet>
+          <ethernet xmlns="urn:ios">
+            <cfm>
+            <ieee/>
+            <global/>
+              <?foreach {ethernet-service-oam/y-1731}?>
+                <?set MESSAGE_PERIOD={message-period}?>
+                <domain>
+                  <name>{$MD_NAME}</name>
+                  <level>{$MD_LEVEL}</level>
+                  <service>
+                    <csi-id>{$SERVICE_NAME}</csi-id>
+                    <evc>evc_{$SERVICE_NAME}</evc>
+                    <direction>down</direction>
+                    <continuity-check>
+                      <interval>{$MESSAGE_PERIOD}</interval>
+                    </continuity-check>
+                  </service>
+                </domain>
+              <?end?>
+            </cfm>
+          </ethernet>
+          <ip xmlns="urn:ios">
+            <sla>
+              <?foreach {ethernet-service-oam/y-1731}?>
+                <?set MEP_ID={mep-id}?>
+                <?set REMOTE_MEP_ID={remote-mep-id}?>
+                <?foreach {y-1731-profile}?>
+                  <?if {type='delay'}?>
+                    <?foreach {delay-params/statistic}?>
+                      <ip-sla-list>
+                        <id>{statistic-id}</id>
+                        <ethernet>
+                          <y1731>
+                            <?if {type='delay-two-way'}?>
+                              <?if {../version='1'}?>
+                                <delay>
+                                  <name>DMMv1</name>
+                                  <?expand cli-ip-eth-delay-source mpid={$REMOTE_MEP_ID}?>
+                                </delay>
+                              <?else?>
+                                <delay>
+                                  <name>DMM</name>
+                                  <?expand cli-ip-eth-delay-source mpid={$REMOTE_MEP_ID}?>
+                                </delay>
+                              <?end?>
+                            <?end?>
+                            <?if {type='delay-sd'}?>
+                              <delay>
+                                <name>1DM</name>
+                                <?expand cli-ip-eth-delay-source mpid={$REMOTE_MEP_ID}?>
+                              </delay>
+                            <?end?>
+                            <?if {type='delay-ds'}?>
+                              <delay-receive>
+                                <delay>
+                                  <receive>
+                                    <name>1DM</name>
+                                    <?expand cli-ip-eth-delay mpid={$MEP_ID}?>
+                                  </receive>
+                                </delay>
+                              </delay-receive>
+                            <?end?>
+                          </y1731>
+                        </ethernet>
+                        <history>
+                          <interval>3</interval>
+                        </history>
+                        <aggregate>
+                          <interval>5</interval>
+                        </aggregate>
+                        <distribution>
+                          <?if {../delay-type='delay' or ../delay-type='both'}?>
+                            <delay>
+                              <?expand cli-ip-distribution-delay numOfBins=2  boundary=5000?>
+                            </delay>
+                          <?end?>
+                          <?if {../delay-type='delay-variation' or ../delay-type='both'}?>
+                            <delay-variation>
+                              <?expand cli-ip-distribution-delay numOfBins=2  boundary=4000?>
+                            </delay-variation>
+                          <?end?>
+                        </distribution>
+                      </ip-sla-list>
+                      <schedule>
+                        <operation-number>{statistic-id}</operation-number>
+                        <?if {../../schedule/duration='forever'}?>
+                          <life>forever</life>
+                        <?else?>
+                          <!-- convert {schedule/duration} given in minutes to {life} given in seconds.-->
+                          <life>{../../schedule/duration * 60}</life>
+                        <?end?>
+                        <start-time>
+                          <now/>
+                        </start-time>
+                      </schedule>
+                    <?end?>
+                  <?end?>
+                  <?if {type='loss' or type='synthetic-loss'}?>
+                    <?foreach {loss-params/statistic}?>
+                      <ip-sla-list>
+                        <id>{statistic-id}</id>
+                        <ethernet>
+                          <y1731>
+                            <?if {../../type='synthetic-loss'}?>
+                              <loss>
+                                <name>SLM</name>
+                                <?expand cli-ip-eth-loss?>
+                              </loss>
+                            <?else?>
+                              <loss>
+                                <name>LMM</name>
+                                <?expand cli-ip-eth-loss?>
+                              </loss>
+                            <?end?>
+                          </y1731>
+                        </ethernet>
+                        <history>
+                          <interval>3</interval>
+                        </history>
+                        <aggregate>
+                          <interval>5</interval>
+                        </aggregate>
+                      </ip-sla-list>
+                      <schedule>
+                        <operation-number>{statistic-id}</operation-number>
+                        <?if {../../schedule/duration='forever'}?>
+                          <life>forever</life>
+                        <?else?>
+                          <!-- convert {schedule/duration} given in minutes to {life} given in seconds.-->
+                          <life>{../../schedule/duration * 60}</life>
+                        <?end?>
+                        <start-time>
+                          <now/>
+                        </start-time>
+                      </schedule>
+                    <?end?>
+                  <?end?>
+                <?end?>
+              <?end?>
+            </sla>
+          </ip>
+        <?end?>
+      </config>
+    </device>
+  </devices>
+</config-template>

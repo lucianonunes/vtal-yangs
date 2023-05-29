@@ -1,0 +1,25 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{onc}</name>
+      <netconf-notifications>
+        <subscription>
+          <name>{onc}-nc-sub</name>
+          <stream>{$STREAM}</stream>
+          <xpath>contains(netconf-config-change/edit/target, 'connectivity-service')</xpath>
+          <local-user>{$USER}</local-user>
+          <reconnect-interval>{/reconnect-interval}</reconnect-interval>
+          <!--<store-in-cdb>true</store-in-cdb>-->
+        </subscription>
+      </netconf-notifications>
+    </device>
+  </devices>
+  <kickers xmlns="http://tail-f.com/ns/kicker">
+    <notification-kicker xmlns="http://tail-f.com/ns/ncs-kicker">
+      <id>{onc}-notif-kicker</id>
+      <selector-expr>$SUBSCRIPTION_NAME = '{onc}-nc-sub'</selector-expr>
+      <kick-node xmlns:tapi-connectivity="urn:onf:otcc:yang:tapi-connectivity" xmlns:tapi-common="urn:onf:otcc:yang:tapi-common">/tapi-common:context/tapi-connectivity:connectivity-context</kick-node>
+      <action-name>handle-netconf-notifications</action-name>
+    </notification-kicker>
+  </kickers>
+</config-template>

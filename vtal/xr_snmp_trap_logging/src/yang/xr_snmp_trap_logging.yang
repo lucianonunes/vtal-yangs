@@ -1,0 +1,62 @@
+module xr_snmp_trap_logging {
+  namespace "http://com/example/xr_snmp_trap_logging";
+  prefix xr_snmp_trap_logging;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  list xr_snmp_trap_logging {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "xr_snmp_trap_logging";
+
+    leaf name {
+      tailf:info "Service name for configuring syslog and traps";
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf-list device {
+      type leafref {
+        tailf:info "Pick required device(s)";
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    // replace with your own stuff here
+     leaf time_zone {
+      tailf:info "Enter Time Zone (ex: CST)";
+      type string;
+    }
+
+     leaf time_zone_region {
+      tailf:info "Enter Time Zone Region (ex: America/Chicago)";
+      type string;
+    }
+
+     leaf epnm_ip_address {
+      tailf:info "Enter EPNM Ipv4 Address as SNMP/Logging Host";
+      type inet:ipv4-address;
+    }
+
+     leaf cdg_ip_address {
+      tailf:info "Enter Crosswork CDG Ipv4 Address as SNMP/Logging Host";
+      type inet:ipv4-address;
+    }
+
+     leaf ntp_server_host {
+      tailf:info "Enter NTP Server IP/Host";
+      type string;
+    }
+
+  }
+}

@@ -1,0 +1,23 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <tm-tc tags="replace" xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tm-tc-fp-internal">
+    <name>{$SERVICE_NAME}</name>
+    <node-name>{$NODE}</node-name>
+    <?foreach {custom-template}?>
+      <custom-template>
+          <name>{name}</name>
+          <?copy-tree {/custom-template}?>
+      </custom-template>
+    <?end?>
+    <traffic-collector when="{traffic-collector}">
+      <?copy-tree {/traffic-collector}?>
+    </traffic-collector>
+    <node>
+      <name>{$NODE}</name>
+      <?copy-tree {node[name=$NODE]}?>
+      <telemetry-model-driven when="{telemetry-model-driven}">
+        <?copy-tree {/telemetry-model-driven}?>
+      </telemetry-model-driven>
+    </node>
+    <redeploy-flag>{redeploy-flag}</redeploy-flag>
+  </tm-tc>
+</config>

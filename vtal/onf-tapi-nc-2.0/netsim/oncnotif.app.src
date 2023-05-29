@@ -1,0 +1,8 @@
+{application, oncnotif, [ {description,  "ONC simulator"}
+                        , {vsn,          "%VSN%"}
+                        , {modules,      [%MODULES%]}
+                        , {mod,          {oncnotif_app, []}}
+                        , {registered,   []}
+                        , {applications, [stdlib, kernel, crypto, econfd]}
+                        ]}.
+

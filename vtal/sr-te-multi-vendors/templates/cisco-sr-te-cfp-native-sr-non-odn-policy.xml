@@ -1,0 +1,527 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+   <device>
+      <name>{$HEAD_END}</name>
+      <config>
+        <sr xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-segment-routing-ms-cfg">
+          <enable />
+          <traffic-engineering xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-xtc-agent-cfg">
+            <policies>
+              <?set REAL_NAME=srte_c_{string(/color)}_ep_{$ENDPOINT}?>
+              <?set REAL_NAME_PREFIX='-discovered-'?>
+              <?if {contains(string(name), $REAL_NAME_PREFIX)}?>
+                <?set REAL_NAME={substring-after(string(name), $REAL_NAME_PREFIX)}?>
+              <?end?>
+              <policy tags="merge">
+                <policy-name>{$REAL_NAME}</policy-name>
+                <binding-sid when="{/binding-sid}">
+                  <binding-sid-type>mpls-label-specified</binding-sid-type>
+                  <mpls-label>{binding-sid}</mpls-label>
+                </binding-sid>
+                <policy-color-endpoint>
+                  <color>{/color}</color>
+                  <end-point-type>end-point-type-{$IP_TYPE}</end-point-type>
+                  <end-point-address>{$ENDPOINT}</end-point-address>
+                </policy-color-endpoint>
+                <auto-route when="{auto-route}">
+                  <auto-route-metric when="{auto-route/auto-route-metric}">
+                    <?if {auto-route/auto-route-metric/metric-constant-value}?>
+                      <autoroute-metric-type>constant</autoroute-metric-type>
+                      <metric-constant-value>
+                        {auto-route/auto-route-metric/metric-constant-value}
+                      </metric-constant-value>
+                    <?end?>
+                    <?if {auto-route/auto-route-metric/metric-relative-value}?>
+                      <autoroute-metric-type>relative</autoroute-metric-type>
+                      <metric-relative-value>
+                        {auto-route/auto-route-metric/metric-relative-value}
+                      </metric-relative-value>
+                    <?end?>
+                  </auto-route-metric>
+                  <?if {auto-route/include-prefixes}?>
+                    <include-prefixes when="{count(auto-route/include-prefixes/include-prefix)>0}">
+                      <?foreach {auto-route/include-prefixes/include-prefix}?>
+                        <include-prefix>
+                          <af-type>af-type-ipv4</af-type>
+                          <af-type-ipv4-or-af-type-ipv6>
+                            <prefix-address>{substring-before(string(prefix-address), '/')}</prefix-address>
+                            <prefix-length>{substring-after(string(prefix-address), '/')}</prefix-length>
+                          </af-type-ipv4-or-af-type-ipv6>
+                        </include-prefix>
+                      <?end?>
+                    </include-prefixes>
+                  <?else?>
+                    <include-prefixes>
+                      <include-prefix>
+                        <af-type>af-type-all</af-type>
+                        <af-type-all/>
+                      </include-prefix>
+                    </include-prefixes>
+                  <?end?>
+                  <force-sr-include when="{auto-route/force-sr-include}"/>
+                  <forward-class>{auto-route/forward-class}</forward-class>
+                </auto-route>
+                <candidate-paths>
+                  <preferences>
+                    <preference foreach="{/path}">
+                      <path-index>{preference}</path-index>
+                      <?if-ned-id cisco-iosxr-nc-7.315:cisco-iosxr-nc-7.315
+                                  cisco-iosxr-nc-7.3:cisco-iosxr-nc-7.3
+                                  cisco-iosxr-nc-7.5:cisco-iosxr-nc-7.5
+                                  cisco-iosxr-nc-7.6:cisco-iosxr-nc-7.6
+                                  cisco-iosxr-nc-7.7:cisco-iosxr-nc-7.7?>
+                        <path-infos>
+                          <?foreach {explicit/sid-list}?>
+                            <?set REAL_NAME={name}?>
+                            <?set REAL_NAME_PREFIX='-discovered-'?>
+                            <?if {contains(string(name), $REAL_NAME_PREFIX)}?>
+                              <?set REAL_NAME={substring-after(string(name), $REAL_NAME_PREFIX)}?>
+                            <?end?>
+                            <path-info>
+                              <type>explicit</type>
+                              <hop-type>mpls</hop-type> <!-- TODO: srv6 -->
+                              <segment-list-name>{$REAL_NAME}</segment-list-name>
+                              <weight when="{weight}">{weight}</weight>
+                            </path-info>
+                          <?end?>
+                          <path-info when="{dynamic}">
+                            <type>dynamic</type>
+                            <hop-type>mpls</hop-type> <!-- TODO: srv6 -->
+                            <segment-list-name>dynamic</segment-list-name>
+                            <pcep when="{dynamic/pce}">
+                            </pcep>
+                            <metric>
+                              <metric-type when="{dynamic/metric-type}">{dynamic/metric-type}</metric-type>
+                              <sid-limit>{dynamic/constraints/sid-limit}</sid-limit>
+                              <?if {dynamic/metric-margin/absolute}?>
+                                <metric-margin>
+                                  <value-type>absolute</value-type>
+                                  <absolute-value>{dynamic/metric-margin/absolute}</absolute-value>
+                                </metric-margin>
+                              <?end?>
+                              <?if {dynamic/metric-margin/relative}?>
+                                <metric-margin>
+                                  <value-type>relative</value-type>
+                                  <relative-value>{dynamic/metric-margin/relative}</relative-value>
+                                </metric-margin>
+                              <?end?>
+                            </metric>
+                          </path-info>
+                        </path-infos>
+                      <?elif-ned-id cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4?>
+                        <path-infos>
+                          <?foreach {explicit/sid-list}?>
+                            <?set REAL_NAME={name}?>
+                            <?set REAL_NAME_PREFIX='-discovered-'?>
+                            <?if {contains(string(name), $REAL_NAME_PREFIX)}?>
+                              <?set REAL_NAME={substring-after(string(name), $REAL_NAME_PREFIX)}?>
+                            <?end?>
+                            <path-info>
+                              <type>explicit</type>
+                              <segment-list-name>{$REAL_NAME}</segment-list-name>
+                              <weight when="{weight}">{weight}</weight>
+                            </path-info>
+                          <?end?>
+                          <path-info when="{dynamic}">
+                            <type>dynamic</type>
+                            <segment-list-name>dynamic</segment-list-name>
+                            <pcep when="{dynamic/pce}">
+                            </pcep>
+                            <metric>
+                              <metric-type when="{dynamic/metric-type}">{dynamic/metric-type}</metric-type>
+                              <sid-limit>{dynamic/constraints/sid-limit}</sid-limit>
+                              <?if {dynamic/metric-margin/absolute}?>
+                                <metric-margin>
+                                  <value-type>absolute</value-type>
+                                  <absolute-value>{dynamic/metric-margin/absolute}</absolute-value>
+                                </metric-margin>
+                              <?end?>
+                              <?if {dynamic/metric-margin/relative}?>
+                                <metric-margin>
+                                  <value-type>relative</value-type>
+                                  <relative-value>{dynamic/metric-margin/relative}</relative-value>
+                                </metric-margin>
+                              <?end?>
+                            </metric>
+                          </path-info>
+                        </path-infos>
+                      <?end?>
+                      <constraints when="{dynamic/constraints}">
+                        <affinity-rules when="{dynamic/constraints/affinity}" foreach="{dynamic/constraints/affinity/rule}" >
+                          <?set ACTION=affinity-{action}?>
+                          <?foreach {color}?>
+                            <?expand traffic-eng-dynamic-contraints-affinity-rule?>
+                          <?end?>
+                        </affinity-rules>
+                        <segment-rules when="{dynamic/constraints/segments}">
+                          <sid-algorithm>{dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                        </segment-rules>
+                        <disjoint-path when="{dynamic/constraints/disjoint-path}">
+                          <group-id>{dynamic/constraints/disjoint-path/group-id}</group-id>
+                          <disjointness-type>{dynamic/constraints/disjoint-path/type}</disjointness-type>
+                          <sub-id>{dynamic/constraints/disjoint-path/sub-id}</sub-id>
+                        </disjoint-path>
+                      </constraints>
+                      <constraints when="{explicit/constraints}">
+                        <affinity-rules when="{explicit/constraints/affinity}" foreach="{explicit/constraints/affinity/rule}" >
+                          <?set ACTION=affinity-{action}?>
+                          <?foreach {color}?>
+                            <?expand traffic-eng-dynamic-contraints-affinity-rule?>
+                          <?end?>
+                        </affinity-rules>
+                        <segment-rules when="{explicit/constraints/segments}">
+                          <sid-algorithm>{explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                        </segment-rules>
+                        <disjoint-path when="{explicit/constraints/disjoint-path}">
+                          <group-id>{explicit/constraints/disjoint-path/group-id}</group-id>
+                          <disjointness-type>{explicit/constraints/disjoint-path/type}</disjointness-type>
+                          <sub-id>{explicit/constraints/disjoint-path/sub-id}</sub-id>
+                        </disjoint-path>
+                      </constraints>
+                    </preference>
+                  </preferences>
+                </candidate-paths>
+                <bandwidth when="{/bandwidth}">{bandwidth}</bandwidth>
+                <srv6 when="{/srv6}">
+                  <locator when="{/srv6/locator}">
+                    <locator-name>{/srv6/locator/locator-name}</locator-name>
+                    <behavior>{/srv6/locator/behavior}</behavior>
+                    <binding-sid-type>{/srv6/locator/binding-sid-type}</binding-sid-type>
+                 </locator>
+                </srv6>
+                <?if {source-address}?>
+                  <?if {contains(string(source-address), '.')}?>
+                    <?expand traffic-eng-source-addr ipType='end-point-type-ipv4' address={source-address}?>
+                  <?else?>
+                    <?expand traffic-eng-source-addr ipType='end-point-type-ipv6' address={source-address}?>
+                  <?end?>
+                <?end?>
+                <?if-ned-id cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4?>
+                  <!-- TODO: using macro to reduce code -->
+                  <!-- TODO: Circuit Style, ETA: TSDN 5.0-->
+                  <!-- ?if {circuit-style} ?>
+                  <protection/>
+                    <candidate-paths>
+                      <preferences>
+                        <preference when="{circuit-style/working-path}">
+                          <path-index>100</path-index>
+                          // TBD: Not in 7.4.2.22I protection
+                          <path-infos>
+                            <?if {circuit-style/working-path/explicit} ?>
+                              <?set FNAME={circuit-style/working-path/explicit/forward-sid-list-name}?>
+                              <?set RNAME={circuit-style/working-path/explicit/reverse-sid-list-name}?>
+                              <?set REAL_FNAME={$FNAME}?>
+                              <?set REAL_FNAME_PREFIX='-discovered-'?>
+                              <?if {contains(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                                <?set REAL_FNAME={substring-after(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                              <?end?>
+                              <?set REAL_RNAME={$RNAME}?>
+                              <?set REAL_RNAME_PREFIX='-discovered-'?>
+                              <?if {contains(string($FNAME), $REAL_RNAME_PREFIX)}?>
+                                <?set REAL_RNAME={substring-after(string($RNAME), $REAL_RNAME_PREFIX)}?>
+                              <?end?>
+                              <path-info>
+                                <type>explicit</type>
+                                <segment-list-name>{$REAL_FNAME}</segment-list-name>
+                                <reverse-path-segment-list-name>{$REAL_RNAME}</reverse-path-segment-list-name>
+                              </path-info>
+                            <?end?>
+                            <?if {circuit-style/working-path/dynamic} ?>
+                              <path-info>
+                                <type>dynamic</type>
+                                <segment-list-name>dynamic</segment-list-name>
+                                <pcep when="{circuit-style/working-path/dynamic/pce}">
+                                </pcep>
+                                <metric>
+                                  <metric-type when="{circuit-style/working-path/dynamic/metric-type}">{circuit-style/working-path/dynamic/metric-type}</metric-type>
+                                  <sid-limit>{circuit-style/working-path/dynamic/constraints/sid-limit}</sid-limit>
+                                  <?if {circuit-style/working-path/dynamic/metric-margin/absolute}?>
+                                    <metric-margin>
+                                      <value-type>absolute</value-type>
+                                      <absolute-value>{circuit-style/working-path/dynamic/metric-margin/absolute}</absolute-value>
+                                    </metric-margin>
+                                  <?end?>
+                                  <?if {circuit-style/working-path/dynamic/metric-margin/relative}?>
+                                    <metric-margin>
+                                      <value-type>relative</value-type>
+                                      <relative-value>{circuit-style/working-path/dynamic/metric-margin/relative}</relative-value>
+                                    </metric-margin>
+                                  <?end?>
+                                </metric>
+                              </path-info>
+                            <?end?>
+                          </path-infos>
+                          <constraints when="{circuit-style/working-path/explicit/constraints}">
+                            <affinity-rules when="{circuit-style/working-path/explicit/constraints/affinity}" foreach="{circuit-style/working-path/explicit/constraints/affinity/rule}" >
+                              <?set ACTION=affinity-{action}?>
+                              <?foreach {color}?>
+                                <affinity-rule>
+                                  <rule>{$ACTION}</rule>
+                                  <affinity-name>
+                                    <affinity-name>{current()}</affinity-name>
+                                  </affinity-name>
+                                </affinity-rule>
+                              <?end?>
+                            </affinity-rules>
+                            <segment-rules when="{circuit-style/working-path/explicit/constraints/segments}">
+                              <sid-algorithm>{circuit-style/working-path/explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                            </segment-rules>
+                            <disjoint-path when="{circuit-style/working-path/explicit/constraints/disjoint-path}">
+                              <group-id>{circuit-style/working-path/explicit/constraints/disjoint-path/group-id}</group-id>
+                              <disjointness-type>{circuit-style/working-path/explicit/constraints/disjoint-path/type}</disjointness-type>
+                              <sub-id>{circuit-style/working-path/explicit/constraints/disjoint-path/sub-id}</sub-id>
+                            </disjoint-path>
+                          </constraints>
+                          <constraints when="{circuit-style/working-path/dynamic/constraints}">
+                            <affinity-rules when="{circuit-style/working-path/dynamic/constraints/affinity}" foreach="{circuit-style/working-path/dynamic/constraints/affinity/rule}" >
+                              <?set ACTION=affinity-{action}?>
+                              <?foreach {color}?>
+                                <affinity-rule>
+                                  <rule>{$ACTION}</rule>
+                                  <affinity-name>
+                                    <affinity-name>{current()}</affinity-name>
+                                  </affinity-name>
+                                </affinity-rule>
+                              <?end?>
+                            </affinity-rules>
+                            <segment-rules when="{circuit-style/working-path/dynamic/constraints/segments}">
+                              <sid-algorithm>{circuit-style/working-path/dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                            </segment-rules>
+                            <disjoint-path when="{circuit-style/working-path/dynamic/constraints/disjoint-path}">
+                              <group-id>{circuit-style/working-path/dynamic/constraints/disjoint-path/group-id}</group-id>
+                              <disjointness-type>{circuit-style/working-path/dynamic/constraints/disjoint-path/type}</disjointness-type>
+                              <sub-id>{circuit-style/working-path/dynamic/constraints/disjoint-path/sub-id}</sub-id>
+                            </disjoint-path>
+                          </constraints>
+                        </preference>
+                        <preference when="{circuit-style/protect-path}">
+                          <path-index>50</path-index>
+                            <?if {circuit-style/protect-path/revertive = 'true'} ?>
+                              <lock>
+                                <?if {circuit-style/protect-path/wait-to-revert-timer} ?>
+                                  <duration>{circuit-style/protect-path/wait-to-revert-timer}</duration>
+                                <?end?>
+                              </lock>
+                            <?else?>
+                              <lock/>
+                            <?end?>
+                          <path-infos>
+                            <?if {circuit-style/protect-path/explicit} ?>
+                              <?set FNAME={circuit-style/protect-path/explicit/forward-sid-list-name}?>
+                              <?set RNAME={circuit-style/protect-path/explicit/reverse-sid-list-name}?>
+                              <?set REAL_FNAME={$FNAME}?>
+                              <?set REAL_FNAME_PREFIX='-discovered-'?>
+                              <?if {contains(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                                <?set REAL_FNAME={substring-after(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                              <?end?>
+                              <?set REAL_RNAME={$RNAME}?>
+                              <?set REAL_RNAME_PREFIX='-discovered-'?>
+                              <?if {contains(string($FNAME), $REAL_RNAME_PREFIX)}?>
+                                <?set REAL_RNAME={substring-after(string($RNAME), $REAL_RNAME_PREFIX)}?>
+                              <?end?>
+                              <path-info>
+                                <type>explicit</type>
+                                <segment-list-name>{$REAL_FNAME}</segment-list-name>
+                                <reverse-path-segment-list-name>{$REAL_RNAME}</reverse-path-segment-list-name>
+                              </path-info>
+                            <?end?>
+                            <?if {circuit-style/protect-path/dynamic} ?>
+                              <path-info>
+                                <type>dynamic</type>
+                                <segment-list-name>dynamic</segment-list-name>
+                                <pcep when="{circuit-style/protect-path/dynamic/pce}">
+                                </pcep>
+                                <metric>
+                                  <metric-type when="{circuit-style/protect-path/dynamic/metric-type}">{circuit-style/protect-path/dynamic/metric-type}</metric-type>
+                                  <sid-limit>{circuit-style/protect-path/dynamic/constraints/sid-limit}</sid-limit>
+                                  <?if {circuit-style/protect-path/dynamic/metric-margin/absolute}?>
+                                    <metric-margin>
+                                      <value-type>absolute</value-type>
+                                      <absolute-value>{circuit-style/protect-path/dynamic/metric-margin/absolute}</absolute-value>
+                                    </metric-margin>
+                                  <?end?>
+                                  <?if {circuit-style/protect-path/dynamic/metric-margin/relative}?>
+                                    <metric-margin>
+                                      <value-type>relative</value-type>
+                                      <relative-value>{circuit-style/protect-path/dynamic/metric-margin/relative}</relative-value>
+                                    </metric-margin>
+                                  <?end?>
+                                </metric>
+                              </path-info>
+                            <?end?>
+                          </path-infos>
+                          <constraints when="{circuit-style/protect-path/explicit/constraints}">
+                            <affinity-rules when="{circuit-style/protect-path/explicit/constraints/affinity}" foreach="{circuit-style/protect-path/explicit/constraints/affinity/rule}" >
+                              <?set ACTION=affinity-{action}?>
+                              <?foreach {color}?>
+                                <affinity-rule>
+                                  <rule>{$ACTION}</rule>
+                                  <affinity-name>
+                                    <affinity-name>{current()}</affinity-name>
+                                  </affinity-name>
+                                </affinity-rule>
+                              <?end?>
+                            </affinity-rules>
+                            <segment-rules when="{circuit-style/protect-path/explicit/constraints/segments}">
+                              <sid-algorithm>{circuit-style/protect-path/explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                            </segment-rules>
+                            <disjoint-path when="{circuit-style/protect-path/explicit/constraints/disjoint-path}">
+                              <group-id>{circuit-style/protect-path/explicit/constraints/disjoint-path/group-id}</group-id>
+                              <disjointness-type>{circuit-style/protect-path/explicit/constraints/disjoint-path/type}</disjointness-type>
+                              <sub-id>{circuit-style/protect-path/explicit/constraints/disjoint-path/sub-id}</sub-id>
+                            </disjoint-path>
+                          </constraints>
+                          <constraints when="{circuit-style/protect-path/dynamic/constraints}">
+                            <affinity-rules when="{circuit-style/protect-path/dynamic/constraints/affinity}" foreach="{circuit-style/protect-path/dynamic/constraints/affinity/rule}" >
+                              <?set ACTION=affinity-{action}?>
+                              <?foreach {color}?>
+                                <affinity-rule>
+                                  <rule>{$ACTION}</rule>
+                                  <affinity-name>
+                                    <affinity-name>{current()}</affinity-name>
+                                  </affinity-name>
+                                </affinity-rule>
+                              <?end?>
+                            </affinity-rules>
+                            <segment-rules when="{circuit-style/protect-path/dynamic/constraints/segments}">
+                              <sid-algorithm>{circuit-style/protect-path/dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                            </segment-rules>
+                            <disjoint-path when="{circuit-style/protect-path/dynamic/constraints/disjoint-path}">
+                              <group-id>{circuit-style/protect-path/dynamic/constraints/disjoint-path/group-id}</group-id>
+                              <disjointness-type>{circuit-style/protect-path/dynamic/constraints/disjoint-path/type}</disjointness-type>
+                              <sub-id>{circuit-style/protect-path/dynamic/constraints/disjoint-path/sub-id}</sub-id>
+                            </disjoint-path>
+                          </constraints>
+                        </preference>
+                        <preference when="{circuit-style/restore-path}">
+                          <path-index>10</path-index>
+                          <path-infos>
+                            <?if {circuit-style/restore-path/explicit} ?>
+                              <?set FNAME={circuit-style/restore-path/explicit/forward-sid-list-name}?>
+                              <?set RNAME={circuit-style/restore-path/explicit/reverse-sid-list-name}?>
+                              <?set REAL_FNAME={$FNAME}?>
+                              <?set REAL_FNAME_PREFIX='-discovered-'?>
+                              <?if {contains(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                                <?set REAL_FNAME={substring-after(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                              <?end?>
+                              <?set REAL_RNAME={$RNAME}?>
+                              <?set REAL_RNAME_PREFIX='-discovered-'?>
+                              <?if {contains(string($FNAME), $REAL_RNAME_PREFIX)}?>
+                                <?set REAL_RNAME={substring-after(string($RNAME), $REAL_RNAME_PREFIX)}?>
+                              <?end?>
+                              <path-info>
+                                <type>explicit</type>
+                                <segment-list-name>{$REAL_FNAME}</segment-list-name>
+                                <reverse-path-segment-list-name>{$REAL_RNAME}</reverse-path-segment-list-name>
+                              </path-info>
+                            <?end?>
+                            <?if {circuit-style/restore-path/dynamic} ?>
+                              <path-info>
+                                <type>dynamic</type>
+                                <segment-list-name>dynamic</segment-list-name>
+                                <pcep when="{circuit-style/restore-path/dynamic/pce}">
+                                </pcep>
+                                <metric>
+                                  <metric-type when="{circuit-style/restore-path/dynamic/metric-type}">{circuit-style/restore-path/dynamic/metric-type}</metric-type>
+                                  <sid-limit>{circuit-style/restore-path/dynamic/constraints/sid-limit}</sid-limit>
+                                  <?if {circuit-style/restore-path/dynamic/metric-margin/absolute}?>
+                                    <metric-margin>
+                                      <value-type>absolute</value-type>
+                                      <absolute-value>{circuit-style/restore-path/dynamic/metric-margin/absolute}</absolute-value>
+                                    </metric-margin>
+                                  <?end?>
+                                  <?if {circuit-style/restore-path/dynamic/metric-margin/relative}?>
+                                    <metric-margin>
+                                      <value-type>relative</value-type>
+                                      <relative-value>{circuit-style/restore-path/dynamic/metric-margin/relative}</relative-value>
+                                    </metric-margin>
+                                  <?end?>
+                                </metric>
+                              </path-info>
+                            <?end?>
+                          </path-infos>
+                          <constraints when="{circuit-style/restore-path/explicit/constraints}">
+                            <affinity-rules when="{circuit-style/restore-path/explicit/constraints/affinity}" foreach="{circuit-style/restore-path/explicit/constraints/affinity/rule}" >
+                              <?set ACTION=affinity-{action}?>
+                              <?foreach {color}?>
+                                <affinity-rule>
+                                  <rule>{$ACTION}</rule>
+                                  <affinity-name>
+                                    <affinity-name>{current()}</affinity-name>
+                                  </affinity-name>
+                                </affinity-rule>
+                              <?end?>
+                            </affinity-rules>
+                            <segment-rules when="{circuit-style/restore-path/explicit/constraints/segments}">
+                              <sid-algorithm>{circuit-style/restore-path/explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                            </segment-rules>
+                            <disjoint-path when="{circuit-style/restore-path/explicit/constraints/disjoint-path}">
+                              <group-id>{circuit-style/restore-path/explicit/constraints/disjoint-path/group-id}</group-id>
+                              <disjointness-type>{circuit-style/restore-path/explicit/constraints/disjoint-path/type}</disjointness-type>
+                              <sub-id>{circuit-style/restore-path/explicit/constraints/disjoint-path/sub-id}</sub-id>
+                            </disjoint-path>
+                          </constraints>
+                          <constraints when="{circuit-style/restore-path/dynamic/constraints}">
+                            <affinity-rules when="{circuit-style/restore-path/dynamic/constraints/affinity}" foreach="{circuit-style/restore-path/dynamic/constraints/affinity/rule}" >
+                              <?set ACTION=affinity-{action}?>
+                              <?foreach {color}?>
+                                <affinity-rule>
+                                  <rule>{$ACTION}</rule>
+                                  <affinity-name>
+                                    <affinity-name>{current()}</affinity-name>
+                                  </affinity-name>
+                                </affinity-rule>
+                              <?end?>
+                            </affinity-rules>
+                            <segment-rules when="{circuit-style/restore-path/dynamic/constraints/segments}">
+                              <sid-algorithm>{circuit-style/restore-path/dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                            </segment-rules>
+                            <disjoint-path when="{circuit-style/restore-path/dynamic/constraints/disjoint-path}">
+                              <group-id>{circuit-style/restore-path/dynamic/constraints/disjoint-path/group-id}</group-id>
+                              <disjointness-type>{circuit-style/restore-path/dynamic/constraints/disjoint-path/type}</disjointness-type>
+                              <sub-id>{circuit-style/restore-path/dynamic/constraints/disjoint-path/sub-id}</sub-id>
+                            </disjoint-path>
+                          </constraints>
+                        </preference>
+                      </preferences>
+                    </candidate-paths>
+                    <?if {circuit-style/steering/drop-traffic-on-invalid-path = "true"} ?>
+                      <steering>
+                        <invalidation-drop/>
+                      </steering>
+                    <?end?>
+                    <performance-measurement when="{circuit-style/protection}">
+                      <enable/>
+                      <delay-measurement when="{circuit-style/protection/delay-measurement}">
+                        <delay-profile>
+                          <pm-profile-name>{circuit-style/protection/delay-measurement/active-profile}</pm-profile-name>
+                        </delay-profile>
+                        <?if {circuit-style/protection/delay-measurement/backup-profile != "default"}?>
+                            // Not in 7.4.2.22I standby
+                            //  <pm-profile-name>{circuit-style/protection/delay-measurement/backup-profile}</pm-profile-name>
+                          <?end?>
+                      </delay-measurement>
+                      <pm-liveness-detection when="{circuit-style/protection/liveness-detection}">
+                        <liveness-profile>
+                          <?if {circuit-style/protection/liveness-detection/active-profile != "default"}?>
+                            <pm-profile-name>{circuit-style/protection/liveness-detection/active-profile}</pm-profile-name>
+                          <?end?>
+                          <?if {circuit-style/protection/liveness-detection/backup-profile != "default"}?>
+                            <backup>
+                              <pm-profile-name>{circuit-style/protection/liveness-detection/backup-profile}</pm-profile-name>
+                            </backup>
+                          <?end?>
+                        </liveness-profile>
+                        <pm-liveness-invalidation-action>invalid-ation-action-down</pm-liveness-invalidation-action>
+                      </pm-liveness-detection>
+                    </performance-measurement>
+                  <?end?-->
+                <?end?>
+              </policy>
+            </policies>
+          </traffic-engineering>
+        </sr>
+      </config>
+    </device>
+  </devices>
+</config-template>

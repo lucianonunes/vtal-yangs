@@ -1,0 +1,1056 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+      <?set DEVICE_NAME={string(access-pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set GLOBAL_RD_ENABLED='false'?>
+      <?save-context service?>
+      <?set-root-node {/cisco-flat-L3vpn-fp-internal:cfp-configurations}?>
+      <?if {/global-rd-enabled}?>
+        <?set GLOBAL_RD_ENABLED='true'?>
+      <?end?>
+      <?set-root-node {/devices}?>
+      <?set PLATFORM = {/device[name=$DEVICE_NAME]/platform/version}?>
+      <?switch-context service?>
+      <config>
+        <?set EXPORT_POLICY_NAME={vrf/vrf-definition}?>
+        <?if {sr-te/odn/export-route-policy-name}?>
+          <?set EXPORT_POLICY_NAME={sr-te/odn/export-route-policy-name}?>
+        <?end?>
+        <?set IMPORT_POLICY_NAME={vrf/vrf-definition}?>
+        <?if {sr-te/odn/import-route-policy-name}?>
+          <?set IMPORT_POLICY_NAME={sr-te/odn/import-route-policy-name}?>
+        <?end?>
+        <?if {sr-te/odn}?>
+        <extcommunity-set xmlns="http://tail-f.com/ned/cisco-ios-xr" foreach="{sr-te/odn/import-color}">
+          <?set COLOR = {id}?>
+          <opaque>
+            <name>COLOR_{$COLOR}</name>
+            <set>
+              <value>{$COLOR}</value>
+            </set>
+          </opaque>
+        </extcommunity-set>
+        <extcommunity-set xmlns="http://tail-f.com/ned/cisco-ios-xr" foreach="{sr-te/odn/export-color}">
+          <?set COLOR = {id}?>
+          <opaque>
+            <name>COLOR_{$COLOR}</name>
+            <set>
+              <value>{$COLOR}</value>
+            </set>
+          </opaque>
+        </extcommunity-set>
+        <?end?>
+        <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr" when="{$EXPORT_COLOR_IPV4!=''}">
+          <name>SET_COLORv4_{$EXPORT_POLICY_NAME}</name>
+          <value>{$EXPORT_COLOR_IPV4}</value>
+        </route-policy>
+        <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr" when="{$EXPORT_COLOR_IPV6!=''}">
+          <name>SET_COLORv6_{$EXPORT_POLICY_NAME}</name>
+          <value>{$EXPORT_COLOR_IPV6}</value>
+        </route-policy>
+        <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr" when="{$IMPORT_COLOR_IPV4!=''}">
+          <name>SET_COLORv4_{$IMPORT_POLICY_NAME}</name>
+          <value>{$IMPORT_COLOR_IPV4}</value>
+        </route-policy>
+        <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr" when="{$IMPORT_COLOR_IPV6!=''}">
+          <name>SET_COLORv6_{$IMPORT_POLICY_NAME}</name>
+          <value>{$IMPORT_COLOR_IPV6}</value>
+        </route-policy>
+        <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr" when="{ce-pe-prot/e-bgp/neighbor-ipv4!='' or ce-pe-prot/e-bgp/neighbor-ipv6!=''}">
+          <name>PASS_ALL</name>
+          <value>{$PASS_ALL_VALUE}</value>
+        </route-policy>
+        <vrf xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <vrf-list>
+            <name>{vrf/vrf-definition}</name>
+            <?if {$GLOBAL_RD_ENABLED='true'}?>
+              <rd>{route-distinguisher}</rd>
+            <?end?>
+            <vpn>
+              <id>{vpn-id}</id>
+            </vpn>
+            <address-family>
+              <ipv4 when="{address-family/address-family='ipv4'}">
+                <unicast>
+                  <import>
+                    <?if {not(starts-with($PLATFORM,'6.5')) and not(starts-with($PLATFORM,'6.6')) and not(starts-with($PLATFORM,'7.0'))
+                    and not(starts-with($PLATFORM,'7.1')) and not(starts-with($PLATFORM,'7.2'))}?>
+                      <route-policy when="{$IMPORT_COLOR_IPV4!=''}">SET_COLORv4_{$IMPORT_POLICY_NAME}</route-policy>
+                    <?end?>
+                    <route-target>
+                      <address-list when="{address-family[address-family='ipv4']/vpn-target/rt-type='import'}">
+                        <name>{address-family[address-family='ipv4']/vpn-target[rt-type='import']/rt-value}</name>
+                      </address-list>
+                      <address-list when="{address-family[address-family='ipv4']/vpn-target/rt-type='both'}">
+                        <name>{address-family[address-family='ipv4']/vpn-target[rt-type='both']/rt-value}</name>
+                      </address-list>
+                    </route-target>
+                  </import>
+                  <export>
+                    <route-policy when="{$EXPORT_COLOR_IPV4!=''}">SET_COLORv4_{$EXPORT_POLICY_NAME}</route-policy>
+                    <route-target>
+                      <address-list when="{address-family[address-family='ipv4']/vpn-target/rt-type='export'}">
+                        <name>{address-family[address-family='ipv4']/vpn-target[rt-type='export']/rt-value}</name>
+                      </address-list>
+                      <address-list when="{address-family[address-family='ipv4']/vpn-target/rt-type='both'}">
+                        <name>{address-family[address-family='ipv4']/vpn-target[rt-type='both']/rt-value}</name>
+                      </address-list>
+                    </route-target>
+                  </export>
+                </unicast>
+              </ipv4>
+              <ipv6 when="{address-family/address-family='ipv6'}">
+                <unicast>
+                  <import>
+                    <?if {not(starts-with($PLATFORM,'6.5')) and not(starts-with($PLATFORM,'6.6')) and not(starts-with($PLATFORM,'7.0'))
+                    and not(starts-with($PLATFORM,'7.1')) and not(starts-with($PLATFORM,'7.2'))}?>
+                      <route-policy when="{$IMPORT_COLOR_IPV6!=''}">SET_COLORv6_{$IMPORT_POLICY_NAME}</route-policy>
+                    <?end?>
+                    <route-target>
+                      <address-list when="{address-family[address-family='ipv6']/vpn-target/rt-type='import'}">
+                        <name>{address-family[address-family='ipv6']/vpn-target[rt-type='import']/rt-value}</name>
+                      </address-list>
+                      <address-list when="{address-family[address-family='ipv6']/vpn-target/rt-type='both'}">
+                        <name>{address-family[address-family='ipv6']/vpn-target[rt-type='both']/rt-value}</name>
+                      </address-list>
+                    </route-target>
+                  </import>
+                  <export>
+                    <route-policy when="{$EXPORT_COLOR_IPV6!=''}">SET_COLORv6_{$EXPORT_POLICY_NAME}</route-policy>
+                    <route-target>
+                      <address-list when="{address-family[address-family='ipv6']/vpn-target/rt-type='export'}">
+                        <name>{address-family[address-family='ipv6']/vpn-target[rt-type='export']/rt-value}</name>
+                      </address-list>
+                      <address-list when="{address-family[address-family='ipv6']/vpn-target/rt-type='both'}">
+                        <name>{address-family[address-family='ipv6']/vpn-target[rt-type='both']/rt-value}</name>
+                      </address-list>
+                    </route-target>
+                  </export>
+                </unicast>
+              </ipv6>
+            </address-family>
+          </vrf-list>
+        </vrf>
+        <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <BVI when="{if-type='BVI'}">
+            <id>{if-id}</id>
+            <vrf when="{vrf/vrf-definition!=''}">{vrf/vrf-definition}</vrf>
+            <ipv4 when="{$IPV4_ADDR!=''}">
+              <address>
+                <ip>{$IPV4_ADDR}</ip>
+                <mask>{$IPV4_MASK}</mask>
+              </address>
+            </ipv4>
+            <ipv6 when="{pe-ipv6-addr!=''}">
+              <address>
+                <prefix-list>
+                  <prefix>{pe-ipv6-addr}</prefix>
+                </prefix-list>
+              </address>
+            </ipv6>
+            <mtu when="mtu!=''">{mtu}</mtu>
+            <shutdown tags="delete"/>
+            <?set IF_ID={if-id}?>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/BVI[id=$IF_ID]/description}?>
+            <?switch-context service?>
+            <?if {$IF_DESC=''}?>
+              <description>{$DEFAULT_INTF_DESC}</description>
+            <?else?>
+              <description>{$IF_DESC}</description>
+            <?end?>
+          </BVI>
+          <Loopback when="{if-type='Loopback'}">
+            <id>{if-id}</id>
+            <vrf when="{vrf/vrf-definition!=''}">{vrf/vrf-definition}</vrf>
+            <ipv4 when="{$IPV4_ADDR!=''}">
+            <address>
+                <ip>{$IPV4_ADDR}</ip>
+                <mask>{$IPV4_MASK}</mask>
+              </address>
+            </ipv4>
+            <ipv6 when="{pe-ipv6-addr!=''}">
+              <address>
+                <prefix-list>
+                  <prefix>{pe-ipv6-addr}</prefix>
+                </prefix-list>
+              </address>
+            </ipv6>
+            <shutdown tags="delete"/>
+            <?set IF_ID={if-id}?>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/Loopback[id=$IF_ID]/description}?>
+            <?switch-context service?>
+            <?if {$IF_DESC=''}?>
+              <description>{$DEFAULT_INTF_DESC}</description>
+            <?else?>
+              <description>{$IF_DESC}</description>
+            <?end?>
+          </Loopback>
+          <?if {vlan-id} ?>
+            <Bundle-Ether-subinterface when="{if-type='Bundle-Ether'}">
+              <Bundle-Ether>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/Bundle-Ether-subinterface/Bundle-Ether[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </Bundle-Ether>
+            </Bundle-Ether-subinterface>
+            <Bundle-Ether when="{if-type='Bundle-Ether'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/Bundle-Ether[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </Bundle-Ether>
+            <FiftyGigE-subinterface when="{if-type='FiftyGigE'}">
+              <FiftyGigE>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FiftyGigE-subinterface/FiftyGigE[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </FiftyGigE>
+            </FiftyGigE-subinterface>
+            <FiftyGigE when="{if-type='FiftyGigE'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FiftyGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </FiftyGigE>
+            <TwoHundredGigE-subinterface when="{if-type='TwoHundredGigE'}">
+              <TwoHundredGigE>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwoHundredGigE-subinterface/TwoHundredGigE[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </TwoHundredGigE>
+            </TwoHundredGigE-subinterface>
+            <TwoHundredGigE when="{if-type='TwoHundredGigE'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwoHundredGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </TwoHundredGigE>
+            <FourHundredGigE-subinterface when="{if-type='FourHundredGigE'}">
+              <FourHundredGigE>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FourHundredGigE-subinterface/FourHundredGigE[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </FourHundredGigE>
+            </FourHundredGigE-subinterface>
+            <FourHundredGigE when="{if-type='FourHundredGigE'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FourHundredGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </FourHundredGigE>
+            <TwentyFiveGigE-subinterface when="{if-type='TwentyFiveGigE'}">
+              <TwentyFiveGigE>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwentyFiveGigE-subinterface/TwentyFiveGigE[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </TwentyFiveGigE>
+            </TwentyFiveGigE-subinterface>
+            <TwentyFiveGigE when="{if-type='TwentyFiveGigE'}">
+              <id>{if-id}</id>
+              <shutdown tags="delete"/>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwentyFiveGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?if {$IF_DESC=''}?>
+                <description>{$DEFAULT_INTF_DESC}</description>
+              <?else?>
+                <description>{$IF_DESC}</description>
+              <?end?>
+            </TwentyFiveGigE>
+            <GigabitEthernet-subinterface when="{if-type='GigabitEthernet'}">
+              <GigabitEthernet>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/GigabitEthernet-subinterface/GigabitEthernet[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </GigabitEthernet>
+            </GigabitEthernet-subinterface>
+            <GigabitEthernet when="{if-type='GigabitEthernet'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/GigabitEthernet[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </GigabitEthernet>
+            <TenGigE-subinterface when="{if-type='TenGigE'}">
+              <TenGigE>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TenGigE-subinterface/TenGigE[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </TenGigE>
+            </TenGigE-subinterface>
+            <TenGigE when="{if-type='TenGigE'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TenGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </TenGigE>
+            <FortyGigE-subinterface when="{if-type='FortyGigE'}">
+              <FortyGigE>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FortyGigE-subinterface/FortyGigE[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </FortyGigE>
+            </FortyGigE-subinterface>
+            <FortyGigE when="{if-type='FortyGigE'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FortyGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </FortyGigE>
+            <HundredGigE-subinterface when="{if-type='HundredGigE'}">
+              <HundredGigE>
+                <id>{if-id}.{vlan-id}</id>
+                <?expand subintf-ip-encap-vrf-mtu?>
+                <?set IF_ID={if-id}.{vlan-id}?>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/HundredGigE-subinterface/HundredGigE[id=$IF_ID]/description}?>
+                <?switch-context service?>
+                <?expand intf-desc-shut?>
+              </HundredGigE>
+            </HundredGigE-subinterface>
+            <HundredGigE when="{if-type='HundredGigE'}">
+              <id>{if-id}</id>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/HundredGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </HundredGigE>
+          <?else?>
+            <Bundle-Ether when="{if-type='Bundle-Ether'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/Bundle-Ether[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </Bundle-Ether>
+
+            <FiftyGigE when="{if-type='FiftyGigE'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FiftyGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </FiftyGigE>
+
+            <TwoHundredGigE when="{if-type='TwoHundredGigE'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwoHundredGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </TwoHundredGigE>
+
+            <FourHundredGigE when="{if-type='FourHundredGigE'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FourHundredGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </FourHundredGigE>
+
+            <TwentyFiveGigE when="{if-type='TwentyFiveGigE'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwentyFiveGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </TwentyFiveGigE>
+
+            <GigabitEthernet when="{if-type='GigabitEthernet'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/GigabitEthernet[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </GigabitEthernet>
+            <TenGigE when="{if-type='TenGigE'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TenGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </TenGigE>
+            <FortyGigE when="{if-type='FortyGigE'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FortyGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </FortyGigE>
+            <HundredGigE when="{if-type='HundredGigE'}">
+              <id>{if-id}</id>
+              <?expand intf-ip-vrf-mtu?>
+              <?set IF_ID={if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/HundredGigE[id=$IF_ID]/description}?>
+              <?switch-context service?>
+              <?expand intf-desc-shut?>
+            </HundredGigE>
+          <?end?>
+        </interface>
+        <?if {if-type = 'BVI'}?>
+          <?set BVI_INTERFACE_NAME={if-type}{if-id}?>
+          <?set BRIDGE_DOMAIN={vrf/vrf-definition}?>
+          <?foreach {l2-attachment-circuit}?>
+            <?set INTERFACE_NAME={if-type}{if-id}?>
+            <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+              <?if {vlan-id}?>
+                <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+                <Bundle-Ether-subinterface when="{if-type='Bundle-Ether'}">
+                  <Bundle-Ether>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/Bundle-Ether-subinterface/Bundle-Ether[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </Bundle-Ether>
+                </Bundle-Ether-subinterface>
+                <Bundle-Ether when="{if-type='Bundle-Ether'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/Bundle-Ether[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </Bundle-Ether>
+
+                <FiftyGigE-subinterface when="{if-type='FiftyGigE'}">
+                  <FiftyGigE>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FiftyGigE-subinterface/FiftyGigE[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </FiftyGigE>
+                </FiftyGigE-subinterface>
+                <FiftyGigE when="{if-type='FiftyGigE'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FiftyGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </FiftyGigE>
+
+                <TwoHundredGigE-subinterface when="{if-type='TwoHundredGigE'}">
+                  <TwoHundredGigE>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwoHundredGigE-subinterface/TwoHundredGigE[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </TwoHundredGigE>
+                </TwoHundredGigE-subinterface>
+                <TwoHundredGigE when="{if-type='TwoHundredGigE'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwoHundredGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </TwoHundredGigE>
+
+                <FourHundredGigE-subinterface when="{if-type='FourHundredGigE'}">
+                  <FourHundredGigE>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FourHundredGigE-subinterface/FourHundredGigE[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </FourHundredGigE>
+                </FourHundredGigE-subinterface>
+                <FourHundredGigE when="{if-type='FourHundredGigE'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FourHundredGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </FourHundredGigE>
+
+                <TwentyFiveGigE-subinterface when="{if-type='TwentyFiveGigE'}">
+                  <TwentyFiveGigE>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwentyFiveGigE-subinterface/TwentyFiveGigE[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </TwentyFiveGigE>
+                </TwentyFiveGigE-subinterface>
+                <TwentyFiveGigE when="{if-type='TwentyFiveGigE'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwentyFiveGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </TwentyFiveGigE>
+
+                <GigabitEthernet-subinterface when="{if-type='GigabitEthernet'}">
+                  <GigabitEthernet>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/GigabitEthernet-subinterface/GigabitEthernet[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </GigabitEthernet>
+                </GigabitEthernet-subinterface>
+                <GigabitEthernet when="{if-type='GigabitEthernet'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/GigabitEthernet[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </GigabitEthernet>
+                <TenGigE-subinterface when="{if-type='TenGigE'}">
+                  <TenGigE>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TenGigE-subinterface/TenGigE[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </TenGigE>
+                </TenGigE-subinterface>
+                <TenGigE when="{if-type='TenGigE'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TenGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </TenGigE>
+                <FortyGigE-subinterface when="{if-type='FortyGigE'}">
+                  <FortyGigE>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FortyGigE-subinterface/FortyGigE[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </FortyGigE>
+                </FortyGigE-subinterface>
+                <FortyGigE when="{if-type='FortyGigE'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FortyGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </FortyGigE>
+                <HundredGigE-subinterface when="{if-type='HundredGigE'}">
+                  <HundredGigE>
+                    <id>{if-id}.{vlan-id}</id>
+                    <?expand subintf-encap-rewrite-mtu-mode?>
+                    <?set IF_ID={if-id}.{vlan-id}?>
+                    <?set IF_DESC=''?>
+                    <?save-context service?>
+                    <?set-root-node {/devices}?>
+                      <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/HundredGigE-subinterface/HundredGigE[id=$IF_ID]/description}?>
+                    <?switch-context service?>
+                    <?expand intf-description?>
+                  </HundredGigE>
+                </HundredGigE-subinterface>
+                <HundredGigE when="{if-type='HundredGigE'}">
+                  <id>{if-id}</id>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/HundredGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </HundredGigE>
+              <?else?>
+                <Bundle-Ether when="{if-type='Bundle-Ether'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/Bundle-Ether[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </Bundle-Ether>
+
+                <FiftyGigE when="{if-type='FiftyGigE'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FiftyGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </FiftyGigE>
+
+                <TwoHundredGigE when="{if-type='TwoHundredGigE'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwoHundredGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </TwoHundredGigE>
+
+                <FourHundredGigE when="{if-type='FourHundredGigE'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FourHundredGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </FourHundredGigE>
+
+                <TwentyFiveGigE when="{if-type='TwentyFiveGigE'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TwentyFiveGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </TwentyFiveGigE>
+
+                <GigabitEthernet when="{if-type='GigabitEthernet'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/GigabitEthernet[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </GigabitEthernet>
+                <TenGigE when="{if-type='TenGigE'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/TenGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </TenGigE>
+                <FortyGigE when="{if-type='FortyGigE'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/FortyGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </FortyGigE>
+                <HundredGigE when="{if-type='HundredGigE'}">
+                  <id>{if-id}</id>
+                  <?expand intf-mtu-transport?>
+                  <?set IF_ID={if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/cisco-ios-xr:interface/HundredGigE[id=$IF_ID]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-desc-shut?>
+                </HundredGigE>
+              <?end?>
+            </interface>
+            <l2vpn xmlns="http://tail-f.com/ned/cisco-ios-xr">
+              <bridge>
+                <group>
+                  <group-name>{$BRIDGE_DOMAIN}</group-name>
+                  <bridge-domain>
+                    <bridge-domain-name>{$BRIDGE_DOMAIN}</bridge-domain-name>
+                    <interface>
+                      <name>{$INTERFACE_NAME}</name>
+                    </interface>
+                  </bridge-domain>
+                </group>
+              </bridge>
+            </l2vpn>
+          <?end?>
+          <l2vpn xmlns="http://tail-f.com/ned/cisco-ios-xr">
+            <bridge>
+              <group>
+                <group-name>{$BRIDGE_DOMAIN}</group-name>
+                <bridge-domain>
+                  <bridge-domain-name>{$BRIDGE_DOMAIN}</bridge-domain-name>
+                  <routed>
+                    <interface>
+                      <name>{$BVI_INTERFACE_NAME}</name>
+                    </interface>
+                  </routed>
+                  <shutdown tags="delete"/>
+                </bridge-domain>
+              </group>
+            </bridge>
+          </l2vpn>
+        <?end?>
+        <router xmlns="http://tail-f.com/ned/cisco-ios-xr" when="{$AS_NO!=''}">
+          <bgp>
+            <bgp-no-instance>
+              <id>{$AS_NO}</id>
+              <vrf>
+                <name>{vrf/vrf-definition}</name>
+                <address-family
+                  when="{address-family/address-family='ipv4' and vrf-definition!=''}">
+                  <ipv4>
+                    <unicast>
+                      <redistribute when="{address-family[address-family='ipv4']/redistribute-connected}">
+                        <connected>
+                          <metric>{address-family[address-family='ipv4']/metric}</metric>
+                        </connected>
+                      </redistribute>
+                      <segment-routing when="{address-family[address-family='ipv4']/srv6}">
+                        <srv6>
+                          <locator>{address-family[address-family='ipv4']/srv6/locator-name}</locator>
+                          <alloc>
+                            <mode>per-vrf</mode>
+                          </alloc>
+                        </srv6>
+                      </segment-routing>
+                    </unicast>
+                  </ipv4>
+                </address-family>
+                <address-family
+                  when="{address-family/address-family='ipv6' and vrf-definition!=''}">
+                  <ipv6>
+                    <unicast>
+                      <redistribute when="{address-family[address-family='ipv6']/redistribute-connected}">
+                        <connected>
+                          <metric>{address-family[address-family='ipv6']/metric}</metric>
+                        </connected>
+                      </redistribute>
+                      <segment-routing when="{address-family[address-family='ipv6']/srv6}">
+                        <srv6>
+                          <locator>{address-family[address-family='ipv6']/srv6/locator-name}</locator>
+                          <alloc>
+                            <mode>per-vrf</mode>
+                          </alloc>
+                        </srv6>
+                      </segment-routing>
+                    </unicast>
+                  </ipv6>
+                </address-family>
+                <neighbor when="{../ce-pe-prot/e-bgp/neighbor-ipv4!=''}">
+                  <id>{../ce-pe-prot/e-bgp/neighbor-ipv4}</id>
+                  <remote-as>{remote-as-ipv4}</remote-as>
+                  <address-family>
+                    <ipv4>
+                      <unicast>
+                        <route-policy>
+                          <direction>in</direction>
+                          <name>PASS_ALL</name>
+                        </route-policy>
+                        <route-policy>
+                          <direction>out</direction>
+                          <name>PASS_ALL</name>
+                        </route-policy>
+                      </unicast>
+                    </ipv4>
+                  </address-family>
+                  <ebgp-multihop when="{ebgp-multihop}">
+                    <ttl-value>{ebgp-multihop/ttl-value}</ttl-value>
+                    <mpls when="{ebgp-multihop/mpls-deactivation='true'}"></mpls>
+                  </ebgp-multihop>
+                  <update-source when="{update-source}">
+                    <Loopback when="{update-source/if-type='Loopback'}">{update-source/if-id}</Loopback>
+                    <GigabitEthernet when="{update-source/if-type='GigabitEthernet' and not(update-source/sub-if-id)}">{update-source/if-id}</GigabitEthernet>
+                    <GigabitEthernet-subinterface when="{update-source/if-type='GigabitEthernet' and update-source/sub-if-id}">
+                      <GigabitEthernet>{update-source/if-id}.{update-source/sub-if-id}</GigabitEthernet>
+                    </GigabitEthernet-subinterface>
+                    <TenGigE when="{update-source/if-type='TenGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</TenGigE>
+                    <TenGigE-subinterface when="{update-source/if-type='TenGigE' and update-source/sub-if-id}">
+                      <TenGigE>{update-source/if-id}.{update-source/sub-if-id}</TenGigE>
+                    </TenGigE-subinterface>
+                    <FortyGigE when="{update-source/if-type='FortyGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</FortyGigE>
+                    <FortyGigE-subinterface when="{update-source/if-type='FortyGigE' and update-source/sub-if-id}">
+                      <FortyGigE>{update-source/if-id}.{update-source/sub-if-id}</FortyGigE>
+                    </FortyGigE-subinterface>
+                    <HundredGigE when="{update-source/if-type='HundredGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</HundredGigE>
+                    <HundredGigE-subinterface when="{update-source/if-type='HundredGigE' and update-source/sub-if-id}">
+                      <HundredGigE>{update-source/if-id}.{update-source/sub-if-id}</HundredGigE>
+                    </HundredGigE-subinterface>
+                    <FiftyGigE when="{update-source/if-type='FiftyGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</FiftyGigE>
+                    <FiftyGigE-subinterface when="{update-source/if-type='FiftyGigE' and update-source/sub-if-id}">
+                      <FiftyGigE>{update-source/if-id}.{update-source/sub-if-id}</FiftyGigE>
+                    </FiftyGigE-subinterface>
+                    <TwoHundredGigE when="{update-source/if-type='TwoHundredGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</TwoHundredGigE>
+                    <TwoHundredGigE-subinterface when="{update-source/if-type='TwoHundredGigE' and update-source/sub-if-id}">
+                      <TwoHundredGigE>{update-source/if-id}.{update-source/sub-if-id}</TwoHundredGigE>
+                    </TwoHundredGigE-subinterface>
+                    <Bundle-Ether when="{update-source/if-type='Bundle-Ether' and not(update-source/sub-if-id)}">{update-source/if-id}</Bundle-Ether>
+                    <Bundle-Ether-subinterface when="{update-source/if-type='Bundle-Ether' and update-source/sub-if-id}">
+                      <Bundle-Ether>{update-source/if-id}.{update-source/sub-if-id}</Bundle-Ether>
+                    </Bundle-Ether-subinterface>
+                    <FourHundredGigE when="{update-source/if-type='FourHundredGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</FourHundredGigE>
+                    <FourHundredGigE-subinterface when="{update-source/if-type='FourHundredGigE' and update-source/sub-if-id}">
+                      <FourHundredGigE>{update-source/if-id}.{update-source/sub-if-id}</FourHundredGigE>
+                    </FourHundredGigE-subinterface>
+                    <TwentyFiveGigE when="{update-source/if-type='TwentyFiveGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</TwentyFiveGigE>
+                    <TwentyFiveGigE-subinterface when="{update-source/if-type='TwentyFiveGigE' and update-source/sub-if-id}">
+                      <TwentyFiveGigE>{update-source/if-id}.{update-source/sub-if-id}</TwentyFiveGigE>
+                    </TwentyFiveGigE-subinterface>
+                  </update-source>
+                </neighbor>
+                <neighbor when="{../ce-pe-prot/e-bgp/neighbor-ipv6!=''}">
+                  <id>{../ce-pe-prot/e-bgp/neighbor-ipv6}</id>
+                  <remote-as>{remote-as-ipv6}</remote-as>
+                  <address-family>
+                    <ipv6>
+                      <unicast>
+                        <route-policy>
+                          <direction>in</direction>
+                          <name>PASS_ALL</name>
+                        </route-policy>
+                        <route-policy>
+                          <direction>out</direction>
+                          <name>PASS_ALL</name>
+                        </route-policy>
+                      </unicast>
+                    </ipv6>
+                  </address-family>
+                  <ebgp-multihop when="{ebgp-multihop}">
+                    <ttl-value>{ebgp-multihop/ttl-value}</ttl-value>
+                    <mpls when="{ebgp-multihop/mpls-deactivation='true'}"></mpls>
+                  </ebgp-multihop>
+                  <update-source when="{update-source}">
+                    <Loopback when="{update-source/if-type='Loopback'}">{update-source/if-id}</Loopback>
+                    <GigabitEthernet when="{update-source/if-type='GigabitEthernet' and not(update-source/sub-if-id)}">{update-source/if-id}</GigabitEthernet>
+                    <GigabitEthernet-subinterface when="{update-source/if-type='GigabitEthernet' and update-source/sub-if-id}">
+                      <GigabitEthernet>{update-source/if-id}.{update-source/sub-if-id}</GigabitEthernet>
+                    </GigabitEthernet-subinterface>
+                    <TenGigE when="{update-source/if-type='TenGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</TenGigE>
+                    <TenGigE-subinterface when="{update-source/if-type='TenGigE' and update-source/sub-if-id}">
+                      <TenGigE>{update-source/if-id}.{update-source/sub-if-id}</TenGigE>
+                    </TenGigE-subinterface>
+                    <FortyGigE when="{update-source/if-type='FortyGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</FortyGigE>
+                    <FortyGigE-subinterface when="{update-source/if-type='FortyGigE' and update-source/sub-if-id}">
+                      <FortyGigE>{update-source/if-id}.{update-source/sub-if-id}</FortyGigE>
+                    </FortyGigE-subinterface>
+                    <HundredGigE when="{update-source/if-type='HundredGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</HundredGigE>
+                    <HundredGigE-subinterface when="{update-source/if-type='HundredGigE' and update-source/sub-if-id}">
+                      <HundredGigE>{update-source/if-id}.{update-source/sub-if-id}</HundredGigE>
+                    </HundredGigE-subinterface>
+                    <FiftyGigE when="{update-source/if-type='FiftyGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</FiftyGigE>
+                    <FiftyGigE-subinterface when="{update-source/if-type='FiftyGigE' and update-source/sub-if-id}">
+                      <FiftyGigE>{update-source/if-id}.{update-source/sub-if-id}</FiftyGigE>
+                    </FiftyGigE-subinterface>
+                    <TwoHundredGigE when="{update-source/if-type='TwoHundredGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</TwoHundredGigE>
+                    <TwoHundredGigE-subinterface when="{update-source/if-type='TwoHundredGigE' and update-source/sub-if-id}">
+                      <TwoHundredGigE>{update-source/if-id}.{update-source/sub-if-id}</TwoHundredGigE>
+                    </TwoHundredGigE-subinterface>
+                    <Bundle-Ether when="{update-source/if-type='Bundle-Ether' and not(update-source/sub-if-id)}">{update-source/if-id}</Bundle-Ether>
+                    <Bundle-Ether-subinterface when="{update-source/if-type='Bundle-Ether' and update-source/sub-if-id}">
+                      <Bundle-Ether>{update-source/if-id}.{update-source/sub-if-id}</Bundle-Ether>
+                    </Bundle-Ether-subinterface>
+                    <FourHundredGigE when="{update-source/if-type='FourHundredGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</FourHundredGigE>
+                    <FourHundredGigE-subinterface when="{update-source/if-type='FourHundredGigE' and update-source/sub-if-id}">
+                      <FourHundredGigE>{update-source/if-id}.{update-source/sub-if-id}</FourHundredGigE>
+                    </FourHundredGigE-subinterface>
+                    <TwentyFiveGigE when="{update-source/if-type='TwentyFiveGigE' and not(update-source/sub-if-id)}">{update-source/if-id}</TwentyFiveGigE>
+                    <TwentyFiveGigE-subinterface when="{update-source/if-type='TwentyFiveGigE' and update-source/sub-if-id}">
+                      <TwentyFiveGigE>{update-source/if-id}.{update-source/sub-if-id}</TwentyFiveGigE>
+                    </TwentyFiveGigE-subinterface>
+                  </update-source>
+                </neighbor>
+                <?if {$GLOBAL_RD_ENABLED='false'}?>
+                  <?if {route-distinguisher}?>
+                    <rd>{route-distinguisher}</rd>
+                  <?else?>
+                    <rd>auto</rd>
+                  <?end?>
+                <?end?>
+              </vrf>
+            </bgp-no-instance>
+          </bgp>
+        </router>
+      </config>
+    </device>
+  </devices>
+</config-template>

@@ -1,0 +1,769 @@
+cisco-flat-L3vpn-fp (v2.0) [November 16, 2020]
+=======================================================
+  A. Added validate callpoint to service.
+    tailf:validate "flat-L3vpn-validation" {
+      tailf:dependency ".";
+    }
+
+cisco-flat-L3vpn-fp (v2.0) [October 09, 2020]
+===============================================
+  A. Add import-route-policy under sr-te
+  B. Renamed sr-te route-policy to export-route-policy
+
+    Current payload:
+
+        <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+          <name>L3</name>
+          <endpoint>
+            <endpoint-name>cli-0</endpoint-name>
+            <access-pe>PIOSXR-0</access-pe>
+            <sr-te>
+              <route-policy>L3-RP-EP1</route-policy>     <----- ONLY IMPLICIT EXPORT ROUTE-POLICY
+              <route-policy>L3-RP-EP2</route-policy>     <----- ONLY IMPLICIT EXPORT ROUTE-POLICY
+            </sr-te>
+          </endpoint>
+        </flat-L3vpn>
+
+    New payload:
+
+        <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+          <name>L3</name>
+          <endpoint>
+            <endpoint-name>cli-0</endpoint-name>
+            <access-pe>PIOSXR-0</access-pe>
+            <sr-te>
+              <export-route-policy>L3-RP-EP1</export-route-policy>   <----- NOW EXPLICIT EXPORT ROUTE-POLICY
+              <import-route-policy>L3-RP-EP2</import-route-policy>   <----- NOW EXPLICIT IMPORT ROUTE-POLICY
+            </sr-te>
+          </endpoint>
+        </flat-L3vpn>
+
+
+cisco-flat-L3vpn-fp (v2.0) [October 06, 2020]
+===============================================
+  A. Add delete check for e-bgp neighbor where neighbor cannot be deleted if its corresponding
+      address-family is active
+
+cisco-flat-L3vpn-fp (v2.0) [August 05, 2020]
+===============================================
+  A. Major redesign to support LSA/non-LSA style deployment (no payload changes)
+
+cisco-flat-L3vpn-fp  (v1.1) [June 10, 2020]
+===============================================
+  A. Added reconcile option to custom redeploy action
+
+cisco-flat-L3vpn-fp  (v1.1) [May 08, 2020]
+===============================================
+
+  1. Added: mpls-deactivation under cisco-flat-L3vpn-fp:flat-L3vpn ->
+            endpoint -> ce-pe-prot -> e-bgp -> ebgp-multihop
+
+
+      Current payload:
+
+          <flat-L3vpn xmlns="...">
+            <name>{NAME}</name>
+            <endpoint>
+              <endpoint-name>nc-0</endpoint-name>
+              <access-pe>P-0</access-pe>
+              <as-no>65001</as-no>
+              <ce-pe-prot>
+                <e-bgp>
+                  <ebgp-multihop>
+                    <ttl-value>29</ttl-value>
+                    <mpls-deactivation>false</mpls-deactivation> ------------------------> ADDED
+                  </ebgp-multihop>
+                </e-bgp>
+              </ce-pe-prot>
+            </endpoint>
+          </flat-L3vpn>
+
+cisco-flat-L3vpn-fp  (v1.1) [May 05, 2020]
+===============================================
+
+  1. Added: sub-if-id under cisco-flat-L3vpn-fp:flat-L3vpn ->
+                  endpoint -> ce-pe-prot -> e-bgp -> update-source
+
+      Current payload:
+
+          <flat-L3vpn xmlns="...">
+            <name>{NAME}</name>
+            <endpoint>
+              <endpoint-name>nc-0</endpoint-name>
+              <access-pe>P-0</access-pe>
+              <as-no>65001</as-no>
+              <ce-pe-prot>
+                <e-bgp>
+                  <update-source>
+                    <if-id>0/0/0/3</if-id>
+                    <if-type>GigabitEthernet</if-type>
+                    <sub-if-id>100</sub-if-id> ------------------------> ADDED
+                  </update-source>
+                </e-bgp>
+              </ce-pe-prot>
+            </endpoint>
+          </flat-L3vpn>
+
+cisco-flat-L3vpn-fp  (v1.1) [May 04, 2020]
+===============================================
+
+  1. Added: ebgp-multihop under cisco-flat-L3vpn-fp:flat-L3vpn ->
+                                  endpoint -> ce-pe-prot -> e-bgp
+
+      Current payload:
+
+          <flat-L3vpn xmlns="...">
+            <name>{NAME}</name>
+            <endpoint>
+              <endpoint-name>nc-0</endpoint-name>
+              <access-pe>P-0</access-pe>
+              <as-no>65001</as-no>
+              <ce-pe-prot>
+                <e-bgp>
+                  <ebgp-multihop> ------------------------> ADDED
+                    <ttl-value>29</ttl-value>
+                  </ebgp-multihop>
+                </e-bgp>
+              </ce-pe-prot>
+            </endpoint>
+          </flat-L3vpn>
+
+cisco-flat-L3vpn-fp  (v0.0.11) [April 16, 2020]
+===============================================
+
+  1. Made IOSXR CLI support as default.
+
+cisco-flat-L3vpn-fp (v0.0.11) [April 13, 2020]
+=============================================
+   A. Added status-code groupings in cisco-flat-L3vpn-fp
+   module cisco-flat-L3vpn-fp {
+      namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn";
+      prefix cisco-flat-L3vpn-fp;
+
+      ...
+
+      grouping status-code-plan-augmentation { ------------------------> ADDED
+       list status-code-detail {
+         tailf:info "Status Codes";
+         description "Status Codes";
+         key "type name";
+         leaf type {
+           type ncs:plan-component-type-t;
+         }
+         leaf name {
+           type string;
+         }
+         leaf code {
+           type string;
+         }
+         list context {
+           key context-name;
+           leaf context-name {
+             type string;
+           }
+           leaf context-msg {
+             type string;
+           }
+           list states {
+             key state;
+             leaf state {
+               type string;
+             }
+             leaf val {
+               type string;
+             }
+           }
+         }
+         leaf severity {
+           type enumeration {
+             enum INFO;
+             enum WARNING;
+             enum ERROR;
+             enum FATAL;
+             enum NONE;
+           }
+         }
+         leaf recommended-action {
+           tailf:info "Recommended action to recover in case of error";
+           description "Recommended action to recover in case of error";
+           type string;
+         }
+       }
+     }
+     grouping status-code-component-augmentation { ---------------------------> ADDED
+       leaf status-code {
+         type string;
+       }
+     }
+   }
+
+   B. Added plan and component augmentation using status-code-plan-augmentation and
+      status-code-component-augmentation groupings to cisco-flat-L3vpn-fp
+
+      module cisco-flat-L3vpn-fp {
+        namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn";
+        prefix cisco-flat-L3vpn-fp;
+
+        ...
+
+        augment /flat-L3vpn-plan/plan { -------------------------------------------------> ADDED
+          uses status-code-plan-augmentation;
+        }
+
+        augment /flat-L3vpn-plan/plan-history { -----------------------------------------> ADDED
+          uses status-code-plan-augmentation;
+        }
+
+        augment /flat-L3vpn-plan/plan/component { ---------------------------------------> ADDED
+          uses status-code-component-augmentation;
+        }
+
+        augment /flat-L3vpn-plan/plan-history/plan/component { --------------------------> ADDED
+          uses status-code-component-augmentation;
+        }
+      }
+
+   C. Added status code oper data grouping to cisco-flat-L3vpn-fp
+
+      module cisco-flat-L3vpn-fp {
+        namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn";
+        prefix cisco-flat-L3vpn-fp;
+
+        ...
+
+        grouping status-code-oper { -----------------------------------> ADDED
+          leaf status-code-name {
+              type string;
+          }
+          list status-context {
+            key context-name;
+            leaf context-name {
+              type string;
+            }
+            leaf context-msg {
+              type string;
+            }
+            list status-state {
+              key state;
+              leaf state {
+                type string;
+              }
+              leaf value {
+                type string;
+              }
+            }
+          }
+        }
+      }
+
+   D. Added "uses" status code oper data grouping to cisco-flat-L3vpn-fp-internal
+
+      module cisco-flat-L3vpn-fp-internal {
+        namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn-internal";
+        prefix cisco-flat-L3vpn-fp-internal;
+
+        import cisco-flat-L3vpn-fp { prefix cisco-flat-L3vpn-fp; } ------------> ADDED
+
+        ...
+
+        container flat-L3vpn-internal {
+
+          ...
+
+          list flat-L3vpn-oper-data {
+
+            ...
+
+            uses cisco-flat-L3vpn-fp:status-code-oper; -------------------------> ADDED
+          }
+        }
+      }
+
+cisco-flat-L2vpn-fp (v0.0.9) [March 11, 2020]
+=============================================
+A. Added: dot1q under rewrite -> ingress -> dot1q
+
+    Current payload:
+          <config xmlns="...">
+            <flat-L3vpn xmlns="...">
+              <endpoint>
+                <l2-attachment-circuit>
+                  <rewrite>
+                    <ingress>
+                      <dot1q>{VLAN ID}</dot1q> -------------------------------> ADDED
+                    </ingress>
+                  </rewrite>
+                </l2-attachment-circuit>
+              </endpoint>
+            </flat-L3vpn>
+          </config>
+
+cisco-flat-L3vpn-fp (v0.0.8) [Feb 27, 2020]
+=============================================
+A. Added: update-source under cisco-flat-L3vpn-fp:flat-L3vpn ->
+                endpoint -> ce-pe-prot -> e-bgp -> update-source
+
+    Current payload:
+
+          <flat-L3vpn xmlns="...">
+            <name>{NAME}</name>
+            <endpoint>
+              <endpoint-name>nc-0</endpoint-name>
+              <access-pe>P-0</access-pe>
+              <as-no>65001</as-no>
+              <ce-pe-prot>
+                <e-bgp>
+                  <remote-as-ipv4>2</remote-as-ipv4>
+                  <neighbor-ipv4>10.10.10.10</neighbor-ipv4>
+                  <update-source> --------------------------------------------> ADDED
+                    <if-type>Loopback</if-type>
+                    <if-id>3</if-id>
+                  </update-source>
+                </e-bgp>
+              </ce-pe-prot>
+            </endpoint>
+          </flat-L3vpn>
+
+cisco-flat-L3vpn-fp (v0.0.8) [Feb 21, 2020]
+=============================================
+A. Added: new list cisco-flat-L3vpn-fp:l3vpn-route-policy
+
+        Payload:
+
+                <config xmlns="http://tail-f.com/ns/config/1.0">
+                  <l3vpn-route-policy xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+                    <name>{NAME}</name>
+                    <color>
+                      <id>{ID}</id>
+                      <ipv4>
+                        <prefix>1.1.1.1/32</prefix>
+                        <prefix>1.1.1.2/32</prefix>
+                      </ipv4>
+                    </color>
+                  </l3vpn-route-policy>
+                </config>
+
+B. Modified: color is replaced with route-policy under flat-L3vpn -> endpoint -> sr-te
+
+        Previous payload:
+
+                <config xmlns="http://tail-f.com/ns/config/1.0">
+                  <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+                    <name>L3</name>
+                    <endpoint>
+                      <endpoint-name>nc-0</endpoint-name>
+                        <sr-te>
+                          <odn> ----------------------> REMOVED
+                            <color>
+                              ...
+                            </color>
+                          </odn>
+                        </sr-te>
+                    </endpoint>
+                  </flat-L3vpn>
+                </config>
+
+        Current payload:
+
+                <config xmlns="http://tail-f.com/ns/config/1.0">
+                  <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+                    <name>L3</name>
+                    <endpoint>
+                      <endpoint-name>{ENDPOINT}</endpoint-name>
+                      <sr-te>
+                        <route-policy>{NAME}</route-policy> ----------------------> ADDED
+                      </sr-te>
+                    </endpoint>
+                  </flat-L3vpn>
+                </config>
+
+
+cisco-flat-L3vpn-fp (v0.0.8) [Feb 18, 2020]
+=============================================
+A. Added
+  1. metric added under address-family for redistribute-connected.
+      <vrf>
+        <address-family>
+          <address-family>ipv4</address-family>
+          <redistribute-connected/>
+          <metric>2</metric> -----------------------------> ADDED
+          <vpn-target>
+            <rt-value>100:101</rt-value>
+            <rt-type>export</rt-type>
+          </vpn-target>
+        </address-family>
+      </vrf>
+
+cisco-flat-L3vpn-fp (v0.0.8) [Feb 14, 2020]
+=============================================
+A. Removed
+  1. Removed tunnel-route (including auto-route + static route options) from internal and external
+     yang models.
+
+
+cisco-flat-L3vpn-fp (v0.0.6) [Jan 08, 2020]
+=============================================
+  1. Added the following new interfaces to following yang files:-
+      cisco-flat-L3vpn-fp.yang
+        a. FiftyGigE;
+        b. TwoHundredGigE;
+        c. Bundle-Ether;
+        d. FourHundredGigE;
+        e. TwentyFiveGigE;
+
+cisco-flat-L3vpn-fp (v0.0.4) [Oct 23, 2019]
+=============================================
+
+A. New Feature
+
+  1. Adding Lux tests for BVI interface and Route Distinguisher in L3vpn
+
+    a. Sample Payload for BVI
+      <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <name>L3-NC</name>
+        <endpoint>
+          <endpoint-name>nc-0</endpoint-name>
+          <access-pe>P-0</access-pe>
+          <if-type>BVI</if-type>
+          <if-id>168</if-id>
+          <pe-ip-addr>169.1.1.1/28</pe-ip-addr>
+          <as-no>65001</as-no>
+          <ce-pe-prot>
+            <e-bgp>
+              <neighbor-ipv4>169.1.1.2</neighbor-ipv4>
+              <remote-as-ipv4>65002</remote-as-ipv4>
+            </e-bgp>
+          </ce-pe-prot>
+          <vrf>
+            <vrf-definition>L3VPN-0</vrf-definition>
+            <route-distinguisher>1:2</route-distinguisher>
+            <address-family>
+              <address-family>ipv4</address-family>
+              <vpn-target>
+                <rt-value>200:100</rt-value>
+                <rt-type>both</rt-type>
+              </vpn-target>
+              ...
+            </address-family>
+          </vrf>
+          <l2-attachment-circuit>
+            <name>AC1</name>
+            <if-type>GigabitEthernet</if-type>
+            <if-id>0/0/0/6</if-id>
+          </l2-attachment-circuit>
+          <l2-attachment-circuit>
+            <name>AC2</name>
+            <if-type>GigabitEthernet</if-type>
+            <if-id>0/0/0/5</if-id>
+          </l2-attachment-circuit>
+          ...
+        </endpoint>
+      </flat-L3vpn>
+
+    b. Check the set Payload
+        admin@ncs> show devices device PIOSXR-0 config cisco-ios-xr:interface BVI 168
+
+
+cisco-flat-L3vpn-fp (v0.0.3) [Aug 08, 2019]
+=============================================
+
+A. New Feature
+
+  1. Custom Templates
+	      Custom templates can be used to apply configs directly on devices
+	      custom-template added under flat-L3vpn and flat-L3vpn -> endpoint
+
+	      Name of custom templates must start with either "ct-" or "CT-"
+
+	      If apply-custom-template leaf is set to 'true', then only custom-templates will get applied
+	      By default apply-custom-template is set to 'true':
+	        admin@ncs% show apply-custom-template
+	        apply-custom-template true;
+
+	    a. Sample custom templates
+	      <devices xmlns="http://tail-f.com/ns/ncs">
+	        <template>
+	          <name>CT-CLI-banner</name> ----------------------> CUSTOM TEMPLATE NAME
+	          <ned-id>
+	            <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+	            <config>
+	              <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+	                <history>informational</history>
+	              </logging>
+	              <banner xmlns="http://tail-f.com/ned/cisco-ios-xr">
+	                <login>
+	                  <start-marker>'</start-marker>
+	                  <message>{$BANNER_TEXT}</message>  ------------------> VARIABLE
+	                  <end-marker>'</end-marker>
+	                </login>
+	              </banner>
+	            </config>
+	          </ned-id>
+	        </template>
+	        <template>
+	          <name>CT-CLI-logging</name> ----------------------> CUSTOM TEMPLATE NAME
+	          <ned-id>
+	            <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+	            <config>
+	              <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+	                <history>informational</history>
+	              </logging>
+	            </config>
+	          </ned-id>
+	        </template>
+	      </devices>
+
+	      CT-CLI-banner template will apply banner config on device
+	      CT-CLI-logging template will set logging config on device
+
+        b. Sample Payloads
+            Previous Payload sample:
+            <config xmlns="http://tail-f.com/ns/config/1.0">
+              <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+                <name>L3</name>
+                <endpoint>
+                  <endpoint-name>cli-1</endpoint-name>
+                  <access-pe>PIOSXR-0</access-pe>
+                </endpoint>
+              </flat-L3vpn>
+            </config>
+
+            Current Payload sample:
+            <config xmlns="http://tail-f.com/ns/config/1.0">
+              <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+                <name>L3</name>
+                <custom-template>
+                  <name>CT-CLI-logging</name>
+                </custom-template>
+                <endpoint>
+                  <endpoint-name>cli-1</endpoint-name>
+                  <access-pe>PIOSXR-0</access-pe>
+                  <custom-template>
+                    <name>CT-CLI-banner</name>
+                    <variable>
+                      <name>BANNER_TEXT</name>
+                      <value>Welcome</value>
+                    </variable>
+                  </custom-template>
+                </endpoint>
+              </flat-L3vpn>
+            </config>
+
+    c. Check status of applied custom-template
+	        admin@ncs> show custom-template-status
+	        NAME                         DEVICE    STATUS   MESSAGE
+	        ---------------------------------------------------------
+	        CT-CLI-banner                PIOSXR-0  APPLIED  SUCCESS
+	        CT-NETCONF-banner-iteration  P-0       APPLIED  SUCCESS
+	        CT-NETCONF-logging           P-0       APPLIED  SUCCESS
+
+
+cisco-flat-L3vpn-fp (v0.0.3) [July 15, 2019]
+=============================================
+
+A. Non-backward compatible enhancements:
+
+  1. L3vpn service -> endpoint -> pe-mask is removed. pe-ip-addr should be of following format now:
+      x.x.x.x/y.
+
+    Previous payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <name>L3</name>
+        <endpoint>
+          <access-pe>P-0</access-pe>
+          <if-type>Loopback</if-type>
+          <if-id>3</if-id>
+          <pe-ip-addr>169.1.1.1</pe-ip-addr> -----------------------------> OLD VALUE
+          <pe-mask>255.255.255.255</pe-mask> -----------------------------> REMOVED
+          ...
+        </endpoint>
+      </flat-L3vpn>
+    </config>
+
+    Current payload sample:
+
+     <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <name>L3</name>
+        <endpoint>
+          <access-pe>P-0</access-pe>
+          <if-type>Loopback</if-type>
+          <if-id>3</if-id>
+          <pe-ip-addr>169.1.1.1/32</pe-ip-addr> -----------------------------> NEW VALUE TYPE UPDATED
+          ...
+        </endpoint>
+      </flat-L3vpn>
+    </config>
+
+  2. L3vpn endpoint key is changed from 'access-pe' to 'endpoint-name' which can be any string.
+
+    Previous payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <name>L3</name>
+        <endpoint>
+          <access-pe>P-0</access-pe> --------------------------------------> REMOVED FROM KEY
+          ...
+        </endpoint>
+      </flat-L3vpn>
+    </config>
+
+    Current payload sample:
+
+     <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <name>L3</name>
+        <endpoint>
+          <endpoint-name>some-pe-name</endpoint-name>  -------------------------------> NEW KEY
+          <access-pe>P-0</access-pe>
+          ...
+        </endpoint>
+      </flat-L3vpn>
+    </config>
+
+
+cisco-flat-L3vpn-fp (v0.0.2) [May 22, 2019]
+=============================================
+
+A. Non-backward compatible enhancements:
+
+  1. Dynamic Device Mapping config doesn't require capability field anymore.
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+          <dynamic-device-mapping>
+            <ned-id>ios-id:cisco-ios</ned-id>
+            <capability>tailf-ned-cisco-ios</capability> ----------------------------------> REMOVED
+            <python-impl-class-name>flat_l3vpn_multi_vendors.Ios</python-impl-class-name>
+          </dynamic-device-mapping>
+        </cfp-configurations>
+      </config>
+
+    Current payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <dynamic-device-mapping>
+          <ned-id>ios-id:cisco-ios</ned-id>
+          <python-impl-class-name>flat_l3vpn_multi_vendors.Ios</python-impl-class-name>
+        </dynamic-device-mapping>
+      </cfp-configurations>
+    </config>
+
+cisco-flat-L3vpn-fp (v0.0.2) [May 10, 2019]
+=============================================
+
+A. Non-backwards incompatible enhancements
+
+  1. Service Namespace has changed.
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <flat-L3vpn xmlns="http://cisco.com/fp/t-sdn/flat-L3vpn"> -------> OLD NS
+            <name>COLT-L3vpn-dynamic</name>
+            ...
+        </flat-L3vpn>
+      </config>
+
+    Current payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn"> ---> NEW NS
+            <name>COLT-L3vpn-dynamic</name>
+            ...
+        </flat-L3vpn>
+      </config>
+
+  2. Dynamic Device Mapping config moved
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <dynamic-device-mapping xmlns="http://cisco.com/fp/t-sdn/flat-L3vpn">
+          <ned-id>ios-id:cisco-ios</ned-id>
+          <capability>tailf-ned-cisco-ios</capability>
+          <python-impl-class-name>flat_l3vpn_multi_vendors.Ios</python-impl-class-name>
+        </dynamic-device-mapping>
+      </config>
+
+    Current payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+        <dynamic-device-mapping>
+          <ned-id>ios-id:cisco-ios</ned-id>
+          <capability>tailf-ned-cisco-ios</capability>
+          <python-impl-class-name>flat_l3vpn_multi_vendors.Ios</python-impl-class-name>
+        </dynamic-device-mapping>
+      </cfp-configurations>
+    </config>
+
+cisco-flat-L3vpn-fp (v0.0.1) [March 22, 2019]
+=============================================
+
+A. Non-backwards incompatible enhancements
+
+  1. L3-VPN gateway leaf is removed from tunnel-route/static-route.
+
+    a. Previous payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L3vpn xmlns="http://cisco.com/fp/t-sdn/flat-L3vpn">
+        <name>L3</name>
+        <endpoint>
+          <access-pe>my-iosxr-cli</access-pe>
+          <sr-te>
+            <tunnel-route>
+              <if-id>100</if-id>
+              <static-route>
+                <ipv4-destination>
+                  <address>5.5.5.5/32</address>
+                  <gateway>10.10.10.10</gateway>
+                </ipv4-destination>
+                <ipv4-destination>
+                  <address>5.5.5.6/32</address>
+                  <gateway>10.10.10.10</gateway>
+                </ipv4-destination>
+              </static-route>
+            </tunnel-route>
+          </sr-te>
+        </endpoint>
+      </flat-L3vpn>
+    </config>
+
+    b. Payload after the change:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L3vpn xmlns="http://cisco.com/fp/t-sdn/flat-L3vpn">
+        <name>L3</name>
+        <endpoint>
+          <access-pe>my-iosxr-cli</access-pe>
+          <sr-te>
+            <tunnel-route>
+              <if-id>100</if-id>
+              <static-route>
+                <ipv4-destination>
+                  <address>5.5.5.5/32</address>
+                </ipv4-destination>
+                <ipv4-destination>
+                  <address>5.5.5.6/32</address>
+                  <!-- gateway>10.10.10.10</gateway -->  -------------------> DELETED
+                </ipv4-destination>
+              </static-route>
+            </tunnel-route>
+          </sr-te>
+        </endpoint>
+      </flat-L3vpn>
+    </config>
+
+  2. NSO version 4.7.3 is minimum.
+
+B. New Features
+
+  1. NETCONF Support

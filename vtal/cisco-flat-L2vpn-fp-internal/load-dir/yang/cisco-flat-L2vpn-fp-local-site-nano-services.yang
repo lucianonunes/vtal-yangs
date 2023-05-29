@@ -1,0 +1,62 @@
+module cisco-flat-L2vpn-fp-local-site-nano-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-local-site-nano-services";
+  prefix cisco-flat-L2vpn-fp-local-site-nano-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-flat-L2vpn-fp-internal-local-site { prefix cisco-flat-L2vpn-fp-internal-local-site; }
+
+  description "Models for L2vpn local site nano services.";
+
+  revision 2019-05-10 {
+    description
+      "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline flat-L2vpn-local-site-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "cisco-flat-L2vpn-fp-local-site-nano-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state as failed in case device transaction is invalidated
+          // this is needed due to CQ, where in device's last-transaction-id is set to INVALIDATED
+          // in case of CQ failures. During redeploy's we do not want the service to go to 'reached'
+          // state unless the device transaction is fixed.
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree flat-L2vpn-internal-local-site {
+    ncs:plan-outline-ref "cisco-flat-L2vpn-fp-local-site-nano-services:"
+                                    + "flat-L2vpn-local-site-nano-plan";
+    ncs:plan-location "/cisco-flat-L2vpn-fp-internal-local-site:flat-L2vpn-internal-local-site/"
+                        + "cisco-flat-L2vpn-fp-internal-local-site:flat-L2vpn-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+      ncs:variable "PE" {
+        ncs:value-expr "pe";
+      }
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+    }
+  }
+}

@@ -1,0 +1,539 @@
+/*
+ * flat-L2vpn EVPN Multipoint for a site
+ */
+module cisco-flat-L2vpn-fp-internal-site {
+
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-internal-site";
+  prefix cisco-flat-L2vpn-fp-internal-site;
+
+  import ietf-inet-types { prefix inet; }
+
+  import ietf-yang-types { prefix yang; }
+
+  import tailf-common { prefix tailf; }
+
+  import tailf-ncs { prefix ncs; }
+
+  import custom-template-hook { prefix ct-hook; }
+
+  import cisco-flat-L2vpn-fp-internal-common { prefix cisco-flat-L2vpn-fp-internal-common; }
+
+  import cisco-tsdn-core-fp-common { prefix tsdn-core-fp-common; }
+
+  description "MPLS L2VPN function pack - example for internal local-site";
+
+  revision 2022-06-17 {
+    description "
+     Added: pattern under evpn-vpws-grouping -> multi-home -> esi-value -> string.
+     Modified: tailf:info and description under evpn-vpws-grouping -> multi-home -> esi-value.
+     Modified: tailf:info under evpn-vpws-grouping -> multi-home -> esi-value -> string
+     Modified: type of flat-L2vpn-internal-site-service -> site-name and flat-L2vpn-internal-site-service -> flat-L2vpn-evpn-multipoint -> site -> site-name to string.";
+  }
+
+  revision 2022-05-27 {
+    description
+      "Removed: Q-in-Q enum options under grouping subinterface-rewrite-common-grouping -> ingress -> translate";
+  }
+
+  revision 2022-05-26 {
+    description
+      "Modified: vlan-id range to 1..4094";
+  }
+
+  revision 2022-05-10 {
+    description
+      "Added: leaf enable under evpn-multipoint-grouping -> split-horizon
+       Removed: leaf group under evpn-multipoint-grouping -> split-horizon
+       Removed: presence statement under evpn-multipoint-grouping -> split-horizon";
+  }
+
+  revision 2022-02-15 {
+    description "Initial revision.";
+  }
+
+  typedef service-name {
+    type string {
+      pattern "[a-zA-Z0-9\\-_]+";
+    }
+  }
+
+  typedef l2-serv-encap-type {
+    type enumeration {
+      enum untagged;
+      enum dot1q;
+    }
+  }
+
+  typedef as-no-type {
+    type union {
+      type uint32 {
+        tailf:info "<1-4294967295>;;Autonomous system number";
+        range "1..4294967295";
+      }
+      type string {
+        tailf:info "<1.0-XX.YY>;;Autonomous system number";
+        pattern '[0-9]+\.[0-9]+';
+      }
+    }
+  }
+
+  typedef asn-ip-type {
+    type string {
+      tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+      pattern '(([0-9]+)|((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+        +'\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))):[0-9]+';
+    }
+  }
+
+  typedef bgp-rt-type {
+    type enumeration {
+      enum import {
+        description "For import";
+      }
+      enum export {
+        description "For export";
+      }
+      enum both {
+        description "For both import and export";
+      }
+    }
+    description "BGP route-target type. Import from BGP YANG";
+  }
+
+  grouping interface-name-grouping {
+    leaf if-type {
+      tailf:info "Interface Type";
+      description "Interface Type";
+      type enumeration {
+        enum Bundle-Ether;
+        enum Ethernet;
+        enum FiftyGigE;
+        enum FortyGigE;
+        enum FourHundredGigE;
+        enum GigabitEthernet;
+        enum HundredGigE;
+        enum TenGigE;
+        enum TwentyFiveGigE;
+        enum TwoHundredGigE;
+      }
+      mandatory true;
+    }
+
+    leaf if-id {
+      tailf:info "Interface Id";
+      description "Interface Id";
+      type string {
+        pattern '[0-9]+(/[0-9]+)*';
+      }
+      mandatory true;
+    }
+  }
+
+  grouping subinterface-rewrite-common-grouping {
+    container ingress {
+      tailf:info "Set the tag rewriting policy for this EFP";
+      description "Set the tag rewriting policy for this EFP";
+      presence "true";
+      choice tag-choice {
+        leaf pop {
+          tailf:info "Remove one or more tags";
+          description "Remove one or more tags";
+          when "../../../if-encap = 'dot1q'";
+          type enumeration {
+            enum "1" {
+              tailf:info "Remove outer tag only";
+            }
+            enum "2" {
+              tailf:info "Remove two outermost tags";
+            }
+          }
+          mandatory true;
+        }
+        leaf push {
+          tailf:info "Push one or more tags";
+          description "Push one or more tags";
+          type empty;
+          mandatory true;
+        }
+        leaf translate {
+          tailf:info "Replace tags with other tags";
+          description "Replace tags with other tags";
+          type enumeration {
+            enum "1-to-1" {
+              tailf:info "Replace the outermost tag with another tag";
+            }
+          }
+          mandatory true;
+        }
+      }
+
+      leaf dot1q {
+        tailf:info "<1-4094> - Push a Dot1Q tag";
+        description "<1-4094> - Push a Dot1Q tag";
+        when "not(../pop)";
+        mandatory true;
+        type uint16 {
+          tailf:info "<1-4094>;;VLAN Id to push";
+          range "1..4094";
+        }
+      }
+
+      leaf mode {
+        type enumeration {
+          enum symmetric {
+            tailf:info "All rewrites must be symmetric";
+          }
+        }
+      }
+    }
+  }
+
+  grouping sr-te-odn-grp {
+    choice type {
+      case odn {
+        container odn {
+          tailf:info "ODN SR policy";
+          description "ODN SR policy";
+          presence true;
+
+          choice attach-or-not {
+            container attach-point {
+              choice parent-rr-route-policy-choice {
+                leaf parent-rr-route-policy {
+                  type string {
+                    length "1..max";
+                  }
+                  tailf:info "Parent RR Route Policy to apply local route policies";
+                  description "Parent RR Route Policy to apply local route policies";
+                }
+              }
+            }
+            leaf route-policy-type {
+              type enumeration {
+                enum "import";
+                enum "export";
+                enum "both";
+              }
+            }
+          }
+
+          leaf route-policy-name {
+            tailf:info "Name of SR routing policy";
+            description "Name of SR routing policy";
+            type string;
+            mandatory true;
+          }
+
+          list color {
+            tailf:info "SR policy color";
+            description "SR policy color";
+            key id;
+            leaf id {
+              tailf:info "<1-4294967295> - SR policy color";
+              description "<1-4294967295> - SR policy color";
+              type uint32 {
+                range  "1..4294967295";
+              }
+              tailf:cli-allow-range;
+            }
+
+            container ipv4 {
+              tailf:info "IPv4 ODN SR";
+              description "IPv4 ODN SR";
+              presence "true";
+              leaf-list rd {
+                tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                description "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                type cisco-flat-L2vpn-fp-internal-common:asn-ip-type;
+              }
+            }
+
+            container ipv6 {
+              presence "true";
+              tailf:info "IPv6 ODN SR";
+              description "IPv6 ODN SR";
+              leaf-list rd {
+                tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                description "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                type cisco-flat-L2vpn-fp-internal-common:asn-ip-type;
+              }
+            }
+
+            container evpn-route-type {
+              tailf:info "EVPN Route Type";
+              description "EVPN Route Type";
+              presence "true";
+              leaf-list route-type {
+                tailf:info "<0-11> - EVPN Route Type";
+                description "<0-11> - EVPN Route Type";
+                type uint8 {
+                  range  "0..11";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping evpn-multipoint-grouping {
+    uses interface-name-grouping;
+
+    leaf if-description {
+      tailf:info "Interface Description";
+      description "Interface Description";
+      type string;
+    }
+
+    leaf if-encap {
+      tailf:info "Interface Encapsulation";
+      description "Interface Encapsulation";
+      type l2-serv-encap-type;
+      mandatory true;
+    }
+
+    container multi-home {
+      presence "true";
+      leaf esi-value {
+        tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        description "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        type string {
+          tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+          pattern '[0-9a-f]{2}(\.[0-9a-f]{2}){8}';
+          pattern '00\.00\.00\.00\.00\.00\.00\.00\.00' {
+            modifier invert-match;
+          }
+        }
+        mandatory true;
+      }
+    }
+
+    leaf vlan-id {
+      tailf:info "<1-4094> - VLAN Id";
+      description "<1-4094> - VLAN Id";
+      when "../if-encap = 'dot1q'";
+      type int32 {
+        range "1..4094";
+      }
+      mandatory true;
+    }
+
+    leaf sub-if-id {
+      tailf:info "Sub Interface Id";
+      description "Sub Interface Id";
+      type int32 ;
+    }
+
+    container rewrite {
+      tailf:info "Tag Rewrite";
+      description "Tag Rewrite";
+      presence "true";
+      when "../sub-if-id or ../vlan-id";
+      uses subinterface-rewrite-common-grouping;
+    }
+
+    leaf mtu {
+      tailf:info "<64-65535> - Set the MTU on an interface";
+      description "<64-65535> - Set the MTU on an interface";
+      type uint16 {
+        tailf:info "<64-65535>;;MTU size in bytes";
+        range "64..65535";
+      }
+    }
+
+    leaf leaf {
+      when "../../topology != 'E-LAN'";
+      tailf:info "Leaf Site";
+      description "Leaf Site";
+      type enumeration {
+        enum 'single-homing';
+        enum 'multi-homing';
+      }
+    }
+
+    container advertise-mac {
+      tailf:info "Configure locally-learned MAC advertisement";
+      description "Configure locally-learned MAC advertisement";
+
+      leaf enable {
+        tailf:info "Enable locally-learned MAC advertisement";
+        description "Enable locally-learned MAC advertisement";
+        type boolean;
+        default "true";
+      }
+    }
+
+    leaf control-word-disable {
+      tailf:info "Disabling control-word";
+      description "Disabling control-word";
+      type boolean;
+      default "true";
+    }
+
+    list vpn-target {
+      key rt-value;
+      tailf:info "Route Targets";
+      description "Route Targets";
+      leaf rt-type {
+        tailf:info "Route-Target Type";
+        description "Route-Target Type";
+        type bgp-rt-type;
+        mandatory true;
+      }
+      leaf rt-value {
+        tailf:info "Route-Target Value";
+        description "Route-Target Value";
+        type asn-ip-type;
+        tailf:cli-allow-range;
+      }
+    }
+
+    container split-horizon {
+      when "../leaf";
+      tailf:info "Configure split horizon group";
+      description "Configure split horizon group";
+      leaf enable {
+        tailf:info "Enable split horizon";
+        description "Enable split horizon";
+        type boolean;
+        default "true";
+      }
+    }
+
+    container sr-te {
+      tailf:info "SR-TE Policy";
+      description "SR-TE Policy";
+      presence "true";
+      uses sr-te-odn-grp;
+    }
+  }
+
+
+  list flat-L2vpn-internal-site-service {
+    tailf:hidden tsdn;
+    tailf:info "Flat L2VPN Configuration";
+    description "Flat L2VPN Configuration";
+    uses ncs:service-data;
+    ncs:servicepoint "flat-L2vpn-internal-site";
+
+    tailf:validate "flat-L2vpn-internal-site-validation" {
+      tailf:dependency ".";
+    }
+
+    key "name site-name";
+    leaf name {
+      tailf:info "Service Name for L2VPN";
+      description "Service Name for L2VPN";
+      type service-name;
+      tailf:cli-allow-range;
+    }
+
+    leaf site-name {
+      tailf:info "Site name";
+      description "Site name";
+      type string;
+      tailf:cli-allow-range;
+    }
+
+    uses ct-hook:template-hook;
+    uses tsdn-core-fp-common:service-assurance-grouping;
+
+    leaf service-type {
+      tailf:info "L2VPN Service Type";
+      description "L2VPN Service Type";
+      type enumeration {
+        enum evpn-multipoint;
+      }
+      mandatory true;
+    }
+
+    container flat-L2vpn-evpn-multipoint {
+      tailf:info "P2P EVPN VPWS Type";
+      description "P2P EVPN VPWS Type";
+      when "../service-type = 'evpn-multipoint'";
+
+      leaf evi-id {
+        tailf:info "<1-65534> - EVI Id";
+        description "<1-65534> - EVI Id";
+        type uint16 {
+          tailf:info "<1-65534>;;Ethernet VPN ID to set";
+          range "1..65534";
+        }
+        mandatory true;
+      }
+
+      leaf topology {
+        tailf:info "L2VPN Topology";
+        description "L2VPN Topology";
+        type enumeration {
+          enum E-LAN;
+          enum E-TREE;
+          enum CUSTOM;
+        }
+        default E-LAN;
+      }
+
+      leaf bridge-group {
+        tailf:info "Bridge group";
+        description "Bridge group";
+        type service-name;
+      }
+
+      list site {
+        tailf:info "L2VPN Site";
+        description "L2VPN Site";
+        key "site-name";
+        unique "pe if-type if-id";
+        max-elements 1;
+
+        leaf site-name {
+          tailf:info "Site name";
+          description "Site name";
+          type string;
+          tailf:cli-allow-range;
+        }
+
+        leaf pe {
+          tailf:info "Site Device";
+          description "Site Device";
+          type leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+          mandatory true;
+        }
+
+        uses evpn-multipoint-grouping;
+        uses ct-hook:template-hook;
+
+        // TODO: Need AA for EVPN-MP
+      }
+    }
+
+    uses cisco-flat-L2vpn-fp-internal-common:action-grouping;
+  }
+
+  container flat-L2vpn-internal-site {
+    tailf:hidden tsdn;
+    list flat-L2vpn-plan {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name site-name";
+      leaf name {
+        type string;
+      }
+      leaf site-name {
+        type string;
+      }
+      leaf pe {
+        type string;
+      }
+      uses ncs:nano-plan-data;
+      uses ncs:nano-plan-history;
+    }
+  }
+
+}

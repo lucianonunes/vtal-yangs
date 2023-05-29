@@ -1,0 +1,704 @@
+module cisco-zr-cfp {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-ron-zr";
+  prefix cisco-zr-cfp;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  description "ZR module";
+
+  revision 2022-08-15 {
+    description "Updated srlg group and name restriction.
+                 Updated iosxr-default-ned-id from cisco-iosxr-cli-7.38 to cisco-iosxr-cli-7.40 in cfp-configurations.
+                 Added dac-rate as input to fetch-optics-data action.
+                 Updated modulation and baud-rate in transceiver-capability to leaf-list.";
+  }
+
+  revision 2022-03-08 {
+    description "Added srlg container to zr dco service";
+  }
+
+  revision 2022-02-11 {
+    description "iosxr-default-ned-id updated from cisco-iosxr-nc-7.3 to cisco-iosxr-cli-7.38 in cfp-configurations";
+  }
+
+  revision 2021-12-09 {
+    description "Removed: core-fp-common reference
+                 Modified : read from dispatch-map to device tree ";
+  }
+  revision 2021-09-13 {
+    description "Added leaf platform-pid as part of zr dco service
+                 Added leaf platform-pid in the output of action fetch-optics-data.";
+  }
+
+  revision 2021-06-04 {
+    description "iosxr-default-ned-id updated from 7.3 to 7.32 in cfp-configurations ";
+  }
+
+  revision 2021-05-21 {
+    description "Added metadata on dco service to store router interfaces configured.";
+  }
+
+  revision 2020-12-06 {
+    description "Initial revision.";
+  }
+
+  grouping ip-address-group {
+    container ip-address {
+      presence "true";
+      tailf:info "IP Address";
+      description "IP Address";
+      leaf v4 {
+        tailf:info "<A.B.C.D/prefix> - IPv4 Address";
+        description "<A.B.C.D/prefix> - IPv4 Address";
+        type tailf:ipv4-address-and-prefix-length;
+      }
+
+      leaf v6 {
+        tailf:info "<X:X::X/length> - IPv6 Address";
+        description "<X:X::X/length> - IPv6 Address";
+        type tailf:ipv6-address-and-prefix-length;
+      }
+    }
+  }
+
+  container zr {
+    tailf:hidden ron;
+    tailf:info "ZR fp data model";
+    description "ZR fp data model";
+
+    list dco {
+      tailf:info "ZR Digital Coherent Optics service";
+      description "ZR Digital Coherent Optics service";
+      key "name router";
+
+      uses ncs:service-data;
+      ncs:servicepoint cisco-zr-dco-servicepoint;
+
+      leaf name {
+        tailf:info "Service Name for ZR-DCO";
+        description "Service Name for ZR-DCO";
+        type string {
+          pattern '[\w\-\.:,_@#%$\+=\|;]+';
+        }
+        tailf:cli-allow-range;
+      }
+
+      leaf router {
+        tailf:info "ZR-pluggable router name";
+        description "ZR-pluggable router name";
+        type leafref {
+          path "/ncs:devices/ncs:device/ncs:name";
+        }
+        mandatory true;
+      }
+
+      leaf line-port {
+        tailf:info "Optics controller port in proper format like Rack/Slot/Instance/Port";
+        description "Optics controller port in proper format like Rack/Slot/Instance/Port";
+        type string {
+          pattern "[0-9]+(/[0-9]+)*";
+        }
+        mandatory true;
+      }
+
+      leaf mode {
+        tailf:info "Mode - transponder or muxponder";
+        description "Mode - transponder or muxponder";
+        type enumeration {
+          enum "transponder";
+          enum "muxponder";
+        }
+        mandatory true;
+      }
+
+      leaf bandwidth {
+        tailf:info "Bandwidth - 100, 200, 300, 400 in GB";
+        description "Bandwidth - 100, 200, 300, 400 in GB";
+        type string {
+          pattern "(100)|(200)|(300)|(400)";
+        }
+        mandatory true;
+      }
+
+      leaf circuit-id {
+        tailf:info "Identifier string for the Circuit";
+        description "Identifier string for the Circuit";
+        type string;
+      }
+
+      leaf transceiver-pid {
+        tailf:info "Pluggable optics line-port PID";
+        description "Pluggable optics line-port PID";
+        type string;
+        mandatory true;
+      }
+
+      leaf flexport-linecard-pid {
+        tailf:info "Flexport line card PID for optics line-port";
+        description "Flexport line card PID for optics line-port";
+        type string;
+      }
+
+      leaf platform-pid {
+        tailf:info "Platform pid to identify the platform model";
+        description "Platform pid to identify the platform model";
+        type string;
+      }
+
+      leaf dac-rate {
+        tailf:info "DAC rate - 1x1/1x1.25 ";
+        description "DAC rate - 1x1/1x1.25";
+        type string {
+          pattern "(1x1)|(1x1.25)";
+        }
+      }
+
+      leaf fec {
+        tailf:info "FEC mode";
+        description "FEC mode";
+        type enumeration {
+          enum "fec-cfec";
+          enum "fec-ofec";
+        }
+      }
+
+      leaf transmit-power {
+        tailf:info "Power level (in units of 0.1dBm)";
+        type int32 {
+          range "-150..0";
+        }
+        mandatory true;
+      }
+
+      leaf grid-type {
+        tailf:info "DWDM Channel Grid Type";
+        description "DWDM Channel Grid Type";
+        type enumeration {
+          enum "50g-hz-grid";
+          enum "100mhz-grid";
+        }
+      }
+
+      leaf frequency {
+        tailf:info "50ghz: 19130-19610 or 100MHz C Band: 1913000-1961000, L band: 1861000-1908500";
+        description "50ghz: 19130-19610 or 100MHz C Band: 1913000-1961000, L band: 1861000-1908500";
+        type uint32;
+
+        must "((../grid-type='50g-hz-grid' and .>=19130 and .<=19610) or"+
+            "(../grid-type='100mhz-grid' and .>=1913000 and .<=1961000))" {
+            error-message "Provided Frequency is out of range for the grid-type";
+          }
+      }
+
+      list bundle {
+        tailf:info "Bundle interface configuration";
+        description "Bundle interface configuration";
+        key id;
+        leaf id {
+          tailf:info "Bundle Id 1-65535";
+          description "Bundle Id 1-65535";
+          type uint16 {
+            range "1..65535";
+          }
+        }
+
+        leaf description {
+          tailf:info "Description of the bundle interface";
+          description "Description of the bundle interface";
+          type string;
+        }
+
+        uses ip-address-group;
+      }
+
+      list interface {
+        tailf:info "Child Interface of Controller";
+        description "Child Interface of Controller";
+        key index;
+        leaf index {
+          tailf:info "Index 0-3";
+          description "Index 0-3";
+          type uint8 {
+            range "0..3";
+          }
+        }
+        max-elements 4;
+
+        container membership {
+          presence "true";
+          tailf:info "Bundle membership configuration";
+          description "Bundle membership configuration";
+
+          leaf bundle-id {
+            tailf:info "Bundle interface id";
+            description "Bundle interface id";
+            type leafref {
+              path "../../../bundle/id";
+            }
+            mandatory true;
+          }
+
+          leaf mode {
+            tailf:info "Bundle port activity Mode";
+            description "Bundle port activity Mode";
+            type enumeration {
+              enum "active";
+              enum "passive";
+              enum "on";
+              enum "inherit";
+            }
+            default "active";
+          }
+        }
+
+        uses ip-address-group {
+          when "not (./membership)";
+        }
+      }
+
+      container srlg {
+        tailf:info "SRLG configuration for all RON interfaces";
+        description "SRLG configuration for all RON interfaces";
+        list value-list {
+          key id;
+          leaf id {
+            tailf:info "Index number for this value 1-65535";
+            description "Index number for this value 1-65535";
+            type uint16 {
+              range "1..65535";
+            }
+          }
+          unique value;
+          leaf value {
+            tailf:info "Configure SRLG network value 0-4294967295";
+            description "Configure SRLG network value 0-4294967295";
+            type uint32 {
+              range "0..4294967295";
+            }
+            mandatory true;
+          }
+          leaf priority {
+            tailf:info "Set prority for the value";
+            description "Set prority for the value";
+            type enumeration {
+              enum verylow;
+              enum low;
+              enum high;
+              enum critical;
+            }
+          }
+        }
+
+        list name-list {
+          key name;
+          leaf name {
+            tailf:info "Bind this predefined SRLG name to the interfaces";
+            description "Bind this predefined SRLG name to the interfaces";
+            type string {
+              pattern '[A-Za-z0-9\-\.:@$_#;]+';
+              length "1..64";
+            }
+          }
+        }
+
+        leaf group {
+          tailf:info "Bind this predefined SRLG Group to the interfaces";
+          description "Bind this predefined SRLG Group to the interfaces";
+          type string {
+            pattern '[A-Za-z0-9\-:@$_#;]+';
+            length "1..32";
+          }
+        }
+      }
+
+      uses ct-hook:template-hook;
+
+      container metadata {
+        tailf:info "ZR Digital Coherent Optics service operational data";
+        description "ZR Digital Coherent Optics service operational data";
+        config false;
+        tailf:cdb-oper {
+          tailf:persistent true;
+        }
+        list interface {
+          tailf:info "Child interface of the controller";
+          description "Child interface of the controller";
+          key index;
+          leaf index {
+            tailf:info "Index 0-3";
+            description "Index 0-3";
+            type uint8 {
+              range "0..3";
+            }
+          }
+          leaf name {
+            tailf:info "The name of the interface configured on the router";
+            description "The name of the interface configured on the router";
+            type string {
+              pattern "[a-zA-Z0-9.:_/-]+";
+            }
+          }
+        }
+      }
+    }
+
+    tailf:action fetch-optics-data {
+      tailf:actionpoint cisco-zr-dco-cfp-fetch-optics-data;
+      tailf:info "Fetches PIDs of Optics PID and Flex LineCard PID and validates";
+      description "Fetches PIDS of Optics PID and Flex LineCard PID and validates";
+      input {
+        leaf end-point-device {
+          tailf:info "ZR-pluggable router name";
+          description "ZR-pluggable router name";
+          type string;
+          mandatory true;
+        }
+        leaf line-port {
+          tailf:info "Optics controller port in proper format like Rack/Slot/Instance/Port";
+          description "Optics controller port in proper format like Rack/Slot/Instance/Port";
+          type string {
+            pattern "[0-9]+(/[0-9]+)*";
+          }
+          mandatory true;
+        }
+        leaf mode {
+          tailf:info "Mode - transponder or muxponder";
+          description "Mode - transponder or muxponder";
+          type enumeration {
+            enum "transponder";
+            enum "muxponder";
+          }
+          mandatory true;
+        }
+        leaf bandwidth {
+          tailf:info "Bandwidth - 100, 200, 300, 400 in GB";
+          description "Bandwidth - 100, 200, 300, 400 in GB";
+          type string {
+            pattern "(100)|(200)|(300)|(400)";
+          }
+          mandatory true;
+        }
+        leaf dac-rate {
+          tailf:info "Digital-to-analog converter (DAC) rate - 1x1/1x1.25";
+          description "Digital-to-analog converter (DAC) rate - 1x1/1x1.25";
+          type string {
+            pattern "(1x1)|(1x1.25)";
+          }
+        }
+      }
+      output {
+        leaf status {
+          type string;
+        }
+        leaf message {
+          type string;
+        }
+        leaf transceiver-pid {
+          type string;
+        }
+        leaf flexport-linecard-pid {
+          type string;
+        }
+        leaf platform-pid {
+          type string;
+        }
+      }
+    }
+
+    tailf:action cleanup {
+      tailf:actionpoint cisco-zr-dco-cfp-cleanup-internal;
+      tailf:info "Clean up ZR-DCO service configuration and operational data";
+      description "Clean up ZR-DCO service configuration and operational data";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf-list devices {
+          tailf:info "Cleanup services with the given devices";
+          description "Cleanup services with the given devices";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+          min-elements 1;
+        }
+        leaf no-networking {
+          tailf:info "Send nothing to the devices when set to true";
+          description "Send nothing to the devices when set to true";
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    tailf:action zombie-clean-sync {
+      tailf:actionpoint cisco-zr-dco-cfp-zombie-clean-sync-internal;
+      tailf:info "Re-deploy ZR Zombie and do sync-from of ZR device";
+      description "Re-deploy ZR Zombie and do sync-from of ZR device";
+      input {
+        leaf service {
+          tailf:info "ZR-dco service name";
+          description "ZR-dco service name";
+          type string;
+          mandatory true;
+        }
+        leaf device {
+          tailf:info "ZR-pluggable router name";
+          description "ZR-pluggable router name";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-zr-dco-cfp-error-recovery-internal;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          tailf:info "ZR-dco service name";
+          description "ZR-dco service name";
+          type string;
+          mandatory true;
+        }
+        leaf router {
+          tailf:info "ZR-pluggable router name";
+          description "ZR-pluggable router name";
+          type leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+          mandatory true;
+        }
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    list dco-plan {
+      tailf:info "ZR DCO Plan";
+      description "ZR DCO Plan";
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name router";
+
+      leaf name {
+        type string;
+      }
+
+      leaf router {
+        type string;
+      }
+
+      uses ncs:nano-plan-data;
+      uses ncs:nano-plan-history;
+    }
+
+    list transceiver-capability {
+      tailf:info "Transceiver capability ";
+      description "Transceiver capability";
+      key "pid mode bandwidth";
+
+      leaf pid {
+        tailf:info "Transceiver PID";
+        description "Transceiver PID";
+        type string;
+      }
+
+      leaf mode {
+        tailf:info "Mode - transponder or muxponder";
+        description "Mode - transponder or muxponder";
+        type enumeration {
+          enum "transponder";
+          enum "muxponder";
+        }
+      }
+
+      leaf bandwidth {
+        tailf:info "Bandwidth - 100, 200, 300, 400 in GB";
+        description "Bandwidth - 100, 200, 300, 400 in GB";
+        type string {
+          pattern "(100)|(200)|(300)|(400)";
+        }
+        mandatory true;
+      }
+
+      leaf fec {
+        tailf:info "Forward Error Correction mode";
+        description "Forward Error Correction mode";
+        type enumeration {
+          enum "fec-cfec";
+          enum "fec-ofec";
+        }
+        mandatory true;
+      }
+
+      leaf-list modulation {
+        tailf:info "Modulation";
+        description "Modulation";
+        type enumeration {
+          enum "qpsk";
+          enum "8qam";
+          enum "16qam";
+        }
+        min-elements 1;
+        ordered-by user;
+      }
+
+      leaf-list baud-rate {
+        tailf:info "Baud rate - 30.155, 59.84, 60.14";
+        description "Baud rate - 30.155, 59.84, 60.14";
+        type string {
+          pattern "(30.155)|(59.84)|(60.14)";
+        }
+        min-elements 1;
+        ordered-by user;
+      }
+
+      leaf-list dac-rate {
+        tailf:info "DAC rate - 1x1/1x1.25 ";
+        description "DAC rate - 1x1/1x1.25";
+        type string {
+          pattern "(1x1)|(1x1.25)";
+        }
+        min-elements 1;
+        ordered-by user;
+      }
+
+      leaf transmit-power {
+        tailf:info "Power level (in units of 0.1dBm)";
+        description "Power level (in units of 0.1dBm)";
+        type int32 {
+          range "-150..0";
+        }
+        mandatory true;
+      }
+    }
+
+    list flexport-linecard {
+      tailf:info "Flex Port Linecard capability ";
+      description "Flex Port Linecard capability ";
+      key "pid";
+
+      leaf pid {
+        tailf:info "Linecard PID";
+        description "Linecard PID";
+        type string;
+      }
+
+      leaf-list port {
+        tailf:info "Port";
+        description "Port";
+        type string;
+      }
+    }
+  }
+
+  grouping status-code-component-augmentation {
+    leaf status-code {
+      type string;
+    }
+  }
+
+  augment /zr/dco-plan/plan/component {
+    uses status-code-component-augmentation;
+  }
+
+  augment /zr/dco-plan/plan-history/plan/component {
+    uses status-code-component-augmentation;
+  }
+
+  container cfp-configurations {
+    list dynamic-device-mapping {
+      tailf:info "Dynamic Device Mapping";
+      description "Dynamic Device Mapping";
+      key "ned-id";
+
+      tailf:validate "zr-dco-dynamic-map-validation" {
+        tailf:dependency ".";
+      }
+
+      leaf ned-id {
+        tailf:info "Device NED ID, eg ned:netconf";
+        description "Device NED ID, eg ned:netconf";
+        type string;
+        tailf:cli-allow-range;
+      }
+      leaf python-impl-class-name {
+        tailf:info "Device Python implementation class, eg module.class";
+        description "Device Python implementation class, eg module.class";
+        type string;
+        mandatory true;
+      }
+    }
+
+    leaf iosxr-default-ned-id {
+      tailf:info "NED ID of the default IOSXR Device.";
+      description "NED ID of the default IOSXR Device.";
+      tailf:hidden ron;
+      type string;
+      default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+    }
+  }
+}

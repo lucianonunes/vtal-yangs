@@ -1,0 +1,36 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <!-- Controller -->
+        <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+          <interface-configuration>
+            <active>act</active>
+            <interface-name>Optics{line-port}</interface-name>
+              <description when="{circuit-id}">{circuit-id}</description>
+              <shutdown tags="delete"/>
+              <breakout xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-optics-driver-cfg" when="{$BREAKOUT!=''}">{$BREAKOUT}</breakout>
+              <speed xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-optics-speed-cfg" when="{$SPEED_PID!=''}">{bandwidth}g</speed>
+              <?if {$DAC='1x1.25'}?>
+                <optics-dac-rate xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-optics-dac-cfg">1:1.25</optics-dac-rate>
+              <?else?>
+                <optics-dac-rate xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-optics-dac-cfg">1:1</optics-dac-rate>
+              <?end?>
+              <optics xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-controller-optics-cfg">
+                <optics-transmit-power>{transmit-power}</optics-transmit-power>
+                <!-- optics-modulation>{$MODULATION}</optics-modulation -->
+                <optics-fec>{$FEC}</optics-fec>
+                <optics-dwdm-carrier>
+                  <grid-type>{grid-type}</grid-type>
+                  <param-type>frequency</param-type>
+                  <param-value>{frequency}</param-value>
+                </optics-dwdm-carrier>
+              </optics>
+          </interface-configuration>
+        </interface-configurations>
+
+      </config>
+    </device>
+  </devices>
+</config>

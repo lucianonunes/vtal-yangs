@@ -1,0 +1,777 @@
+/*
+ * flat-L2vpn Static PW and EVPN-VPWS for internal remote-site
+ */
+module cisco-flat-L2vpn-fp-internal-remote-site {
+
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-internal-remote-site";
+  prefix cisco-flat-L2vpn-fp-internal-remote-site;
+
+  import ietf-inet-types { prefix inet; }
+
+  import ietf-yang-types { prefix yang; }
+
+  import tailf-common { prefix tailf; }
+
+  import tailf-ncs { prefix ncs; }
+
+  import custom-template-hook { prefix ct-hook; }
+
+  import cisco-flat-L2vpn-fp-internal-common { prefix cisco-flat-L2vpn-fp-internal-common; }
+
+  import cisco-tsdn-core-fp-common { prefix tsdn-core-fp-common; }
+
+  description "MPLS L2VPN function pack - example for internal remote-site";
+
+  revision 2022-06-10 {
+    description "
+     Added: pattern under evpn-vpws-grouping -> multi-home -> esi-value -> string.
+     Modified: tailf:info and description under evpn-vpws-grouping -> multi-home -> esi-value.
+     Modified: tailf:info under evpn-vpws-grouping -> multi-home -> esi-value -> string.";
+  }
+
+  revision 2022-05-27 {
+    description
+      "Removed: Q-in-Q enum options under grouping subinterface-rewrite-common-grouping -> ingress -> translate";
+  }
+
+  revision 2022-05-26 {
+    description
+      "Modified: vlan-id range to 1..4094";
+  }
+
+  revision 2022-01-13 {
+    description
+      "Added: using grouping srv6-grp under evpn-vpws-grouping";
+  }
+
+  revision 2021-03-25 {
+    description "Added: new ethernet-service-oam to flat-L2vpn-internal-remote-site-service
+                 Added: new ervice-assurance-grouping to flat-L2vpn-internal-remote-site-service";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-06 {
+    description "Removed: evpn-bgp-grp
+                 Removed: bgp when condition from sr-te-grp -> odn
+                 Removed: unconditional-pass from sr-te-grp -> odn
+                 Added: attach-point container to sr-te-grp -> odn";
+  }
+
+  revision 2020-10-05 {
+    description "Added: Ethernet interface for XE support in interface-name-grouping";
+  }
+
+  revision 2020-09-01 {
+    description "Modified: moved p2p-grouping -> sr-te into choice policy-type
+                 Added: p2p-grouping -> rsvp into choice policy-type";
+  }
+
+  revision 2020-08-11 {
+    description "Added:  unconditional-pass under
+                flat-L2vpn-internal-remote-site-service -> flat-L2vpn-evpn-vpws -> sr-te -> odn";
+  }
+
+  revision 2020-05-18 {
+    description "Modified rewrite when condition to allow either sub-if-id or vlan-id";
+  }
+
+  revision 2020-05-14 {
+    description "Removed all must conditions from internal yang";
+  }
+
+  revision 2020-05-05 {
+    description "Added sub-if-id under flat-L2vpn-internal-remote-site-service
+                    -> flat-L2vpn-evpn-vpws -> remote-site -> bgp -> update-source";
+  }
+  revision 2020-04-21 {
+    description "
+     Added: tailf:info and description added to esi-value as '<0-ff>.;;9-octet ESI value'
+            under flat-L2vpn-internal-remote-site-service -> flat-L2vpn-evpn-vpws
+            -> local-site -> multi-home.";
+  }
+
+  revision 2020-04-15 {
+    description "
+      Added must for checking range of Bundle-Ether.";
+  }
+
+  revision 2020-04-13 {
+    description "Added: flat-L2vpn-internal-remote-site -> flat-L2vpn-oper-data ->
+                    status-code-oper
+                 Modified: pw-id type to unit32 and range <1-4294967295> under
+                    flat-L2vpn-internal-remote-site-service -> flat-L2vpn-p2p";
+  }
+
+  revision 2020-03-26 {
+    description "Added: must check for rewrite ingress tag-choice.";
+  }
+
+  revision 2020-03-25 {
+    description "Modified: Fixed label range for mpls-local-label & mpls-remote-label";
+  }
+
+  revision 2020-03-18 {
+    description "Modified: pw-class for evpn-vpws now depends on sr-te/preferred-path/policy
+                  to be set.";
+  }
+
+  revision 2020-03-08 {
+    description "
+      Modified: sub-if-id to allow for both untagged/dot1q encapsulation
+      Added: rewrite -> ingress -> dot1q";
+  }
+
+  revision 2020-02-26 {
+    description "Added update-source under flat-L2vpn-internal-remote-site-service
+                    -> flat-L2vpn-evpn-vpws -> remote-site -> bgp";
+  }
+
+  revision 2020-02-21 {
+    description "
+      Added: new leaf route-policy-name under,
+                  flat-L2vpn-internal-remote-site-service -> flat-L2vpn-evpn-vpws -> sr-te
+      Removed: ip-prefix from sr-te->odn->color->{ipv4|ipv6} under,
+                  flat-L2vpn-internal-remote-site-service -> flat-L2vpn-evpn-vpws
+               sr-te->odn under
+                  flat-L2vpn-internal-remote-site-service -> flat-L2vpn-p2p";
+  }
+
+  revision 2020-01-08 {
+    description
+    "Modified: e-bgp is rename to bgp under sr-te-grp -> odn and evpn-bgp-grp.
+     Added: FiftyGigE, TwoHundredGigE, Bundle-Ether, FourHundredGigE,
+      TwentyFiveGigE interfaces. 'must' condition for uint16 'Bundle-Ether'
+      interface to check for numbers as interface ID.";
+  }
+
+  revision 2019-07-27 {
+    description "
+     Added: custom-template-hook at global and node level under :
+      flat-L2vpn-internal-remote-site-service,
+      flat-L2vpn-internal-remote-site-service->flat-L2vpn-p2p->remote-site and
+      flat-L2vpn-internal-remote-site-service->flat-L2vpn-evpn-vpws->remote-site";
+  }
+
+  revision 2019-05-10 {
+    description "Initial revision.";
+  }
+
+  typedef service-name {
+    type string {
+      pattern "[a-zA-Z0-9\\-_]+";
+    }
+  }
+
+  typedef l2-serv-encap-type {
+    type enumeration {
+      enum untagged;
+      enum dot1q;
+    }
+  }
+
+  typedef as-no-type {
+    type union {
+      type uint32 {
+        tailf:info "<1-4294967295>;;Autonomous system number";
+        range "1..4294967295";
+      }
+      type string {
+        tailf:info "<1.0-XX.YY>;;Autonomous system number";
+        pattern '[0-9]+\.[0-9]+';
+      }
+    }
+  }
+
+  grouping interface-name-grouping {
+    leaf if-type {
+      tailf:info "Interface Type";
+      description "Interface Type";
+      type enumeration {
+        enum Bundle-Ether;
+        enum Ethernet;
+        enum FiftyGigE;
+        enum FortyGigE;
+        enum FourHundredGigE;
+        enum GigabitEthernet;
+        enum HundredGigE;
+        enum TenGigE;
+        enum TwentyFiveGigE;
+        enum TwoHundredGigE;
+      }
+      mandatory true;
+    }
+
+    leaf if-id {
+      tailf:info "Interface Id";
+      description "Interface Id";
+      type string {
+        pattern '[0-9]+(/[0-9]+)*';
+      }
+      mandatory true;
+    }
+  }
+
+
+  grouping subinterface-rewrite-common-grouping {
+    container ingress {
+      tailf:info "Set the tag rewriting policy for this EFP";
+      description "Set the tag rewriting policy for this EFP";
+      presence "true";
+      choice tag-choice {
+        leaf pop {
+          tailf:info "Remove one or more tags";
+          description "Remove one or more tags";
+          when "../../../if-encap = 'dot1q'";
+          type enumeration {
+            enum "1" {
+              tailf:info "Remove outer tag only";
+            }
+            enum "2" {
+              tailf:info "Remove two outermost tags";
+            }
+          }
+          mandatory true;
+        }
+        leaf push {
+          tailf:info "Push one or more tags";
+          description "Push one or more tags";
+          type empty;
+          mandatory true;
+        }
+        leaf translate {
+          tailf:info "Replace tags with other tags";
+          description "Replace tags with other tags";
+          type enumeration {
+            enum "1-to-1" {
+              tailf:info "Replace the outermost tag with another tag";
+            }
+          }
+          mandatory true;
+        }
+      }
+      leaf dot1q {
+        tailf:info "<1-4094> - Push a Dot1Q tag";
+        description "<1-4094> - Push a Dot1Q tag";
+        when "not(../pop)";
+        mandatory true;
+        type uint16 {
+          tailf:info "<1-4094>;;VLAN Id to push";
+          range "1..4094";
+        }
+      }
+
+      leaf mode {
+        type enumeration {
+          enum symmetric {
+            tailf:info "All rewrites must be symmetric";
+          }
+        }
+      }
+    }
+  }
+
+  grouping sr-te-pref-path-grp {
+    container preferred-path {
+      tailf:info "Specify SR TE policy for preferred path";
+      description "Specify SR TE policy for preferred path";
+      presence true;
+      leaf policy {
+        tailf:info "Name of SR TE policy";
+        description "Name of SR TE policy";
+        type string;
+        mandatory true;
+      }
+      leaf fallback {
+        tailf:info "Fallback option for preferred path";
+        description "Fallback option for preferred path";
+        type enumeration {
+          enum disable {
+            tailf:info "Disable fallback for preferred path";
+          }
+        }
+      }
+    }
+  }
+
+  grouping rsvp-tunnel-te-pref-path-grp {
+    container preferred-path {
+      tailf:info "Specify RSVP-TE policy for preferred path";
+      description "Specify RSVP-TE policy for preferred path";
+      presence true;
+      choice tunnel-te-id-source {
+        leaf te-tunnel-id {
+          tailf:info "Specify tunnel number for preferred path <0-65535>";
+          description "Specify tunnel number for preferred path <0-65535>";
+          type uint16;
+          mandatory true;
+        }
+      }
+      leaf fallback {
+        tailf:info "Fallback option for preferred path";
+        description "Fallback option for preferred path";
+        type enumeration {
+          enum disable {
+            tailf:info "Disable fallback for preferred path";
+          }
+        }
+      }
+    }
+  }
+
+  grouping sr-te-grp {
+    choice type {
+      case odn {
+        container odn {
+          tailf:info "ODN SR policy";
+          description "ODN SR policy";
+          presence true;
+
+          container attach-point {
+            choice parent-rr-route-policy-choice {
+              leaf parent-rr-route-policy {
+                tailf:info "Parent RR Route Policy to apply local route policies";
+                description "Parent RR Route Policy to apply local route policies";
+                type string;
+              }
+            }
+          }
+
+          leaf route-policy-name {
+            tailf:info "Name of SR routing policy";
+            description "Name of SR routing policy";
+            type string;
+            mandatory true;
+          }
+
+          list color {
+            tailf:info "SR policy color";
+            description "SR policy color";
+            key id;
+            leaf id {
+              tailf:info "<1-4294967295> - SR policy color";
+              description "<1-4294967295> - SR policy color";
+              type uint32 {
+                range  "1..4294967295";
+              }
+              tailf:cli-allow-range;
+            }
+
+            container ipv4 {
+              tailf:info "IPv4 ODN SR";
+              description "IPv4 ODN SR";
+              presence "true";
+              leaf-list rd {
+                tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                description "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                type cisco-flat-L2vpn-fp-internal-common:asn-ip-type;
+              }
+            }
+
+            container ipv6 {
+              tailf:info "IPv6 ODN SR";
+              description "IPv6 ODN SR";
+              presence "true";
+              leaf-list rd {
+                tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                description "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+                type cisco-flat-L2vpn-fp-internal-common:asn-ip-type;
+              }
+            }
+          }
+        }
+      }
+      case preferred-path {
+        uses sr-te-pref-path-grp;
+      }
+    }
+  }
+
+  grouping p2p-grouping {
+    uses  interface-name-grouping;
+    leaf if-description {
+      tailf:info "Interface Description";
+      description "Interface Description";
+      type string;
+    }
+
+    leaf if-encap {
+      tailf:info "Interface Encapsulation";
+      description "Interface Encapsulation";
+      type l2-serv-encap-type;
+      mandatory true;
+    }
+
+    leaf vlan-id {
+      tailf:info "<1-4094> - VLAN Id";
+      description "<1-4094> - VLAN Id";
+      when "../if-encap = 'dot1q'";
+      type int32 {
+        range "1..4094";
+      }
+      mandatory true;
+    }
+
+    leaf sub-if-id {
+      tailf:info "Sub Interface Id";
+      description "Sub Interface Id";
+      type int32 ;
+    }
+
+    container rewrite {
+      tailf:info "Tag Rewrite";
+      description "Tag Rewrite";
+      presence "true";
+      when "../sub-if-id or ../vlan-id";
+      uses subinterface-rewrite-common-grouping;
+    }
+
+    leaf mtu {
+      tailf:info "<64-65535> - Set the MTU on an interface";
+      description "<64-65535> - Set the MTU on an interface";
+      type uint16 {
+        tailf:info "<64-65535>;;MTU size in bytes";
+        range "64..65535";
+      }
+    }
+
+    leaf xconnect-group-name {
+      tailf:info "XConnect Group name";
+      description "XConnect Group name";
+      mandatory true;
+      type string;
+    }
+
+    leaf xconnect-encapsulation {
+      tailf:info "XConnect Encapsulation";
+      description "XConnect Encapsulation";
+      type enumeration {
+        enum mpls;
+      }
+      default mpls;
+    }
+
+    leaf p2p-name {
+      tailf:info "P2P Name";
+      description "P2P Name";
+      mandatory true;
+      type string;
+    }
+
+    choice policy-type {
+      container sr-te {
+        tailf:info "SR-TE Policy";
+        description "SR-TE Policy";
+        presence "true";
+        uses sr-te-pref-path-grp;
+      }
+
+      container rsvp-te {
+        tailf:info "RSVP-TE Policy";
+        description "RSVP-TE Policy";
+        presence "true";
+        uses rsvp-tunnel-te-pref-path-grp;
+      }
+    }
+
+    leaf control-word {
+      tailf:info "Control Word";
+      description "Control Word";
+      type enumeration {
+        enum yes;
+        enum no;
+      }
+      default no;
+    }
+
+    leaf pw-class {
+      tailf:info "PW Class Name";
+      description "PW Class Name";
+      type string;
+      mandatory true;
+    }
+  }
+
+  grouping evpn-vpws-grouping {
+    uses interface-name-grouping;
+
+    leaf if-description {
+      tailf:info "Interface Description";
+      description "Interface Description";
+      type string;
+    }
+    leaf if-encap {
+      tailf:info "Interface Encapsulation";
+      description "Interface Encapsulation";
+      type l2-serv-encap-type;
+      mandatory true;
+    }
+
+    container multi-home {
+      presence "true";
+      leaf esi-value {
+        tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        description "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        type string {
+          tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+          pattern '[0-9a-f]{2}(\.[0-9a-f]{2}){8}';
+          pattern '00\.00\.00\.00\.00\.00\.00\.00\.00' {
+            modifier invert-match;
+          }
+        }
+        mandatory true;
+      }
+    }
+
+    leaf vlan-id {
+      tailf:info "<1-4094> - VLAN Id";
+      description "<1-4094> - VLAN Id";
+      when "../if-encap = 'dot1q'";
+      type int32 {
+        range "1..4094";
+      }
+      mandatory true;
+    }
+
+    leaf sub-if-id {
+      tailf:info "Sub Interface Id";
+      description "Sub Interface Id";
+      type int32 ;
+    }
+
+    container rewrite {
+      tailf:info "Tag Rewrite";
+      description "Tag Rewrite";
+      presence "true";
+      when "../sub-if-id or ../vlan-id";
+      uses subinterface-rewrite-common-grouping;
+    }
+
+    leaf mtu {
+      tailf:info "<64-65535> - Set the MTU on an interface";
+      description "<64-65535> - Set the MTU on an interface";
+      type uint16 {
+        tailf:info "<64-65535>;;MTU size in bytes";
+        range "64..65535";
+      }
+    }
+
+    leaf xconnect-group-name {
+      tailf:info "XConnect Group name";
+      description "XConnect Group name";
+      mandatory true;
+      type string;
+    }
+
+    leaf p2p-name {
+      tailf:info "P2P name";
+      description "P2P name";
+      mandatory true;
+      type string;
+    }
+
+
+    container sr-te {
+      tailf:info "SR-TE Policy";
+      description "SR-TE Policy";
+      presence "true";
+      uses sr-te-grp;
+    }
+
+    leaf pw-class {
+      tailf:info "PW Class Name";
+      description "PW Class Name";
+      when "../sr-te/preferred-path/policy";
+      type string;
+      mandatory true;
+    }
+
+    uses cisco-flat-L2vpn-fp-internal-common:srv6-grp;
+  }
+
+
+  list flat-L2vpn-internal-remote-site-service {
+    tailf:hidden tsdn;
+    tailf:info "Flat L2VPN Configuration";
+    description "Flat L2VPN Configuration";
+    uses ncs:service-data;
+    ncs:servicepoint "flat-L2vpn-internal-remote-site";
+
+    tailf:validate "flat-L2vpn-internal-remote-site-validation" {
+      tailf:dependency ".";
+    }
+
+    key "name pe";
+    leaf name {
+      tailf:info "Unique Service Name for L2VPN";
+      description "Unique Service Name for L2VPN";
+      type service-name;
+      tailf:cli-allow-range;
+    }
+
+    leaf pe {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+      tailf:cli-allow-range;
+      tailf:info "Remote device";
+      description "Remote device";
+    }
+
+    uses ct-hook:template-hook;
+    uses tsdn-core-fp-common:service-assurance-grouping;
+
+    leaf service-type {
+      tailf:info "L2VPN Service Type";
+      description "L2VPN Service Type";
+      type enumeration {
+        enum p2p;
+        enum evpn-vpws;
+      }
+      mandatory true;
+    }
+
+    container flat-L2vpn-p2p {
+      tailf:info "P2P Static Type";
+      description "P2P Static Type";
+      when "../service-type = 'p2p'";
+
+      leaf pw-id {
+        tailf:info "<1-4294967295>;;Pseudowire Id";
+        description "<1-4294967295>;;Pseudowire Id";
+        type uint32 {
+          range  "1..4294967295";
+        }
+        mandatory true;
+      }
+
+      container local-site {
+        tailf:info "Local Site";
+        description "Local Site";
+
+        leaf xconnect-local-ip {
+          tailf:info "<A.B.C.D or X:X::X> - XConnect Local IP Address";
+          description "<A.B.C.D or X:X::X> - XConnect Local IP Address";
+          type inet:ip-address;
+        }
+
+        leaf mpls-local-label {
+          tailf:info "<16-1048575> - MPLS Local Label";
+          description "<16-1048575> - MPLS Local Label";
+          type uint32 {
+            range "16..1048575";
+          }
+        }
+        leaf mpls-remote-label {
+          tailf:info "<16-1048575> - MPLS Remote Label";
+          description "<16-1048575> - MPLS Remote Label";
+          type uint32 {
+            range "16..1048575";
+          }
+        }
+      }
+
+      container remote-site {
+        tailf:info "Remote Site";
+        description "Remote Site";
+        presence "true";
+        leaf pe {
+          tailf:info "Remote Site Device";
+          description "Remote Site Device";
+          type leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+          mandatory true;
+        }
+
+        uses ct-hook:template-hook;
+        uses p2p-grouping;
+        uses cisco-flat-L2vpn-fp-internal-common:ethernet-y-1731-grouping;
+      }
+    }
+
+    container flat-L2vpn-evpn-vpws {
+      tailf:info "P2P EVPN VPWS Type";
+      description "P2P EVPN VPWS Type";
+      when "../service-type = 'evpn-vpws'";
+
+      leaf evi-id {
+        tailf:info "<1-65534> - EVI Id";
+        description "<1-65534> - EVI Id";
+        type uint16 {
+          tailf:info "<1-65534>;;Ethernet VPN ID to set";
+          range "1..65534";
+        }
+        mandatory true;
+      }
+
+      container local-site {
+        tailf:info "Local Site";
+        description "Local Site";
+        leaf evi-source {
+          tailf:info "<1-16777215> - Local ACI Id";
+          description "<1-16777215> - Local ACI Id";
+          type uint32 {
+            tailf:info "<1-16777215>;;Source ac-id (hex or decimal format)";
+            range "1..16777215";
+          }
+          mandatory true;
+        }
+
+        leaf evi-target {
+          tailf:info "<1-16777215> - Remote ACI Id";
+          description "<1-16777215> - Remote ACI Id";
+          type uint32 {
+            tailf:info "<1-16777215>;;Remote ac-id (hex or decimal format)";
+            range "1..16777215";
+          }
+          mandatory true;
+        }
+      }
+
+      container remote-site {
+        tailf:info "Remote Site";
+        description "Remote Site";
+        presence "true";
+        leaf pe {
+          tailf:info "Remote Site Device";
+          description "Remote Site Device";
+          type leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+          mandatory true;
+        }
+
+        uses ct-hook:template-hook;
+        uses evpn-vpws-grouping;
+        uses cisco-flat-L2vpn-fp-internal-common:ethernet-y-1731-grouping;
+      }
+    }
+
+    uses cisco-flat-L2vpn-fp-internal-common:action-grouping;
+  }
+
+  container flat-L2vpn-internal-remote-site {
+    tailf:hidden tsdn;
+    list flat-L2vpn-plan {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name pe";
+      leaf name {
+        type string;
+      }
+
+      leaf pe {
+        type string;
+      }
+      uses ncs:nano-plan-data;
+      uses ncs:nano-plan-history;
+    }
+  }
+
+}

@@ -1,0 +1,446 @@
+module cisco-sr-te-cfp-sr-common {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-common";
+  prefix cisco-sr-te-cfp-sr-common;
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import cisco-sr-te-cfp {
+    prefix cisco-sr-te-cfp;
+  }
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import cisco-sr-te-cfp-sr-types {
+    prefix cisco-sr-te-cfp-sr-types;
+  }
+
+  description "SR-TE Common module";
+
+  revision 2021-12-03 {
+    description "Modified: Changed cs-protection-grp -> protection container to presence container";
+  }
+
+  revision 2021-11-22 {
+    description "Added: grouping cs-sid-grp
+                 Added: grouping cs-steering-grp
+                 Added: grouping cs-protection-grp
+                 Added: grouping cs-dynamic-grp
+                 Added: grouping cs-explicit-grp";
+  }
+
+  revision 2021-08-31 {
+    description "Added: length range of type string for
+                        sr-te -> policies -> policy -> srv6 -> locator -> locator-name";
+  }
+
+  revision 2021-06-17 {
+    description "Added: sr-te -> policies -> policy -> srv6 -> locator -> behavior
+                        sr-te -> policies -> policy -> srv6 -> locator -> binding-sid-type
+                        sr-te -> odn -> odn-template -> srv6 -> locator -> behavior
+                        sr-te -> odn -> odn-template -> srv6 -> locator -> binding-sid-type
+                 Updated: tailf:info for
+                          sr-te -> policies -> policy -> srv6 -> locator
+                          sr-te -> policies -> policy -> srv6 -> locator -> locator-name
+                 Updated: sr-te -> policies -> policy -> srv6 -> locator as presence container.";
+  }
+
+  revision 2021-05-13 {
+    description "Removed: sr-te -> policies -> policy -> srv6 -> locator -> behavior
+                          sr-te -> policies -> policy -> srv6 -> locator -> binding-sid-type
+                          sr-te -> odn -> odn-template -> srv6 -> locator -> behavior
+                          sr-te -> odn -> odn-template -> srv6 -> locator -> binding-sid-type";
+  }
+
+  revision 2021-03-12 {
+    description "Updated tailf:info for
+                 sr-te -> policies -> policy -> path -> dynamic -> metric-margin -> relative
+                 sr-te -> odn -> odn-template -> dynamic -> metric-margin -> relative";
+  }
+
+  revision 2021-03-10 {
+    description "Add SRv6 support";
+  }
+
+  revision 2020-11-05 {
+    description "Removed source from constraints-grp grouping";
+  }
+
+  revision 2020-10-26 {
+    description "Added source under disjointness for XE devices.";
+  }
+
+  revision 2020-07-29 {
+    description "Removed: status-code-oper grouping";
+  }
+
+  revision 2020-07-13 {
+    description "Removed: redeploy-input grouping (containing reconcile options)";
+  }
+
+  revision 2020-06-23 {
+    description "Added: sr-te -> policies -> policy -> path -> dynamic -> metric-margin
+                        sr-te -> odn -> odn-template -> dynamic -> metric-margin";
+  }
+
+  revision 2020-06-10 {
+    description "Added redeploy-input grouping (containing reconcile options)";
+  }
+
+  revision 2020-04-13 {
+    description "
+      Added: status code plan augmentation grouping : status-code-plan-augmentation
+      Added: status code plan component augmentation grouping : status-code-component-augmentation
+      Added: status code oper data grouping : status-code-oper";
+  }
+
+  revision 2020-03-16 {
+    description "Initial Revision.";
+  }
+
+  grouping dynamic-path {
+    container dynamic {
+      presence "true";
+      tailf:info "Use dynamic path computation";
+      description "Use dynamic path computation";
+      leaf metric-type {
+        type enumeration {
+          enum igp;
+          enum te;
+          enum latency;
+          enum hopcount;
+        }
+      }
+      container metric-margin {
+        presence "true";
+        tailf:info "Metric-margin";
+        description "Metric-margin";
+        choice metric-margin {
+          leaf absolute {
+            tailf:info "<0-2147483647>;;Absolute metric margin value";
+            description "<0-2147483647>;;Absolute metric margin value";
+            type uint32 {
+              range "0..2147483647";
+            }
+          }
+          leaf relative {
+            tailf:info "XR <0-2147483647>; XE <1-100>; Check your device version limitations;
+                          Relative metric margin value";
+            description "XR <0-2147483647>; XE <1-100>; Check your device version limitations;
+                          Relative metric margin value";
+            type uint32 {
+              range "0..2147483647";
+            }
+          }
+        }
+      }
+      container pce {
+        tailf:info "Delegate dynamic path computation to PCE";
+        description "Delegate dynamic path computation to PCE";
+        presence true;
+      }
+    }
+  }
+
+  grouping constraints-grp {
+
+    container disjoint-path {
+      presence true;
+      tailf:info "Compute a path that is disjoint from another path in the same disjoint-group";
+      description "Compute a path that is disjoint from another path in the same disjoint-group";
+      leaf type {
+        type enumeration {
+          enum link;
+          enum node;
+          enum srlg;
+          enum srlg-node;
+        }
+        mandatory true;
+      }
+
+      leaf group-id {
+        tailf:info "<1-65535> - Group ID";
+        description "<1-65535> - Group ID";
+        type uint16 {
+          tailf:info "<1-65535>;;Group ID";
+          range "1..65535";
+        }
+        mandatory true;
+      }
+      leaf sub-id {
+        tailf:info "<1-65535>;;Subgroup ID number";
+        description "<1-65535>;;Subgroup ID number";
+        type uint16 {
+          tailf:info "<1-65535>;;Subgroup ID number";
+          range "1..65535";
+        }
+      }
+    }
+
+    container affinity {
+      tailf:info "Compute paths with link color constraint";
+      description "Compute paths with link color constraint";
+      presence true;
+      list rule {
+        key action;
+        leaf action {
+          type enumeration {
+            enum include-any;
+            enum include-all;
+            enum exclude-any;
+          }
+        }
+        leaf-list color {
+          tailf:info "One of affinity-map colors";
+          description "One of affinity-map colors";
+          type string;
+        }
+      }
+    }
+  }
+
+  grouping srv6-grp {
+    container srv6 {
+      presence  "true";
+      tailf:info "SRv6 Options";
+      description "SRv6 Options";
+
+      container locator {
+        presence  "true";
+        tailf:info "SRv6 Locator options, settings under this container will override
+                      the settings at SR-TE or at a Global level in the headend node.";
+        description "SRv6 Locator options, settings under this container will override
+                      the settings at SR-TE or at a Global level in the headend node.";
+        leaf locator-name {
+          tailf:info "SRv6 locator name,
+                      should match locators configured at a node-global level on each router";
+          description "SRv6 locator name,
+                      should match locators configured at a node-global level on each router";
+          type string {
+            length "1..64";
+          }
+          mandatory true;
+        }
+        leaf behavior {
+          tailf:info "SRv6 USID Behavior";
+          description "SRv6 USID Behavior";
+          type enumeration {
+            enum "ub6-insert-reduced" {
+              tailf:info "SRv6 USID Insert Reduced Behavior";
+              description "SRv6 USID Insert Reduced Behavior";
+            }
+          }
+          default "ub6-insert-reduced";
+        }
+        leaf binding-sid-type {
+          tailf:info "Binding Segment ID type";
+          description "Binding Segment ID type";
+          type enumeration {
+            enum "srv6-dynamic" {
+              tailf:info "Allocate dynamic SRv6 BSID";
+              description "Allocate dynamic SRv6 BSID";
+            }
+          }
+          default "srv6-dynamic";
+        }
+      }
+    }
+  }
+
+  grouping cs-explicit-grp {
+    container explicit {
+      tailf:info "Use a predefine explicit path";
+      description "Use a predefine explicit path";
+
+      container constraints {
+        uses constraints-grp;
+
+        container segments {
+          tailf:info "Path segments constraints";
+          description "Path segments constraints";
+          presence true;
+
+          leaf sid-algorithm {
+            tailf:info "<128-255> - Specify the path computation metric options";
+            description "<128-255> - Specify the path computation metric options";
+            type uint16 {
+              tailf:info "<128-255>;;Sid-algorithm value";
+              range "128..255";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping cs-dynamic-grp {
+    container dynamic {
+      tailf:info "Use dynamic path computation";
+      description "Use dynamic path computation";
+      leaf metric-type {
+        type enumeration {
+          enum igp;
+          enum te;
+          enum latency;
+          enum hopcount;
+        }
+        default "igp";
+      }
+      container metric-margin {
+        presence "true";
+        tailf:info "Metric-margin";
+        description "Metric-margin";
+        choice metric-margin {
+          leaf absolute {
+            tailf:info "<0-2147483647>;;Absolute metric margin value";
+            description "<0-2147483647>;;Absolute metric margin value";
+            type uint32 {
+              range "0..2147483647";
+            }
+          }
+          leaf relative {
+            tailf:info "XR <0-2147483647>; XE <1-100>; Check your device version limitations;
+                          Relative metric margin value";
+            description "XR <0-2147483647>; XE <1-100>; Check your device version limitations;
+                          Relative metric margin value";
+            type uint32 {
+              range "0..2147483647";
+            }
+          }
+        }
+      }
+      container pce {
+        tailf:info "Delegate dynamic path computation to PCE";
+        description "Delegate dynamic path computation to PCE";
+        presence true;
+      }
+
+      container constraints {
+        leaf sid-limit {
+          tailf:info "<1-255> - Absolute limit on the number of SIDs in the SID-list";
+          description "<1-255> - Absolute limit on the number of SIDs in the SID-list";
+          type uint32 {
+            range "1..255";
+          }
+        }
+
+        uses constraints-grp;
+
+        container segments {
+          tailf:info "Path segments constraints";
+          description "Path segments constraints";
+          presence true;
+
+          leaf sid-algorithm {
+            tailf:info "<128-255> - Specify the path computation metric options";
+            description "<128-255> - Specify the path computation metric options";
+            type uint16 {
+              tailf:info "<128-255>;;Sid-algorithm value";
+              range "128..255";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping cs-protection-grp {
+    container protection {
+      tailf:info "Protection";
+      description "Protection";
+      presence true;
+
+      choice profile-type {
+        case delay {
+          container delay-measurement {
+            tailf:info "Delay measurement";
+            description "Delay measurement";
+            presence "true";
+            leaf active-profile {
+              tailf:info "Name of active delay profile";
+              description "Name of active delay profile";
+              type string;
+            }
+          }
+        }
+        case liveness {
+          container liveness-detection {
+            tailf:info "Liveness detection";
+            description "Liveness detection";
+            presence "true";
+            leaf active-profile {
+              tailf:info "Name of active liveness profile";
+              description "Name of active liveness profile";
+              type string;
+            }
+            leaf backup-profile {
+              when "../active-profile";
+              tailf:info "Name of backup liveness profile";
+              description "Name of backup liveness profile";
+              type string;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping cs-steering-grp {
+    container steering {
+      tailf:info "Steering";
+      description "Steering";
+      presence "true";
+
+      leaf drop-traffic-on-invalid-path {
+        tailf:info "Drop traffic when all paths are invalid. Default = false" ;
+        description "Drop traffic when all paths are invalid. Default = false" ;
+        type boolean;
+        default false;
+      }
+    }
+  }
+
+  grouping sid-grp {
+    list sid {
+      key index;
+      leaf index {
+        tailf:info "<1-65535> - Sid Index";
+        description "<1-65535> - Sid Index";
+        type uint32 {
+          range "1..65535";
+        }
+        tailf:cli-allow-range;
+      }
+      min-elements 1;
+
+      choice type {
+        mandatory true;
+        container mpls {
+          leaf label {
+            tailf:info "<0-1048575> - MPLS label configuration";
+            description "<0-1048575> - MPLS label configuration";
+            type uint32 {
+              range "0..1048575";
+            }
+            mandatory true;
+          }
+        }
+        container ipv4 {
+          leaf address {
+            tailf:info "<A.B.C.D> - IPV4 address family";
+            description "<A.B.C.D> - IPV4 address family";
+            type inet:ipv4-address;
+            mandatory true;
+          }
+        }
+      }
+    }
+  }
+}

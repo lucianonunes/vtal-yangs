@@ -1,0 +1,68 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <kickers xmlns="http://tail-f.com/ns/kicker">
+    <?set POLICY_NAME = {/name} ?>
+    <?foreach {/path}?>
+      <?if {explicit}?>
+        <?foreach {explicit/sid-list} ?>
+          <data-kicker>
+            <id>sr-te-policies-{$POLICY_NAME}-{name}-sid-list-kicker</id>
+            <monitor>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:sid-list[name='{name}']</monitor>
+            <kick-node>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:policy[name='{$POLICY_NAME}']</kick-node>
+            <action-name>reactive-re-deploy</action-name>
+          </data-kicker>
+        <?end?>
+      <?end?>
+    <?end?>
+    <!-- TODO: Circuit Style, ETA: TSDN 5.0 -->
+    <!-- ?if {/circuit-style}?>
+      <?if {circuit-style/working-path/explicit} ?>
+        <?set FNAME={circuit-style/working-path/explicit/forward-sid-list-name}?>
+        <?set RNAME={circuit-style/working-path/explicit/reverse-sid-list-name}?>
+        <data-kicker>
+          <id>sr-te-policies-{$POLICY_NAME}-{$FNAME}-sid-list-kicker</id>
+          <monitor>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:sid-list[name='{$FNAME}']</monitor>
+          <kick-node>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:policy[name='{$POLICY_NAME}']</kick-node>
+          <action-name>reactive-re-deploy</action-name>
+        </data-kicker>
+        <data-kicker>
+          <id>sr-te-policies-{$POLICY_NAME}-{$RNAME}-sid-list-kicker</id>
+          <monitor>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:sid-list[name='{$RNAME}']</monitor>
+          <kick-node>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:policy[name='{$POLICY_NAME}']</kick-node>
+          <action-name>reactive-re-deploy</action-name>
+        </data-kicker>
+      <?end?>
+      <?if {circuit-style/protect-path/explicit} ?>
+        <?set FNAME={circuit-style/protect-path/explicit/forward-sid-list-name}?>
+        <?set RNAME={circuit-style/protect-path/explicit/reverse-sid-list-name}?>
+        <data-kicker>
+          <id>sr-te-policies-{$POLICY_NAME}-{$FNAME}-sid-list-kicker</id>
+          <monitor>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:sid-list[name='{$FNAME}']</monitor>
+          <kick-node>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:policy[name='{$POLICY_NAME}']</kick-node>
+          <action-name>reactive-re-deploy</action-name>
+        </data-kicker>
+        <data-kicker>
+          <id>sr-te-policies-{$POLICY_NAME}-{$RNAME}-sid-list-kicker</id>
+          <monitor>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:sid-list[name='{$RNAME}']</monitor>
+          <kick-node>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:policy[name='{$POLICY_NAME}']</kick-node>
+          <action-name>reactive-re-deploy</action-name>
+        </data-kicker>
+      <?end?>
+      <?if {circuit-style/restore-path/explicit} ?>
+        <?set FNAME={circuit-style/restore-path/explicit/forward-sid-list-name}?>
+        <?set RNAME={circuit-style/restore-path/explicit/reverse-sid-list-name}?>
+        <data-kicker>
+          <id>sr-te-policies-{$POLICY_NAME}-{$FNAME}-sid-list-kicker</id>
+          <monitor>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:sid-list[name='{$FNAME}']</monitor>
+          <kick-node>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:policy[name='{$POLICY_NAME}']</kick-node>
+          <action-name>reactive-re-deploy</action-name>
+        </data-kicker>
+        <data-kicker>
+          <id>sr-te-policies-{$POLICY_NAME}-{$RNAME}-sid-list-kicker</id>
+          <monitor>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:sid-list[name='{$RNAME}']</monitor>
+          <kick-node>/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/cisco-sr-te-cfp-sr-policies:policy[name='{$POLICY_NAME}']</kick-node>
+          <action-name>reactive-re-deploy</action-name>
+        </data-kicker>
+      <?end?>
+    <?end? -->
+  </kickers>
+</config>

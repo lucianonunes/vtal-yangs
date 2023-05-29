@@ -1,0 +1,80 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+        <segment-routing xmlns="urn:ios">
+          <traffic-eng>
+            <on-demand tags="merge">
+              <color>
+                <id>{color}</id>
+                <authorize/>
+                <candidate-paths>
+                  <preference>
+                    <id>100</id>
+                    <constraints>
+                      <association-group when="{dynamic/disjoint-path}">
+                        <disjointness when="{dynamic/disjoint-path}">
+                          <type>{dynamic/disjoint-path/type}</type>
+                        </disjointness>
+                        <identifier>{dynamic/disjoint-path/group-id}</identifier>
+                        <source>{dynamic/disjoint-path/source}</source>
+                      </association-group>
+                      <affinity when="{dynamic/affinity}" foreach="{dynamic/affinity/rule}" >
+                        <?set ACTION={current()}?>
+                        <?if {$ACTION='include-all'}?>
+                          <?expand segment-routing-dynamic-constraints-affinity-attr-list id=include-all?>
+                        <?end?>
+                        <?if {$ACTION='include-any'}?>
+                          <?expand segment-routing-dynamic-constraints-affinity-attr-list id=include-any?>
+                          <attribute-list>
+                              <id>include-any</id>
+                              <name>
+                                <name>{color}</name>
+                              </name>
+                          </attribute-list>
+                        <?end?>
+                        <?if {$ACTION='exclude-any'}?>
+                          <?expand segment-routing-dynamic-constraints-affinity-attr-list id=exclude-any?>
+                        <?end?>
+                      </affinity>
+                      <bandwidth when="{bandwidth}">{bandwidth}</bandwidth>
+                      <segments>
+                        <algorithm>{dynamic/flex-alg}</algorithm>
+                        <dataplane>
+                          <mpls/>
+                        </dataplane>
+                      </segments>
+                    </constraints>
+                    <dynamic  when="{dynamic}">
+                      <pcep when="{dynamic/pce}"></pcep>
+                      <?set METRIC_TYPE={dynamic/metric-type}?>
+                      <metric>
+                        <sid-limit when="{maximum-sid-depth}">{maximum-sid-depth}</sid-limit> 
+                        <?if {$METRIC_TYPE = 'latency'}?>
+                          <type>delay</type>
+                        <?else?>
+                          <type when="{$METRIC_TYPE}">{$METRIC_TYPE}</type>
+                        <?end?>
+                        <?if {dynamic/metric-margin/absolute}?>
+                          <margin>
+                            <absolute>{dynamic/metric-margin/absolute}</absolute>
+                          </margin>
+                        <?end?> 
+                        <?if {dynamic/metric-margin/relative}?>
+                          <margin>
+                            <relative>{dynamic/metric-margin/relative}</relative>
+                          </margin>
+                        <?end?> 
+                      </metric>
+                    </dynamic>
+                  </preference>
+                </candidate-paths>
+              </color>
+            </on-demand>
+          </traffic-eng>
+        </segment-routing>
+      </config>
+    </device>
+  </devices>
+</config-template>

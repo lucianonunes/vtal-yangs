@@ -1,0 +1,166 @@
+module cisco-ron-cfp-nano-plan-services {
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/cfp/cisco-ron-cfp-nano-plan-services";
+  prefix cisco-ron-cfp-nano-plan-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-ron-cfp {prefix cisco-ron-cfp; }
+
+  revision 2020-12-06 {
+    description "Initial version";
+  }
+
+  identity optical-controller {
+    base ncs:plan-component-type;
+  }
+
+  identity router {
+    base ncs:plan-component-type;
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline ron-ml-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          ncs:post-action-node "$SERVICE" {
+            ncs:action-name "validate-service-input";
+          }
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          ncs:pre-condition {
+            ncs:monitor "$PLAN" {
+              ncs:trigger-expr "not(component[type != 'ncs:self'])"
+              + "or component[type != 'ncs:self']/state/status = 'failed'";
+            }
+          }
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // this checks if there are errors in another components, show it in plan
+          ncs:pre-condition {
+            ncs:monitor "$PLAN" {
+              // All other components have reached ready or have failed
+              ncs:trigger-expr
+              "not(component[type != 'ncs:self']/state[name = 'ncs:ready']/status != 'reached') "
+              + "or component[type != 'ncs:self']/state/status = 'failed' ";
+            }
+          }
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-ron-cfp-nano-plan-services:optical-controller" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          ncs:pre-condition {
+            ncs:monitor "$PLAN" {
+              ncs:trigger-expr "component[type='ncs:self'][name='self']/state[name='ncs:init']/post-action-status = 'create-reached'";
+            }
+          }
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          // marks failure - internal plan failures
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-ron-cfp-nano-plan-services:config-apply" {
+        ncs:create {
+          // create internal optical service for this device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-ron-cfp-nano-plan-services:router" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          ncs:pre-condition {
+            ncs:monitor "$PLAN" {
+              ncs:trigger-expr "component[type='ncs:self'][name='self']/state[name='ncs:init']/post-action-status = 'create-reached' and
+                                (not(component[type='cisco-ron-cfp-nano-plan-services:optical-controller'][name='Optical-Controller']) or
+                                component[type='cisco-ron-cfp-nano-plan-services:optical-controller'][name='Optical-Controller']/state[name='ncs:ready']/status = 'reached')";
+            }
+          }
+        }
+        ncs:delete {
+          // marks failure - internal plan failures
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-ron-cfp-nano-plan-services:config-apply" {
+        ncs:create {
+          // create internal zr dco service for this device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree cisco-ron-ml-servicepoint {
+    ncs:plan-outline-ref "cisco-ron-cfp-nano-plan-services:ron-ml-nano-plan";
+    ncs:plan-location "/cisco-ron-cfp:ron/cisco-ron-cfp:ron-ml-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:selector {
+        ncs:pre-condition {
+          ncs:monitor "$SERVICE/end-point/../ols-domain";
+        }
+        ncs:variable "OPTICAL_CONTROLLER" {
+          ncs:value-expr "'Optical-Controller'";
+        }
+        ncs:create-component "$OPTICAL_CONTROLLER" {
+          ncs:component-type-ref "cisco-ron-cfp-nano-plan-services:optical-controller";
+        }
+      }
+
+      ncs:multiplier {
+        ncs:foreach "$SERVICE/end-point/terminal-device-packet/.." {
+          ncs:variable "ROUTER" {
+            ncs:value-expr "end-point-device";
+          }
+          ncs:create-component "$ROUTER" {
+            ncs:component-type-ref "cisco-ron-cfp-nano-plan-services:router";
+          }
+        }
+      }
+    }
+  }
+}

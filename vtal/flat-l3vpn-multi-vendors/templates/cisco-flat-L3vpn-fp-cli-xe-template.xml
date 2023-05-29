@@ -1,0 +1,283 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+      <?set DEVICE_NAME={string(access-pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?save-context service?>
+      <?set-root-node {/cisco-flat-L3vpn-fp-internal:cfp-configurations}?>
+      <?switch-context service?>
+      <config>
+        <mpls xmlns="urn:ios">
+          <label>
+            <mode>
+              <vrf>
+                <name>{vrf/vrf-definition}</name>
+                <protocol>
+                  <all-afs>per-vrf</all-afs>
+                </protocol>
+              </vrf>
+            </mode>
+          </label>
+        </mpls>
+        <vrf xmlns="urn:ios">
+          <definition>
+            <name>{vrf/vrf-definition}</name>
+            <rd when="{route-distinguisher}">{route-distinguisher}</rd>
+            <vpn>
+              <id>{vpn-id}</id>
+            </vpn>
+            <address-family>
+              <ipv4 when="{(../pe-ip-addr!='' and ../BDI) or (address-family/address-family='ipv4')}">
+                <?expand cli-vrf-address-route-target ipVersion=ipv4?>
+              </ipv4>
+              <ipv6 when="{(../pe-ipv6-addr!='' and ../BDI) or (address-family/address-family='ipv6')}">
+                <?expand cli-vrf-address-route-target ipVersion=ipv6?>
+              </ipv6>
+            </address-family>
+          </definition>
+        </vrf>
+        <?set EXPORT_POLICY_NAME=''?>
+        <?set EXPORT_ROUTE_MAP_CONFIGv4='false'?>
+        <?set EXPORT_ROUTE_MAP_CONFIGv6='false'?>
+        <?if {sr-te/odn/export-route-policy-name}?>
+          <?set EXPORT_POLICY_NAME={sr-te/odn/export-route-policy-name}?>
+          <ip xmlns="urn:ios">
+            <prefix-list>
+              <?foreach {sr-te/odn/export-color}?>
+                <?expand cli-ip-prefix-list prefix='ipv4/prefix' name=SET_COLORv4_{$EXPORT_POLICY_NAME}_{$COLOR} start=5?>
+              <?end?>
+            </prefix-list>
+          </ip>
+          <ipv6 xmlns="urn:ios">
+            <prefix-list>
+              <?foreach {sr-te/odn/export-color}?>
+                <?expand cli-ip-prefix-list prefix='ipv6/ipv6-prefix' name=SET_COLORv6_{$EXPORT_POLICY_NAME}_{$COLOR} start=5?>
+              <?end?>
+            </prefix-list>
+          </ipv6>
+          <?set i = 5 ?>
+          <?foreach {sr-te/odn/export-color}?>
+            <?if {ipv4}?>
+              <?set EXPORT_ROUTE_MAP_CONFIGv4='true'?>
+              <?expand cli-router-map-ipv4 name=SET_COLORv4_{$EXPORT_POLICY_NAME} prefix='ipv4/prefix' prefixList=SET_COLORv4_{$EXPORT_POLICY_NAME}_{id}?>
+              <?set i={$i+5}?>
+            <?end?>
+          <?end?>
+          <?set i = 5 ?>
+          <?foreach {sr-te/odn/export-color}?>
+            <?if {ipv6}?>
+              <?set EXPORT_ROUTE_MAP_CONFIGv6='true'?>
+              <?expand cli-router-map-ipv6 name=SET_COLORv6_{$EXPORT_POLICY_NAME} prefix='ipv6/ipv6-prefix' prefixList=SET_COLORv6_{$EXPORT_POLICY_NAME}_{id}?>
+              <?set i={$i+5}?>
+            <?end?>
+          <?end?>
+        <?end?>
+        <?set IMPORT_POLICY_NAME=''?>
+        <?set IMPORT_ROUTE_MAP_CONFIGv4='false'?>
+        <?set IMPORT_ROUTE_MAP_CONFIGv6='false'?>
+        <?if {sr-te/odn/import-route-policy-name}?>
+          <?set IMPORT_POLICY_NAME={sr-te/odn/import-route-policy-name}?>
+          <ip xmlns="urn:ios">
+            <prefix-list>
+              <?foreach {sr-te/odn/import-color}?>
+                <?expand cli-ip-prefix-list prefix='ipv4/prefix' name=SET_COLORv4_{$IMPORT_POLICY_NAME}_{$COLOR} start=500?>
+              <?end?>
+            </prefix-list>
+          </ip>
+          <ipv6 xmlns="urn:ios">
+            <prefix-list>
+              <?foreach {sr-te/odn/import-color}?>
+                <?expand cli-ip-prefix-list prefix='ipv6/ipv6-prefix' name=SET_COLORv6_{$IMPORT_POLICY_NAME}_{$COLOR} start=500?>
+              <?end?>
+            </prefix-list>
+          </ipv6>
+          <?set i = 500 ?>
+          <?foreach {sr-te/odn/import-color}?>
+            <?if {ipv4}?>
+              <?set IMPORT_ROUTE_MAP_CONFIGv4='true'?>
+              <?expand cli-router-map-ipv4 name=SET_COLORv4_{$IMPORT_POLICY_NAME} prefix='ipv4/prefix' prefixList=SET_COLORv4_{$IMPORT_POLICY_NAME}_{id}?>
+              <?set i={$i+5}?>
+            <?end?>
+          <?end?>
+          <?set i = 500 ?>
+          <?foreach {sr-te/odn/import-color}?>
+            <?if {ipv6}?>
+              <?set IMPORT_ROUTE_MAP_CONFIGv6='true'?>
+              <?expand cli-router-map-ipv6 name=SET_COLORv6_{$IMPORT_POLICY_NAME} prefix='ipv6/ipv6-prefix' prefixList=SET_COLORv6_{$IMPORT_POLICY_NAME}_{id}?>
+              <?set i={$i+5}?>
+            <?end?>
+          <?end?>
+        <?end?>
+        <interface xmlns="urn:ios">
+          <BDI when="{BDI and not (if-type='Loopback')}">
+            <name>{BDI}</name>
+            <vrf>
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{$IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+              <mtu>{mtu}</mtu>
+            </ip>
+            <ipv6 when="{pe-ipv6-addr!=''}">
+              <?expand cli-intf-ipv6?>
+            </ipv6>
+            <shutdown tags="delete"/>
+          </BDI>
+          <?if {if-type='Bundle-Ether'}?>
+            <Port-channel>
+              <name>{if-id}</name>
+              <vrf when="{not (BDI)}">
+                <forwarding>{vrf/vrf-definition}</forwarding>
+              </vrf>
+              <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+                <?expand cli-intf-ipv4?>
+              </ip>
+              <ipv6 when="{not (BDI) and pe-ipv6-addr!=''}">
+                <?expand cli-intf-ipv6?>
+              </ipv6>
+              <mtu when='{not (BDI)}'>{mtu}</mtu>
+              <?expand cli-intf-service?>
+              <shutdown tags="delete"/>
+            </Port-channel>
+          <?end?>
+          <Loopback when="{if-type='Loopback'}">
+            <name>{if-id}</name>
+            <vrf>
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+            </ip>
+            <ipv6 when="{not (BDI) and pe-ipv6-addr!=''}">
+              <?expand cli-intf-ipv6?>
+            </ipv6>
+            <shutdown tags="delete"/>
+          </Loopback>
+          <GigabitEthernet when="{if-type='GigabitEthernet'}">
+            <name>{if-id}</name>
+            <vrf when="{not (BDI)}">
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+            </ip>
+            <ipv6 when="{not (BDI) and pe-ipv6-addr!=''}">
+              <?expand cli-intf-ipv6?>
+            </ipv6>
+            <mtu when='{not (BDI)}'>{mtu}</mtu>
+            <?expand cli-intf-service?>
+            <shutdown tags="delete"/>
+          </GigabitEthernet>
+          <TenGigabitEthernet when="{if-type='TenGigE'}">
+            <name>{if-id}</name>
+            <vrf when="{not (BDI)}">
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+            </ip>
+            <ipv6 when="{not (BDI) and pe-ipv6-addr!=''}">
+              <?expand cli-intf-ipv6?>
+            </ipv6>
+            <mtu when='{not (BDI)}'>{mtu}</mtu>
+            <?expand cli-intf-service?>
+            <shutdown tags="delete"/>
+          </TenGigabitEthernet>
+          <FortyGigabitEthernet when="{if-type='FortyGigE'}">
+            <name>{if-id}</name>
+            <vrf when="{not (BDI)}">
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+            </ip>
+            <ipv6 when="{not (BDI) and pe-ipv6-addr!=''}">
+              <?expand cli-intf-ipv6?>
+            </ipv6>
+            <mtu when='{not (BDI)}'>{mtu}</mtu>
+            <?expand cli-intf-service?>
+            <shutdown tags="delete"/>
+          </FortyGigabitEthernet>
+          <HundredGigE when="{if-type='HundredGigE'}">
+            <name>{if-id}</name>
+            <vrf when="{not (BDI)}">
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+            </ip>
+            <ipv6 when="{not (BDI) and pe-ipv6-addr!=''}">
+              <?expand cli-intf-ipv6?>
+            </ipv6>
+            <mtu when='{not (BDI)}'>{mtu}</mtu>
+            <?expand cli-intf-service?>
+            <shutdown tags="delete"/>
+          </HundredGigE>
+          <HundredGigE when="{if-type='HundredGigE'}">
+            <name>{if-id}</name>
+            <vrf when="{not (BDI)}">
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+            </ip>
+            <ipv6 when="{not (BDI) and pe-ipv6-addr!=''}">
+              <?expand cli-intf-ipv6?>
+            </ipv6>
+            <mtu when='{not (BDI)}'>{mtu}</mtu>
+            <?expand cli-intf-service?>
+            <shutdown tags="delete"/>
+          </HundredGigE>
+          <Ethernet when="{if-type='Ethernet'}">
+            <name>{if-id}</name>
+            <vrf when="{not (BDI)}">
+              <forwarding>{vrf/vrf-definition}</forwarding>
+            </vrf>
+            <ip when="{not (BDI) and $IPV4_ADDR!=''}">
+              <?expand cli-intf-ipv4?>
+            </ip>
+            <mtu when='{not (BDI)}'>{mtu}</mtu>
+            <?expand cli-intf-service?>
+            <shutdown tags="delete"/>
+          </Ethernet>
+        </interface>
+        <router xmlns="urn:ios" when="{$AS_NO!=''}">
+          <bgp>
+            <as-no>{$AS_NO}</as-no>
+            <neighbor when="{ce-pe-prot/e-bgp/neighbor-ipv4!=''}">
+              <id>{ce-pe-prot/e-bgp/neighbor-ipv4}</id>
+              <remote-as>{remote-as-ipv4}</remote-as>
+            </neighbor>
+            <neighbor when="{ce-pe-prot/e-bgp/neighbor-ipv6!=''}">
+              <id>{ce-pe-prot/e-bgp/neighbor-ipv6}</id>
+              <remote-as>{remote-as-ipv6}</remote-as>
+            </neighbor>
+            <address-family>
+              <vpnv4 when="{ce-pe-prot/e-bgp/neighbor-ipv4!=''}">
+                <af>unicast</af>
+                <?expand cli-router-bgp-vpn-neigh ipVersion=v4?>
+              </vpnv4>
+              <vpnv6 when="{ce-pe-prot/e-bgp/neighbor-ipv6!=''}">
+                <af>unicast</af>
+                <?expand cli-router-bgp-vpn-neigh ipVersion=v6?>
+              </vpnv6>
+              <with-vrf when="{vrf/address-family/address-family='ipv4' and vrf/vrf-definition!=''}">
+                <ipv4>
+                  <af>unicast</af>
+                  <?expand cli-router-bgp-with-vrf-ip ipVersion=ipv4?>
+                </ipv4>
+              </with-vrf>
+              <ipv6-with-vrf when="{vrf/address-family/address-family='ipv6' and vrf/vrf-definition!=''}">
+                <ipv6>
+                  <af>unicast</af>
+                  <?expand cli-router-bgp-with-vrf-ip ipVersion=ipv6?>
+                </ipv6>
+              </ipv6-with-vrf>
+            </address-family>
+          </bgp>
+        </router>
+      </config>
+    </device>
+  </devices>
+</config-template>

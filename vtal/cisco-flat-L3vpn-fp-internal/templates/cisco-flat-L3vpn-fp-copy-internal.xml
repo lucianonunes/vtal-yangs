@@ -1,0 +1,49 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn-internal">
+    <name>{$SERVICE_NAME}</name>
+    <endpoint-name>{$ENDPOINT}</endpoint-name>
+    <?foreach {custom-template}?>
+      <custom-template>
+          <name>{name}</name>
+          <?copy-tree {.}?>
+      </custom-template>
+    <?end?>
+    <?if {service-assurance}?>
+      <service-assurance>
+        <?copy-tree {service-assurance}?>
+      </service-assurance>
+    <?end?>
+    <endpoint>
+      <endpoint-name>{$ENDPOINT}</endpoint-name>
+      <?copy-tree {endpoint[endpoint-name=$ENDPOINT]}?>
+      <?if {endpoint[endpoint-name=$ENDPOINT]/sr-te}?>
+        <sr-te>
+          <odn>
+            <?if {endpoint[endpoint-name=$ENDPOINT]/sr-te/import-route-policy}?>
+              <import-route-policy-name>{deref(endpoint[endpoint-name=$ENDPOINT]/sr-te/import-route-policy)}</import-route-policy-name>
+              <import-color foreach="{deref(endpoint[endpoint-name=$ENDPOINT]/sr-te/import-route-policy)/../color}">
+                <id>{id}</id>
+                <?copy-tree {.}?>
+              </import-color>
+              <import-extra-policy foreach="{deref(endpoint[endpoint-name=$ENDPOINT]/sr-te/import-route-policy)/../extra-policy}">
+                <name>{name}</name>
+                <?copy-tree {.}?>
+              </import-extra-policy>
+            <?end?>
+            <?if {endpoint[endpoint-name=$ENDPOINT]/sr-te/export-route-policy}?>
+              <export-route-policy-name>{deref(endpoint[endpoint-name=$ENDPOINT]/sr-te/export-route-policy)}</export-route-policy-name>
+              <export-color foreach="{deref(endpoint[endpoint-name=$ENDPOINT]/sr-te/export-route-policy)/../color}">
+                <id>{id}</id>
+                <?copy-tree {.}?>
+              </export-color>
+              <export-extra-policy foreach="{deref(endpoint[endpoint-name=$ENDPOINT]/sr-te/export-route-policy)/../extra-policy}">
+                <name>{name}</name>
+                <?copy-tree {.}?>
+              </export-extra-policy>
+            <?end?>
+          </odn>
+        </sr-te>
+      <?end ?>
+    </endpoint>
+  </flat-L3vpn>
+</config>

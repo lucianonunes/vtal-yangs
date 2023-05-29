@@ -1,0 +1,112 @@
+module l2vpn-resource-manager {
+
+    namespace "http://poc.vtal.com/l2vpn-resource-manager";
+    prefix l2vpn-resource-manager;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+    import tailf-common {
+        prefix tailf;
+    }
+    import tailf-ncs {
+        prefix ncs;
+    }
+
+    organization
+        "VTAL Brasil";
+
+    description
+        "Resource Manager for l2vpn project";
+
+    revision 2023-09-03 {
+        description
+            "Initial development";
+    }
+
+    list l2vpn-resource-manager {
+
+        key "customer-name region interface-type";
+        leaf customer-name {
+            type customers;
+        }
+        leaf region {
+            type regions;
+        }
+
+        leaf interface-type {
+            type interface-types;
+        }
+
+        list ports {
+            key os;
+
+            leaf os {
+                type int16 {
+                    range "1000..1005";
+                }
+            }
+
+            leaf device {
+                type devices;
+                mandatory true;
+            }
+
+            leaf interface-id {
+                type string;
+                mandatory true;
+            }
+
+            leaf maximum-bandwidth {
+                type int16;
+                mandatory true;
+            }
+
+            leaf available {
+                type boolean;
+                mandatory true;
+            }
+        }
+
+        uses ncs:service-data;
+        ncs:servicepoint l2vpn-resource-manager;
+    }
+
+    typedef customers {
+        description "VTAL Customers";
+        type enumeration{
+            enum TIM;
+            enum CLARO;
+            enum VIVO;
+        }
+    }
+
+    typedef regions {
+        description "VTAL Regions";
+        type enumeration {
+            enum VTAL-RJ-01;
+            enum VTAL-RJ-02;
+            enum VTAL-RJ-03;
+            enum VTAL-SP-01;
+            enum VTAL-SP-02;
+            enum VTAL-SP-03;
+        }
+    }
+
+    typedef interface-types {
+        description "Interface Speed Type";
+        type enumeration {
+            enum 1G;
+            enum 10G;
+        }
+    }
+
+    typedef devices {
+        description "VTAL Devices";
+        type enumeration {
+            enum PE-01-VTAL;
+            enum PE-02-VTAL;
+        }
+    }
+
+}

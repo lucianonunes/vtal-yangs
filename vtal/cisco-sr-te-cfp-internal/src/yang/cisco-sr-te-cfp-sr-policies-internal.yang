@@ -1,0 +1,861 @@
+module cisco-sr-te-cfp-sr-policies-internal {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies-internal";
+  prefix cisco-sr-te-cfp-sr-policies-internal;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-yang-types {
+    prefix yang;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import cisco-sr-te-cfp-internal {
+    prefix cisco-sr-te-cfp-internal;
+  }
+
+  import cisco-sr-te-cfp-sr-types-internal {
+    prefix cisco-sr-te-cfp-sr-types-internal;
+  }
+
+  import cisco-sr-te-cfp-sr-common-internal {
+    prefix cisco-sr-te-cfp-sr-common-internal;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  description "SR policies internal module";
+
+  revision 2022-01-12 {
+    description "Removed: Commented circuit-style and related conditions";
+  }
+
+  revision 2021-12-03 {
+    description "Modified: Changed cs-protection-grp -> protection container to presence container";
+  }
+
+  revision 2021-10-13 {
+    description "Added: circuit-style support
+                 sr-te -> policies -> policy -> circuit-style
+                 When condition for cs/non-cs";
+  }
+
+  revision 2021-09-27 {
+    description "Added: When condition for
+                 sr-te -> policies -> policy -> bandwidth
+                 sr-te -> policies -> policy -> auto-route";
+  }
+
+  revision 2021-06-17 {
+    description "Added: description for when statement
+                 sr-te -> policies -> policy -> binding-sid
+                 sr-te -> policies -> policy -> path -> sr-te-path-choice -> explicit-path
+                 Updated: tailf info for
+                /cisco-sr-te-cfp-internal:sr-te -> policies -> policy -> source-address";
+  }
+
+  revision 2021-03-10 {
+    description "Add SRv6 support";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-05 {
+    description "Added source under disjointness for XE devices.";
+  }
+
+  revision 2020-07-13 {
+    description "Modified: Moved from cisco-sr-te-cfp to internal package.
+                  Removed: head-end-redeploy-flag.
+                  Removed: policy-oper-data
+                  Removed: no-op action";
+  }
+
+  revision 2020-06-23 {
+    description "Added: sr-te -> policies -> policy -> path -> dynamic -> metric-margin";
+  }
+
+  revision 2020-05-14 {
+    description "Removed all must conditions from internal yang";
+  }
+
+  revision 2020-04-21 {
+    description "Added: Must condition to allow either PCE or Sid-alogorithm under
+                  sr-te -> policies -> policy -> path -> dynamic";
+  }
+
+  revision 2020-04-13 {
+    description "Added: sr-te -> policies -> policy-oper-data -> status-code-oper";
+  }
+
+  revision 2020-04-06 {
+    description "Modified: forward-class range updated to 0-7 under
+                  /cisco-sr-te-cfp:sr-te -> policies -> policy -> auto-route";
+  }
+
+  revision 2020-03-23 {
+    description "Removed: string format entry support for tail-end under
+                  /cisco-sr-te-cfp:sr-te -> policies -> policy -> tail-end";
+  }
+
+  revision 2020-03-19 {
+    description "Modified: path preference range updated to 1-65535.";
+  }
+
+  revision 2020-03-18 {
+    description
+      "Removed: sr-te -> policies -> policy -> path -> name field.";
+  }
+
+  revision 2020-03-16 {
+    description
+      "Modified: Removed self-test status-type from oper-data and removed internal self-test
+                                                                                    action.
+      Modified: Moved ODN to a separate service.";
+  }
+
+  revision 2020-03-06 {
+    description
+      "Modified: Removed policy name validation.";
+  }
+
+  revision 2020-02-26 {
+    description
+      "Modified: Removed sid-limit option for ODN.";
+  }
+
+  revision 2020-02-25 {
+    description
+      "Modified: Removed re-match function used for policy name validation,
+                replaced with simple string match.
+                Renamed sr-te -> policies -> policy -> odn -> odn-template";
+  }
+
+  revision 2020-02-18 {
+    description
+      "Added: maximum-sid-depth to policy for ODN services.
+       Added: Added hopcount under sr-te -> policies -> policy -> path -> dynamic -> metric-type";
+  }
+
+  revision 2020-02-14 {
+    description
+      "Modified: Added head-end-redeploy-flag for head-end level redeploys.";
+  }
+
+  revision 2020-02-12 {
+    description
+      "Added: sub-id is added under
+       sr-te -> policies -> policy -> path -> dynamic/explict -> constraints.";
+
+  }
+
+  revision 2020-02-05 {
+    description
+      "Modified: Sr-policy name validation is not done for non-ODN service, when
+                cfp-configurations -> policy-name-validation-disabled is set.";
+  }
+
+  revision 2020-02-04 {
+    description
+      "Added: sr-te -> policies -> no-op action";
+  }
+
+  revision 2020-01-27 {
+    description
+      "Modified: sr-te -> policies -> policy -> tail-end-choice to sr-te -> policies
+                  -> policy -> tail-end.";
+  }
+
+  revision 2020-01-22 {
+    description "
+      Updated: status-type also as key in policy-oper-data under
+      sr-te -> policies -> policy-oper-data" ;
+  }
+
+  revision 2019-11-25 {
+    description "
+      Added: Cisco-ios-xr-string
+        Changed the policy-name type from 'service-name' to 'Cisco-ios-xr-string'
+              to accept more characters." ;
+  }
+
+  revision 2019-08-19 {
+    description "
+    Added: custom-template-hook under:
+      cisco-sr-te-cfp:sr-te->policies->policy->head-end";
+  }
+
+  revision 2019-06-18 {
+    description
+      "Modified: sr-te -> policies -> policy -> tail-end to sr-te -> policies
+                  -> policy -> tail-end-choice.";
+  }
+
+  revision 2019-05-15 {
+    description
+      "Added: sr-te -> policies -> policy -> path -> explict -> constraints.";
+  }
+
+  revision 2019-05-10 {
+    description "Initial revision.";
+  }
+
+  grouping cs-sid-list-grp {
+    container explicit {
+      tailf:info "Use a predefine explicit path";
+      description "Use a predefine explicit path";
+      leaf forward-sid-list-name {
+        tailf:info "Use a predefine forward explicit path";
+        description "Use a predefine forward explicit path";
+        type string;
+        mandatory true;
+      }
+      list forward-sid {
+        key index;
+        leaf index {
+          tailf:info "<1-65535> - Sid Index";
+          description "<1-65535> - Sid Index";
+          type uint32 {
+            range "1..65535";
+          }
+          tailf:cli-allow-range;
+        }
+        min-elements 1;
+
+        choice type {
+          mandatory true;
+          container mpls {
+            leaf label {
+              tailf:info "<0-1048575> - MPLS label configuration";
+              description "<0-1048575> - MPLS label configuration";
+              type uint32 {
+                range "0..1048575";
+              }
+              mandatory true;
+            }
+          }
+          container ipv4 {
+            leaf address {
+              tailf:info "<A.B.C.D> - IPV4 address family";
+              description "<A.B.C.D> - IPV4 address family";
+              type inet:ipv4-address;
+              mandatory true;
+            }
+          }
+        }
+      }
+
+      leaf reverse-sid-list-name {
+        tailf:info "Use a predefine reverse explicit path";
+        description "Use a predefine reverse explicit path";
+        type string;
+        mandatory true;
+      }
+      list reverse-sid {
+        key index;
+        leaf index {
+          tailf:info "<1-65535> - Sid Index";
+          description "<1-65535> - Sid Index";
+          type uint32 {
+            range "1..65535";
+          }
+          tailf:cli-allow-range;
+        }
+        min-elements 1;
+
+        choice type {
+          mandatory true;
+          container mpls {
+            leaf label {
+              tailf:info "<0-1048575> - MPLS label configuration";
+              description "<0-1048575> - MPLS label configuration";
+              type uint32 {
+                range "0..1048575";
+              }
+              mandatory true;
+            }
+          }
+          container ipv4 {
+            leaf address {
+              tailf:info "<A.B.C.D> - IPV4 address family";
+              description "<A.B.C.D> - IPV4 address family";
+              type inet:ipv4-address;
+              mandatory true;
+            }
+          }
+        }
+      }
+
+      container constraints {
+        uses cisco-sr-te-cfp-sr-common-internal:constraints-grp;
+
+        container segments {
+          tailf:info "Path segments constraints";
+          description "Path segments constraints";
+          presence true;
+
+          leaf sid-algorithm {
+            tailf:info "<128-255> - Specify the path computation metric options";
+            description "<128-255> - Specify the path computation metric options";
+            type uint16 {
+              tailf:info "<128-255>;;Sid-algorithm value";
+              range "128..255";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping cs-dynamic-grp {
+    container dynamic {
+      tailf:info "Use dynamic path computation";
+      description "Use dynamic path computation";
+      leaf metric-type {
+        type enumeration {
+          enum igp;
+          enum te;
+          enum latency;
+          enum hopcount;
+        }
+        default "igp";
+      }
+      container metric-margin {
+        presence "true";
+        tailf:info "Metric-margin";
+        description "Metric-margin";
+        choice metric-margin {
+          leaf absolute {
+            tailf:info "<0-2147483647>;;Absolute metric margin value";
+            description "<0-2147483647>;;Absolute metric margin value";
+            type uint32 {
+              range "0..2147483647";
+            }
+          }
+          leaf relative {
+            tailf:info "<0-2147483647>;;Relative metric margin value";
+            description "<0-2147483647>;;Relative metric margin value";
+            type uint32 {
+              range "0..2147483647";
+            }
+          }
+        }
+      }
+      container pce {
+        tailf:info "Delegate dynamic path computation to PCE";
+        description "Delegate dynamic path computation to PCE";
+        presence true;
+      }
+
+      container constraints {
+        leaf sid-limit {
+          tailf:info "<0-255> - Absolute limit on the number of SIDs in the SID-list";
+          description "<0-255> - Absolute limit on the number of SIDs in the SID-list";
+          type uint32 {
+            range "0..255";
+          }
+        }
+        uses cisco-sr-te-cfp-sr-common-internal:constraints-grp;
+
+        container segments {
+          tailf:info "Path segments constraints";
+          description "Path segments constraints";
+          presence true;
+
+          leaf sid-algorithm {
+            tailf:info "<128-255> - Specify the path computation metric options";
+            description "<128-255> - Specify the path computation metric options";
+            type uint16 {
+              tailf:info "<128-255>;;Sid-algorithm value";
+              range "128..255";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping cs-path-choice {
+    choice sr-te-path-choice {
+      case explicit-path {
+        uses cs-sid-list-grp;
+      }
+      case dynamic-path {
+        uses cs-dynamic-grp;
+      }
+    }
+  }
+
+  augment /cisco-sr-te-cfp-internal:sr-te {
+    container policies {
+      tailf:hidden tsdn;
+      tailf:info "SR-TE Policy container";
+      description "SR-TE Policy container";
+      list policy {
+        tailf:info "SR-Policy";
+        description "SR-Policy";
+
+        uses ncs:service-data;
+        ncs:servicepoint sr-policies-servicepoint;
+
+        tailf:validate "sr-policies-internal-validation" {
+            tailf:dependency ".";
+        }
+
+        key "name head-end";
+
+        leaf name {
+          tailf:info "Unique identifier for a SR-Policy";
+          description "Unique identifier for a SR-Policy";
+          type cisco-sr-te-cfp-sr-types-internal:Cisco-ios-xr-string;
+          tailf:cli-allow-range;
+        }
+
+        leaf head-end {
+          tailf:info "Head-End Router";
+          description "Head-End Router";
+          type leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+          tailf:cli-allow-range;
+        }
+
+        uses ct-hook:template-hook;
+
+        uses cisco-sr-te-cfp-sr-common-internal:srv6-grp;
+
+        leaf tail-end {
+          tailf:info "<A.B.C.D or X:X::X> - Router-Id of the tail-end device of the SR policy";
+          description "<A.B.C.D or X:X::X> - Router-Id of the tail-end device of the SR policy";
+          type inet:ip-address;
+          mandatory true;
+        }
+
+        leaf color {
+          tailf:info "<1-4294967295> - SR policy color";
+          description "<1-4294967295> - SR policy color";
+          type uint32 {
+            range  "1..4294967295";
+          }
+        }
+
+        leaf binding-sid {
+          when "not(../srv6)" {
+            description "Binding-Sid is not supported for SRv6 in the current release.";
+          }
+          tailf:info "<16-1048575> - Binding SID of the SR-Policy applied at the headend";
+          description "<16-1048575> - Binding SID of the SR-Policy applied at the headend";
+          type uint32 {
+            range "16..1048575";
+          }
+        }
+
+        // TODO: Circuit Style, ETA: TSDN 5.0
+        // container circuit-style {
+        //   when "not(../srv6)" {
+        //     description "Circuit style is not supported for SRv6 in the current release.";
+        //   }
+        //   tailf:info "Service to configure a SR Circuit Style policy";
+        //   description "This is service to configure a SR Circuit Style policy";
+        //   presence "true";
+
+        //   container protection {
+        //     tailf:info "Protection";
+        //     description "Protection";
+        //     presence true;
+
+        //     choice profile-type {
+        //       case delay {
+        //         container delay-measurement {
+        //           tailf:info "Delay measurement";
+        //           description "Delay measurement";
+        //           presence "true";
+        //           leaf active-profile {
+        //             tailf:info "Name of active delay profile";
+        //             description "Name of active delay profile";
+        //             type string;
+        //           }
+        //         }
+        //       }
+        //       case liveness {
+        //         container liveness-detection {
+        //           tailf:info "Liveness detection";
+        //           description "Liveness detection";
+        //           presence "true";
+        //           leaf active-profile {
+        //             tailf:info "Name of active liveness profile";
+        //             description "Name of active liveness profile";
+        //             type string;
+        //           }
+        //           leaf backup-profile {
+        //             when "../active-profile";
+        //             tailf:info "Name of backup liveness profile";
+        //             description "Name of backup liveness profile";
+        //             type string;
+        //           }
+        //         }
+        //       }
+        //     }
+        //   }
+
+        //   container steering {
+        //     tailf:info "Steering";
+        //     description "Steering";
+        //     presence "true";
+
+        //     leaf drop-traffic-on-invalid-path {
+        //       tailf:info "Drop traffic when all paths are invalid. Default = false" ;
+        //       description "Drop traffic when all paths are invalid. Default = false" ;
+        //       type boolean;
+        //       default false;
+        //     }
+        //   }
+
+        //   container working-path {
+        //     tailf:info "Working path";
+        //     description "Working path";
+        //     uses cs-path-choice;
+        //   }
+
+        //   container protect-path {
+        //     presence "true";
+        //     tailf:info "Protect path";
+        //     description "Protect path";
+        //     uses cs-path-choice;
+        //     leaf revertive {
+        //       tailf:info "Revertive protect path. Default = false";
+        //       description "Revertive protect path. Default = false";
+        //       type boolean;
+        //       default false;
+        //     }
+        //     leaf wait-to-revert-timer {
+        //       when "../revertive = 'true'";
+        //       tailf:info "<0 - 3000> -- seconds to wait before reverting. Default = 300";
+        //       description "<0 - 3000> -- seconds to wait before reverting. Default = 300";
+        //       type uint32 {
+        //         range "0..3000";
+        //       }
+        //       default 300;
+        //     }
+        //   }
+
+        //   container restore-path {
+        //     presence "true";
+        //     tailf:info "Restore path";
+        //     description "Restore path";
+        //     uses cs-path-choice;
+        //   }
+        // }
+
+        list path {
+          // TODO: Circuit Style, ETA: TSDN 5.0
+          // when "not(../circuit-style)";
+          tailf:info "SR-Policy candidate paths";
+          description "SR-Policy candidate paths";
+          key preference;
+          leaf preference {
+            tailf:info "<1-65535> - Path preference - Higher value indicates higher preference";
+            description "<1-65535> - Path preference - Higher value indicates higher preference";
+            type uint16 {
+              range  "1..65535";
+            }
+            tailf:cli-allow-range;
+          }
+
+          min-elements 1;
+          choice sr-te-path-choice {
+            container explicit {
+              when "not(../../srv6)" {
+                description "Explicit Path is not supported for SRv6 in the current release.";
+              }
+              presence "true";
+              tailf:info "Use a predefine explicit path";
+              description "Use a predefine explicit path";
+              list sid-list {
+                key name;
+                leaf name {
+                  type string;
+                  tailf:cli-allow-range;
+                }
+
+                leaf weight {
+                  tailf:info "<1-4294967295> - SID-List weight ";
+                  description "<1-4294967295> - SID-List weight ";
+                  type uint32 {
+                    range "1..4294967295";
+                  }
+                }
+
+                list sid {
+                  key index;
+                  leaf index {
+                    tailf:info "<1-65535> - Sid Index";
+                    description "<1-65535> - Sid Index";
+                    type uint32 {
+                      range "1..65535";
+                    }
+                    tailf:cli-allow-range;
+                  }
+                  min-elements 1;
+
+                  choice type {
+                    mandatory true;
+                    container mpls {
+                      leaf label {
+                        tailf:info "<0-1048575> - MPLS label configuration";
+                        description "<0-1048575> - MPLS label configuration";
+                        type uint32 {
+                          range "0..1048575";
+                        }
+                        mandatory true;
+                      }
+                    }
+                    container ipv4 {
+                      leaf address {
+                        tailf:info "<A.B.C.D> - IPV4 address family";
+                        description "<A.B.C.D> - IPV4 address family";
+                        type inet:ipv4-address;
+                        mandatory true;
+                      }
+                    }
+                  }
+                }
+
+                leaf discovered {
+                  tailf:hidden full;
+                  type empty;
+                }
+              }
+              container constraints {
+                uses cisco-sr-te-cfp-sr-common-internal:constraints-grp {
+                  augment "disjoint-path" {
+                    leaf source {
+                      tailf:info "<A.B.C.D> - Association source";
+                      description "<A.B.C.D> - Association source";
+                      type inet:ipv4-address;
+                    }
+                  }
+                }
+                container segments {
+                  tailf:info "Path segments constraints";
+                  description "Path segments constraints";
+                  presence true;
+
+                  leaf sid-algorithm {
+                    tailf:info "<128-255> - Specify the path computation metric options";
+                    description "<128-255> - Specify the path computation metric options";
+                    type uint16 {
+                      tailf:info "<128-255>;;Sid-algorithm value";
+                      range "128..255";
+                    }
+                  }
+                }
+              }
+            }
+
+            container dynamic {
+              presence "true";
+              tailf:info "Use dynamic path computation";
+              description "Use dynamic path computation";
+              leaf metric-type {
+                type enumeration {
+                  enum igp;
+                  enum te;
+                  enum latency;
+                  enum hopcount;
+                }
+              }
+              container metric-margin {
+                presence "true";
+                tailf:info "Metric-margin";
+                description "Metric-margin";
+                choice metric-margin {
+                  leaf absolute {
+                    tailf:info "<0-2147483647>;;Absolute metric margin value";
+                    description "<0-2147483647>;;Absolute metric margin value";
+                    type uint32 {
+                      range "0..2147483647";
+                    }
+                  }
+                  leaf relative {
+                    tailf:info "<0-2147483647>;;Relative metric margin value";
+                    description "<0-2147483647>;;Relative metric margin value";
+                    type uint32 {
+                      range "0..2147483647";
+                    }
+                  }
+                }
+              }
+              container pce {
+                tailf:info "Delegate dynamic path computation to PCE";
+                description "Delegate dynamic path computation to PCE";
+                presence true;
+              }
+
+              container constraints {
+                leaf sid-limit {
+                  tailf:info "<0-255> - Absolute limit on the number of SIDs in the SID-list";
+                  description "<0-255> - Absolute limit on the number of SIDs in the SID-list";
+                  type uint32 {
+                    range "0..255";
+                  }
+                }
+                uses cisco-sr-te-cfp-sr-common-internal:constraints-grp {
+                  augment "disjoint-path" {
+                    leaf source {
+                      tailf:info "<A.B.C.D> - Neighbor IPv4 Address";
+                      description "<A.B.C.D> - Neighbor IPv4 Address";
+                      type inet:ipv4-address;
+                    }
+                  }
+                }
+                container segments {
+                  tailf:info "Path segments constraints";
+                  description "Path segments constraints";
+                  presence true;
+
+                  leaf sid-algorithm {
+                    tailf:info "<128-255> - Specify the path computation metric options";
+                    description "<128-255> - Specify the path computation metric options";
+                    type uint16 {
+                      tailf:info "<128-255>;;Sid-algorithm value";
+                      range "128..255";
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        leaf bandwidth {
+          when "not(../srv6)" {
+            description "bandwidth is not supported for SRv6 in the current release.";
+          }
+          tailf:info "<1-4294967295> - Requested Bandwidth value in kbps";
+          description "<1-4294967295> - Requested Bandwidth value in kbps";
+          type uint32 {
+            range "1..4294967295";
+          }
+        }
+
+        container auto-route {
+          when "not(../srv6)" {
+            description "auto-route is not supported for SRv6 in the current release.";
+          }
+          tailf:info "Autoroute configuration";
+          description "Autoroute configuration";
+          presence true;
+          container auto-route-metric {
+            tailf:info "Autoroute metric";
+            description "Autoroute metric";
+            presence true;
+            choice metric-choice {
+              leaf metric-relative-value {
+                tailf:info "<(-10)-10> - Autoroute relative metric";
+                description "<(-10)-10> - Autoroute relative metric";
+                type int32 {
+                  range "-10..10";
+                }
+              }
+              leaf metric-constant-value {
+                tailf:info "<1-2147483647> - Autoroute constant metric";
+                description "<1-2147483647> - Autoroute constant metric";
+                type uint32 {
+                  range "1..2147483647";
+                }
+              }
+            }
+          }
+
+          container include-prefixes {
+            presence true;
+            tailf:info "Autoroute include prefix table configuration";
+            description "Autoroute include prefix table configuration";
+            list include-prefix {
+              tailf:info "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+              description "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+              key "prefix-address";
+              leaf prefix-address {
+                tailf:info "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+                description "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+                type tailf:ipv4-address-and-prefix-length;
+                tailf:cli-allow-range;
+              }
+            }
+          }
+
+          leaf force-sr-include {
+            tailf:info "Force autoroute policy to be safe for carrying SR labelled traffic";
+            description "Force autoroute policy to be safe for carrying SR labelled traffic";
+            type empty;
+          }
+
+          leaf forward-class {
+            tailf:info "<0-7> - Specify forward class for policy based routing";
+            description "<0-7> - Specify forward class for policy based routing";
+            type uint8 {
+              tailf:info "<0-7>;;Forward class value, default value is 0";
+              range "0..7";
+            }
+          }
+        }
+
+        leaf source-address {
+          tailf:info "Source address of policy. The value set on a per-policy basis
+                        will override the value set globally on the device.";
+          description "Source address of policy. The value set on a per-policy basis
+                        will override the value set globally on the device.";
+          type inet:ip-address;
+        }
+
+        container action {
+          tailf:action self-test {
+            tailf:actionpoint sr-policy-internal-self-test-actionpoint;
+            input {
+            }
+            output {
+              leaf status {
+                type string;
+              }
+              leaf message {
+                type string;
+              }
+            }
+          }
+        }
+      }
+
+      list policy-plan {
+        config false;
+        tailf:cdb-oper {
+          tailf:persistent true;
+        }
+        key "name head-end";
+
+        leaf name {
+          type string;
+        }
+
+        leaf head-end {
+          type string;
+        }
+
+        uses ncs:nano-plan-data;
+        uses ncs:nano-plan-history;
+      }
+    }
+  }
+}

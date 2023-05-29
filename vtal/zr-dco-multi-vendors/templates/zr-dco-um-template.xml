@@ -1,0 +1,56 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <!-- Controller -->
+        <?if-ned-id cisco-iosxr-nc-7.5:cisco-iosxr-nc-7.5
+                    cisco-iosxr-nc-7.6:cisco-iosxr-nc-7.6?>
+          <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+            <controller>
+              <controller-name>Optics{line-port}</controller-name>
+              <description when="{circuit-id}">{circuit-id}</description>
+              <shutdown tags="delete"/>
+              <?if {(grid-type = '100mhz-grid') and frequency}?>
+                <dwdm-carrier xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg">
+                  <grid-100mhz>
+                    <frequency>{frequency}</frequency>
+                  </grid-100mhz>
+                </dwdm-carrier>
+              <?end?>
+              <transmit-power xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg">{transmit-power}</transmit-power>
+              <!-- modulation xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg">16Qam</modulation -->
+              <speed xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-speed-cfg" when="{$SPEED_PID!=''}">{bandwidth}g</speed>
+              <fec xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg" when="{$FEC='fec-ofec'}">OFEC</fec>
+              <fec xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg" when="{$FEC='fec-cfec'}">CFEC</fec>
+              <breakout xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-breakout-cfg" when="{$BREAKOUT!=''}">{$BREAKOUT}</breakout>
+              <dac-rate xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-dac-rate-cfg">{$DAC}</dac-rate>
+            </controller>
+          </interfaces>
+        <?elif-ned-id cisco-iosxr-nc-7.7:cisco-iosxr-nc-7.7?>
+          <controllers xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+            <controller>
+              <controller-name>Optics{line-port}</controller-name>
+              <description when="{circuit-id}">{circuit-id}</description>
+              <shutdown tags="delete"/>
+              <?if {(grid-type = '100mhz-grid') and frequency}?>
+                <dwdm-carrier xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg">
+                  <grid-100mhz>
+                    <frequency>{frequency}</frequency>
+                  </grid-100mhz>
+                </dwdm-carrier>
+              <?end?>
+              <transmit-power xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg">{transmit-power}</transmit-power>
+              <!-- modulation xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg">16Qam</modulation -->
+              <speed xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-speed-cfg" when="{$SPEED_PID!=''}">{bandwidth}g</speed>
+              <fec xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg" when="{$FEC='fec-ofec'}">OFEC</fec>
+              <fec xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-optics-cfg" when="{$FEC='fec-cfec'}">CFEC</fec>
+              <breakout xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-cont-breakout-cfg" when="{$BREAKOUT!=''}">{$BREAKOUT}</breakout>
+              <dac-rate xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-dac-rate-cfg">{$DAC}</dac-rate>
+            </controller>
+          </controllers>
+        <?end?>
+      </config>
+    </device>
+  </devices>
+</config>

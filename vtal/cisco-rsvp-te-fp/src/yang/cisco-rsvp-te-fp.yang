@@ -1,0 +1,712 @@
+module cisco-rsvp-te-fp {
+  namespace "http://cisco.com/ns/nso/fp/cisco-tsdn-rsvp-te";
+  prefix cisco-rsvp-te-fp;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  description "RSVP TE module";
+
+  revision 2022-08-12 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.40";
+  }
+
+  revision 2022-05-04 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.39";
+  }
+
+  revision 2022-01-13 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.38";
+  }
+
+  revision 2021-11-17 {
+    description
+      "Modified: default under cfp-configurations -> iosxr-default-ned-id";
+  }
+
+  revision 2021-06-02 {
+    description "Removed unused groupings status-code-plan-augmentation and status-code-component-augmentation";
+  }
+
+  revision 2021-02-15 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.33";
+  }
+
+  revision 2020-12-11 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.32";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-10 {
+    description "Added leaf sync-direction as mandatory input to error-recovery action";
+  }
+
+  revision 2020-11-04 {
+    description "Added self-test action under rsvp-te -> tunnel-te";
+  }
+
+  revision 2020-10-09 {
+    description "Added rsvp-te -> tunnel-te -> hold-priority and
+                 rsvp-te -> tunnel-te -> setup-priority";
+  }
+
+  revision 2020-08-18 {
+    description "Removed default value from ipv4 -> unnumbered -> loopback.";
+  }
+
+  revision 2020-08-14 {
+    description "Added error-recovery action.";
+  }
+
+  revision 2020-08-10 {
+    description "Added cleanup action.";
+  }
+
+  revision 2020-06-10 {
+    description "Initial revision.";
+  }
+
+  grouping explicit-path-index-list-grouping {
+    list index {
+      tailf:info "<1-65535> - Index";
+      description "<1-65535> - Index";
+      key index-id;
+      leaf index-id {
+        tailf:info "<1-65535> - Index number";
+        description "<1-65535> - Index number";
+        type uint16 {
+          range "1..65535";
+        }
+      }
+      // explicit-path name * / index * next-address
+      leaf keyword {
+        type enumeration {
+          enum exclude-address {
+            tailf:info "Specify the next address to be excluded ";
+            description "Specify the next address to be excluded ";
+          }
+          enum exclude-srlg {
+            tailf:info "Specify an IP Addr to get SRLGs from for exclusion";
+            description "Specify an IP Addr to get SRLGs from for exclusion";
+          }
+          enum next-address {
+            tailf:info "Specify the next (adjacent) address in the path";
+            description "Specify the next (adjacent) address in the path";
+          }
+          enum next-label {
+            tailf:info "Specify the next MPLS label in the path";
+            description "Specify the next MPLS label in the path";
+          }
+        }
+        mandatory true;
+      }
+      // explicit-path name * / index * next-address loose
+      // explicit-path name * / index * next-address strict
+      leaf hop-type {
+        when "../keyword = 'next-address'";
+        tailf:info "Hop type";
+        description "Hop type";
+        type enumeration {
+          enum loose {
+            tailf:info "Specify the next address in the path as a loose hop";
+            description "Specify the next address in the path as a loose hop";
+          }
+          enum strict {
+            tailf:info "Specify the next address in the path as a strict hop";
+            description "Specify the next address in the path as a strict hop";
+          }
+        }
+        default 'strict';
+      }
+      leaf label {
+        when "../keyword = 'next-label'";
+        tailf:info "<0-1048575>  MPLS label value";
+        description "<0-1048575>  MPLS label value";
+        type uint32 {
+          range "0..1048575";
+        }
+      }
+      // explicit-path name * / index * ipv4 unicast
+      container ipv4 {
+        when "../keyword != 'next-label'";
+        presence "true";
+        tailf:info "Specify the address AFI";
+        description "Specify the address AFI";
+        leaf unicast {
+          tailf:info "A.B.C.D - Specify the IPv4 address SAFI";
+          description "A.B.C.D - Specify the IPv4 address SAFI";
+          type inet:ipv4-address;
+          mandatory true;
+        }
+      }
+    }
+  }
+
+  grouping interface-tunnel-signalled-grouping {
+    // interface tunnel-te* / signalled-name
+    leaf signalled-name {
+      tailf:info "The signaling name to assign to tunnel";
+      description "The signaling name to assign to tunnel";
+      type string;
+    }
+
+    // interface tunnel-te* / signalled-bandwidth
+    container signalled-bandwidth {
+      presence "true";
+      tailf:info "Tunnel bandwidth requirement to be signalled";
+      description "Tunnel bandwidth requirement to be signalled";
+      leaf sub-pool {
+        tailf:info "Specify sub-pool bandwidth";
+        description "Specify sub-pool bandwidth";
+        type empty;
+      }
+      leaf bandwidth {
+        tailf:info "<1-4294967295> - Bandwidth requirement in kbps";
+        description "<1-4294967295> - Bandwidth requirement in kbps";
+        type uint32 {
+          range "1..4294967295";
+        }
+        mandatory true;
+      }
+    }
+  }
+
+  grouping interface-tunnel-path-option-grouping {
+    list path-option {
+      tailf:info "Path setup option";
+      description "Path setup option";
+      key preference-priority;
+      leaf preference-priority {
+        tailf:info "<1-1000> - Preference for this path option";
+        description "<1-1000> - Preference for this path option";
+        type uint16 {
+          range "1..1000";
+        }
+      }
+      choice path-option-choice {
+        container dynamic {
+          presence "true";
+          tailf:info "Setup based on dynamically allocated path";
+          description "Setup based on dynamically allocated path";
+          container pce {
+            presence "true";
+            tailf:info "Use Path Computation Element";
+            description "Use Path Computation Element";
+            leaf ipv4 {
+              tailf:info "A.B.C.D - IPv4 PCE address";
+              description "A.B.C.D - IPv4 PCE address";
+              type inet:ipv4-address;
+            }
+          }
+        }
+        container explicit {
+          presence "true";
+          tailf:info "Setup based on preconfigured path";
+          description "Setup based on preconfigured path";
+          choice path-choice {
+            leaf identifier {
+              tailf:info "Specify an IP explicit path by number";
+              description "Specif yan IP explicit path by number";
+              type leafref {
+                path "../../../../explicit-path/identifier/id";
+              }
+              mandatory true;
+            }
+            leaf name {
+              tailf:info "Specify an IP explicit path by name";
+              description "Specify an IP explicit path by name";
+              type leafref {
+                path "../../../../explicit-path/name/id";
+              }
+              mandatory true;
+            }
+          }
+
+          leaf verbatim {
+            tailf:info "Do not require topology database for explicit path";
+            description "Do not require topology database for explicit path";
+            type empty;
+          }
+        }
+      }
+    }
+  }
+
+  grouping interface-tunnel-path-selection-grouping {
+    container path-selection {
+      presence true;
+      tailf:info "Path Selection Configuration";
+      description "Path Selection Configuration";
+
+      // interface tunnel-te* / path-selection / metric
+      container metric {
+        presence true;
+        tailf:info "Metric Type for path calculation";
+        description "Metric Type for path calculation";
+        leaf metric-type {
+          type enumeration {
+            enum igp {
+              tailf:info "Use IGP metric";
+              description "Use IGP metric";
+            }
+            enum te {
+              tailf:info "Use TE metric";
+              description "Use TE metric";
+            }
+            enum delay {
+              tailf:info "Use delay metric";
+              description "Use delay metric";
+            }
+          }
+        }
+      }
+
+      // interface tunnel-te* / path-selection / hop-limit
+      leaf hop-limit {
+        tailf:info "<1-255> - Hop limit";
+        description "<1-255> - Hop limit";
+        type uint8 {
+          range "1..255";
+        }
+      }
+
+      // interface tunnel-te* / path-selection / cost-limit
+      leaf cost-limit {
+        tailf:info "<1-4294967295> - Cost limit";
+        description "<1-4294967295> - Cost limit";
+        type uint32 {
+          range "1..4294967295";
+        }
+      }
+
+      // interface tunnel-te* / path-selection / delay-limit
+      leaf delay-limit {
+        tailf:info "<1-4294967295> - Delay limit";
+        description "<1-4294967295> - Delay limit";
+        type uint32 {
+          range "1..4294967295";
+        }
+      }
+    }
+  }
+
+  grouping interface-tunnel-steering-grouping {
+    container traffic-steering {
+      presence "true";
+      tailf:info "Steer traffic traffic through the tunnel";
+      description  "Steer traffic traffic through the tunnel";
+      choice steering-choice {
+        // interface tunnel-te* / autoroute
+        container autoroute {
+          presence "true";
+          tailf:info "Parameters for IGP routing over tunnel";
+          description "Parameters for IGP routing over tunnel";
+
+          // interface tunnel-te* / autoroute announce
+          container announce {
+            presence "true";
+            tailf:info "Announce tunnel to IGP";
+            description "Announce tunnel to IGP";
+            // interface tunnel-te* / autoroute announce / metric
+            container metric {
+              presence true;
+              tailf:info "Specify MPLS tunnel metric";
+              description "Specify MPLS tunnel metric";
+              choice metric-choice {
+                // interface tunnel-te* / autoroute announce / metric constant
+                leaf constant {
+                  tailf:info "<1-2147483647> - Set constant metric";
+                  description "<1-2147483647> - Set constant metric";
+                  type uint32 {
+                    range "1..2147483647";
+                  }
+                }
+                // interface tunnel-te* / autoroute announce / metric absolute
+                leaf absolute {
+                  tailf:info "<1-2147483647> - Set absolute metric";
+                  description "<1-2147483647> - Set absolute metric";
+                  type uint32 {
+                    range "1..2147483647";
+                  }
+                }
+                // interface tunnel-te* / autoroute announce / metric relative
+                leaf relative {
+                  tailf:info "<-10,+10> - Set relative metric";
+                  description "<-10,+10> - Set relative metric";
+                  type int8 {
+                    range "-10..10";
+                  }
+                }
+              }
+            }
+            // interface tunnel-te* / autoroute announce / exclude-traffic
+            container exclude-traffic {
+              presence "true";
+              tailf:info "Exclude the type of traffic that goes through AA";
+              description "Exclude the type of traffic that goes through AA";
+              leaf segment-routing {
+                tailf:info "Exclude segment-routing traffic from the autoroute announced tunnel";
+                description "Exclude segment-routing traffic from the autoroute announced tunnel";
+                type empty;
+                mandatory true;
+              }
+            }
+            // interface tunnel-te* / autoroute announce / include-ipv6
+            leaf include-ipv6 {
+              tailf:info "Announce tunnel as an IPv6 FA also";
+              description "Announce tunnel as an IPv6 FA also";
+              type empty;
+            }
+          }
+
+          // interface tunnel-te* / autoroute destination *
+          list destination {
+            tailf:info "Adds static route address A.B.C.D to destination";
+            description "Adds static route address A.B.C.D to destination";
+            key address;
+            leaf address {
+              tailf:info "A.B.C.D - IPv4 Address of static route to add";
+              description "A.B.C.D - IPv4 Address of static route to add";
+              type inet:ipv4-address;
+            }
+          }
+        }
+
+        // interface tunnel-te* / forwarding-adjacency
+        container forwarding-adjacency {
+          presence "true";
+          tailf:info "Enable tunnel as a forwarding-adjacency";
+          description "Enable tunnel as a forwarding-adjacency";
+
+          // interface tunnel-te* / forwarding-adjacency / holdtime
+          leaf holdtime {
+            tailf:info "<0-20000> - Hold time in ms";
+            description "<0-20000> - Hold time in ms";
+            type uint16 {
+              range "0..20000";
+            }
+          }
+
+          // interface tunnel-te* / forwarding-adjacency / include-ipv6
+          leaf include-ipv6 {
+            tailf:info "Announce tunnel as an IPv6 FA also";
+            description "Announce tunnel as an IPv6 FA also";
+            type empty;
+          }
+        }
+      }
+    }
+  }
+
+  container rsvp-te {
+    tailf:hidden tsdn;
+    tailf:info "RSVP MPLS-TE Tunnel";
+    description "RSVP MPLS-TE Tunnel";
+
+    // explicit-path *
+    container explicit-path {
+      tailf:info "Explicit-path config commands";
+      description "Explicit-path config commands";
+      presence "true";
+
+      // explicit-path name *
+      list name {
+        tailf:info "Specify explicit path by name";
+        description "Specify explicit path by name";
+        key id;
+        leaf id {
+          tailf:info "Enter name";
+          description "Enter name";
+          type string;
+        }
+
+        // explicit-path name * / index *
+        uses explicit-path-index-list-grouping;
+      }
+
+      // explicit-path identifier *
+      list identifier {
+        tailf:info "<1-65535> - Specify explicit path by number";
+        description "<1-65535> - Specify explicit path by number";
+        key id;
+        leaf id {
+          tailf:info "<1-65535> - Enter number";
+          description "<1-65535> - Enter number";
+          type uint16 {
+            range "1..65535";
+          }
+        }
+
+        // explicit-path identifier * / index *
+        uses explicit-path-index-list-grouping;
+      }
+    }
+
+    // interface tunnel-te*
+    list tunnel-te {
+      tailf:info "MPLS Traffic Engineering Tunnel";
+      description "MPLS Traffic Engineering Tunnel";
+      key "name";
+
+      uses ncs:service-data;
+      ncs:servicepoint rsvp-te-servicepoint;
+
+      tailf:validate "rsvp-te-validation" {
+        tailf:dependency ".";
+      }
+
+      leaf name {
+        tailf:info "Service Name for RSVP-TE";
+        description "Service Name for RSVP-TE";
+        type string {
+          pattern '[\w\-\.:,_@#%$\+=\|;]+';
+        }
+        tailf:cli-allow-range;
+      }
+
+      leaf id {
+        tailf:info "<0-65535> - Tunnel-te interface id";
+        description "<0-65535> - Tunnel-te interface id";
+        type uint16 {
+          range "0..65535";
+        }
+        mandatory true;
+      }
+
+      leaf head-end {
+        tailf:info "Head-end router";
+        description "Head-end router";
+        type leafref {
+          path "/ncs:devices/ncs:device/ncs:name";
+        }
+        mandatory true;
+      }
+
+      uses ct-hook:template-hook;
+
+      // interface tunnel-te* / description
+      leaf description {
+        tailf:info "Set description for this interface";
+        description "Set description for this interface";
+        type string;
+      }
+
+      // interface tunnel-te* / setup-priority
+      leaf setup-priority {
+        tailf:info "<0-7> - TE LSP requested setup priority";
+        description "<0-7> - TE LSP requested setup priority";
+        type uint8 {
+          range "0..7";
+        }
+        default 7;
+      }
+
+      // interface tunnel-te* / hold-priority
+      leaf hold-priority {
+        tailf:info "<0-7> - TE LSP requested hold priority";
+        description "<0-7> - TE LSP requested hold priority";
+        type uint8 {
+          range "0..7";
+        }
+        default 7;
+      }
+
+      // interface tunnel-te* / ipv4 unnumbered
+      container ipv4 {
+        container unnumbered {
+          tailf:info "Enable IPv4 processing without an explicit address";
+          description "Enable IPv4 processing without an explicit address";
+          presence true;
+
+          leaf loopback {
+            tailf:info "<0-2147483647> - Loopback interface";
+            description "<0-2147483647> - Loopback interface";
+            type uint32 {
+              range 0..2147483647;
+            }
+          }
+        }
+      }
+
+      // interface tunnel-te* / destination
+      leaf destination {
+        tailf:info "A.B.C.D - Specify tunnel destination IPv4 address";
+        description "A.B.C.D - Specify tunnel destination IPv4 address";
+        type inet:ipv4-address;
+        mandatory true;
+      }
+
+      // interface tunnel-te* / signalled*
+      uses interface-tunnel-signalled-grouping;
+
+      // interface tunnel-te* / path-selection
+      uses interface-tunnel-path-selection-grouping;
+
+      // interface tunnel-te* / path-option *
+      uses interface-tunnel-path-option-grouping;
+
+      // interface tunnel-te* / pce
+      container pce {
+        tailf:info "Config PCE parameters";
+        description "Config PCE parameters";
+        presence true;
+
+        // interface tunnel-te* / pce / delegation
+        leaf delegation {
+          tailf:info "Enable PCE delegation";
+          type empty;
+        }
+      }
+
+      // interface tunnel-te* / autoroute
+      // interface tunnel-te* / forwarding-adjacency
+      uses interface-tunnel-steering-grouping;
+
+      // TODO: SHOULD THIS STEERING OF STATIC ROUTE GO UNDER L3?
+      //       router static address-family ipv4 unicast A.B.C.D/length tunnel-te ID
+
+    container action {
+        tailf:action self-test {
+          tailf:actionpoint cisco-rsvp-te-self-test-actionpoint;
+          input {
+          }
+          output {
+            leaf status {
+              type string;
+            }
+            leaf message {
+              type string;
+            }
+          }
+        }
+      }
+    }
+
+	  tailf:action cleanup {
+      tailf:actionpoint cisco-rsvp-te-fp-cleanup-internal;
+      tailf:info "Clean up RSVP-TE service configuration and operational data";
+      description "Clean up RSVP-TE service configuration and operational data";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf no-networking {
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-rsvp-te-fp-error-recovery-internal;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          tailf:info "Service to recover";
+          description "Service to recover";
+          type string;
+          mandatory true;
+        }
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    list tunnel-te-plan {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name";
+
+      leaf name {
+        tailf:info "Service Name for RSVP-TE";
+        description "Service Name for RSVP-TE";
+        type string;
+        tailf:cli-allow-range;
+      }
+
+      uses ncs:nano-plan-data;
+      uses ncs:nano-plan-history;
+    }
+  }
+
+  container cfp-configurations {
+    list dynamic-device-mapping {
+      tailf:info "Dynamic Device Mapping";
+      description "Dynamic Device Mapping";
+      key "ned-id";
+      leaf ned-id {
+        tailf:info "Device NED ID, eg ned:netconf";
+        description "Device NED ID, eg ned:netconf";
+        type string;
+        tailf:cli-allow-range;
+      }
+      leaf python-impl-class-name {
+        tailf:info "Device Python implementation class, eg module.class";
+        description "Device Python implementation class, eg module.class";
+        type string;
+        mandatory true;
+      }
+    }
+
+    leaf iosxr-default-ned-id {
+      tailf:info "NED ID of the default IOSXR Device.";
+      description "NED ID of the default IOSXR Device.";
+      tailf:hidden tsdn;
+      type string;
+      default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+    }
+  }
+}

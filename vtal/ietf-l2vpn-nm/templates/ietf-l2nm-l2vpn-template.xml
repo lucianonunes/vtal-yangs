@@ -1,0 +1,458 @@
+<flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+  <name>L2NM-{vpn-id}-internal</name>
+  <?set VPN_ID = {vpn-id}?>
+  <?set VPN_SVC_TYPE = {string(vpn-svc-type)}?>
+  <?set CONTROL_WORD = '' ?>
+  <?foreach {custom-template}?>
+    <custom-template>
+      <name>{name}</name>
+      <?copy-tree {.}?>
+    </custom-template>
+  <?end?>
+
+  <?if {service-assurance}?>
+    <service-assurance>
+      <?copy-tree {service-assurance}?>
+    </service-assurance>
+  <?end?>
+
+  <?save-context vpn-service?>
+  <?if {control-word}?>
+    <?set CONTROL_WORD = {control-word}?>
+  <?end?>
+  <?foreach {vpn-nodes/vpn-node}?>
+        <?set VPN_NW_ID = '' ?>
+        <?set INTERFACE_ENCAP = '' ?>
+        <?set INTERFACE_ID = '' ?>
+        <?set INTERFACE_TYPE = '' ?>
+        <?set VLAN_ID = '' ?>
+        <?set SUB_IF_ID = '' ?>
+        <?set PHYSICAL_INF = ''?>
+
+        <?save-context vpn-node?>
+        <?set-context-node {vpn-network-accesses/vpn-network-access[position()=1]}?>
+        <?save-context vpn-network-access?>
+
+        <?set VPN_NW_ID = {id} ?>
+        <?if {connection/encapsulation-type='vpn-common:dot1q'}?>
+          <?set INTERFACE_ENCAP = 'dot1q' ?> <!-- dot1q -->
+          <?set VLAN_ID = {connection/dot1q-interface/dot1q/c-vlan-id} ?>
+          <?set PHYSICAL_INF = {string(connection/dot1q-interface/dot1q/physical-inf)} ?>
+        <?end?>
+        <?if {connection/encapsulation-type='vpn-common:untagged-int'}?>
+          <?set INTERFACE_ENCAP = 'untagged' ?>
+          <?set SUB_IF_ID = {connection/untagged-interface/untagged/sub-if-id} ?>
+          <?set PHYSICAL_INF = {string(connection/untagged-interface/untagged/physical-inf)} ?>
+        <?end?>
+
+        <?if {starts-with($PHYSICAL_INF,'GigabitEthernet')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'GigabitEthernet')} ?>
+            <?set INTERFACE_TYPE = 'GigabitEthernet' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'Bundle-Ether')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'Bundle-Ether')} ?>
+            <?set INTERFACE_TYPE = 'Bundle-Ether' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'FiftyGigE')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'FiftyGigE')} ?>
+            <?set INTERFACE_TYPE = 'FiftyGigE' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'FortyGigE')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'FortyGigE')} ?>
+            <?set INTERFACE_TYPE = 'FortyGigE' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'FourHundredGigE')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'FourHundredGigE')} ?>
+            <?set INTERFACE_TYPE = 'FourHundredGigE' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'HundredGigE')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'HundredGigE')} ?>
+            <?set INTERFACE_TYPE = 'HundredGigE' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'TenGigE')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'TenGigE')} ?>
+            <?set INTERFACE_TYPE = 'TenGigE' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'TwentyFiveGigE')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'TwentyFiveGigE')} ?>
+            <?set INTERFACE_TYPE = 'TwentyFiveGigE' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'TwoHundredGigE')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'TwoHundredGigE')} ?>
+            <?set INTERFACE_TYPE = 'TwoHundredGigE' ?>
+        <?end?>
+        <?if {starts-with($PHYSICAL_INF,'Ethernet')}?>
+            <?set INTERFACE_ID = {substring-after($PHYSICAL_INF, 'Ethernet')} ?>
+            <?set INTERFACE_TYPE = 'Ethernet' ?>
+        <?end?>
+
+        <?switch-context vpn-node?>
+
+      <?if {$VPN_SVC_TYPE='vpn-common:t-ldp'}?>
+        <service-type>p2p</service-type>
+        <flat-L2vpn-p2p>
+          <pw-id>{signaling-options[position()=1]/t-ldp-pwe/ac-pw-list[position()=1]/vc-id}</pw-id>
+          <?if {vpn-node-id=$L2NM_LOCAL_SITE}?>
+            <local-site>
+              <pe>{vpn-node-id}</pe>
+              <if-id>{$INTERFACE_ID}</if-id>
+              <if-type>{$INTERFACE_TYPE}</if-type>
+              <if-encap>{$INTERFACE_ENCAP}</if-encap>
+              <pw-class>{$VPN_ID}</pw-class>
+              <p2p-name>{$VPN_ID}</p2p-name>
+              <xconnect-group-name>{$VPN_ID}</xconnect-group-name>
+              <control-word>{$CONTROL_WORD}</control-word>
+              <xconnect-remote-ip>{signaling-options[position()=1]/t-ldp-pwe/ac-pw-list[position()=1]/peer-addr}</xconnect-remote-ip>
+              <mpls-local-label>{signaling-options[position()=1]/t-ldp-pwe/ac-pw-list[position()=1]/mpls-label}</mpls-local-label>
+              <?if {te-service-mapping/te-mapping/te-tunnel-list}?>
+                <rsvp-te>
+                  <preferred-path>
+                    <?if {te-service-mapping/te-mapping/te-tunnel-list/te-tunnel-id}?>
+                      <te-tunnel-id>{te-service-mapping/te-mapping/te-tunnel-list/te-tunnel-id}</te-tunnel-id>
+                    <?end?>
+                    <?if {te-service-mapping/te-mapping/te-tunnel-list/ietf-te-service}?>
+                      <ietf-te-service>{te-service-mapping/te-mapping/te-tunnel-list/ietf-te-service}</ietf-te-service>
+                    <?end?>
+                    <fallback>{te-service-mapping/te-mapping/te-tunnel-list/fallback}</fallback>
+                  </preferred-path>
+                </rsvp-te>
+              <?end?>
+              <?if {te-service-mapping/te-mapping/sr-policy}?>
+                <sr-te>
+                  <preferred-path>
+                    <policy>{te-service-mapping/te-mapping/sr-policy/policy}</policy>
+                    <fallback>{te-service-mapping/te-mapping/sr-policy/fallback}</fallback>
+                  </preferred-path>
+                </sr-te>
+              <?end?>
+              <?foreach {custom-template}?>
+                <custom-template>
+                  <name>{name}</name>
+                  <?copy-tree {.}?>
+                </custom-template>
+              <?end?>
+
+              <?switch-context vpn-network-access?>
+              <mtu>{Interface-mtu}</mtu>
+              <?if {$INTERFACE_ENCAP='dot1q'}?>
+                <vlan-id>{$VLAN_ID}</vlan-id>
+                <sub-if-id>{$VLAN_ID}</sub-if-id>
+                <?if {connection/dot1q-interface/dot1q/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/dot1q-interface/dot1q/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {$INTERFACE_ENCAP='untagged'}?>
+                <sub-if-id>{$SUB_IF_ID}</sub-if-id>
+                <?if {connection/untagged-interface/untagged/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/untagged-interface/untagged/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {ethernet-service-oam/md-name and count(ethernet-service-oam/y-1731)>0}?>
+                <ethernet-service-oam>
+                  <?copy-tree {ethernet-service-oam}?>
+                  <?foreach {ethernet-service-oam/y-1731}?>
+                    <y-1731>
+                      <maid>{maid}</maid>
+                      <id-type>{id-type}</id-type>
+                      <?foreach {l2vpn-ntw-augmentations:y-1731-profile}?>
+                        <y-1731-profile>
+                          <name>{.}</name>
+                          <schedule>
+                            <interval>{schedule/interval}</interval>
+                            <duration>{schedule/duration}</duration>
+                          </schedule>
+                        </y-1731-profile>
+                      <?end?>
+                    </y-1731>
+                  <?end?>
+                </ethernet-service-oam>
+              <?end?>
+              <?switch-context vpn-node?>
+
+              <!-- No Mappings for
+                xconnect-encapsulation
+                bgp
+              -->
+            </local-site>
+          <?end?>
+
+          <?if {vpn-node-id!=$L2NM_LOCAL_SITE}?>
+            <remote-site>
+              <pe>{vpn-node-id}</pe>
+              <if-id>{$INTERFACE_ID}</if-id>
+              <if-type>{$INTERFACE_TYPE}</if-type>
+              <if-encap>{$INTERFACE_ENCAP}</if-encap>
+              <pw-class>{$VPN_ID}</pw-class>
+              <p2p-name>{$VPN_ID}</p2p-name>
+              <xconnect-group-name>{$VPN_ID}</xconnect-group-name>
+              <control-word>{$CONTROL_WORD}</control-word>
+              <?if {te-service-mapping/te-mapping/te-tunnel-list}?>
+                <rsvp-te>
+                  <preferred-path>
+                    <?if {te-service-mapping/te-mapping/te-tunnel-list/te-tunnel-id}?>
+                      <te-tunnel-id>{te-service-mapping/te-mapping/te-tunnel-list/te-tunnel-id}</te-tunnel-id>
+                    <?end?>
+                    <?if {te-service-mapping/te-mapping/te-tunnel-list/ietf-te-service}?>
+                      <ietf-te-service>{te-service-mapping/te-mapping/te-tunnel-list/ietf-te-service}</ietf-te-service>
+                    <?end?>
+                    <fallback>{te-service-mapping/te-mapping/te-tunnel-list/fallback}</fallback>
+                  </preferred-path>
+                </rsvp-te>
+              <?end?>
+              <?if {te-service-mapping/te-mapping/sr-policy}?>
+                <sr-te>
+                  <preferred-path>
+                    <policy>{te-service-mapping/te-mapping/sr-policy/policy}</policy>
+                    <fallback>{te-service-mapping/te-mapping/sr-policy/fallback}</fallback>
+                  </preferred-path>
+                </sr-te>
+              <?end?>
+              <?foreach {custom-template}?>
+                <custom-template>
+                  <name>{name}</name>
+                  <?copy-tree {.}?>
+                </custom-template>
+              <?end?>
+
+              <?switch-context vpn-network-access?>
+              <mtu>{Interface-mtu}</mtu>
+              <?if {$INTERFACE_ENCAP='dot1q'}?>
+                <vlan-id>{$VLAN_ID}</vlan-id>
+                <sub-if-id>{$VLAN_ID}</sub-if-id>
+                <?if {connection/dot1q-interface/dot1q/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/dot1q-interface/dot1q/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {$INTERFACE_ENCAP='untagged'}?>
+                <sub-if-id>{$SUB_IF_ID}</sub-if-id>
+                <?if {connection/untagged-interface/untagged/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/untagged-interface/untagged/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {ethernet-service-oam/md-name and count(ethernet-service-oam/y-1731)>0}?>
+                <ethernet-service-oam>
+                  <?copy-tree {ethernet-service-oam}?>
+                  <?foreach {ethernet-service-oam/y-1731}?>
+                    <y-1731>
+                      <maid>{maid}</maid>
+                      <id-type>{id-type}</id-type>
+                      <?foreach {l2vpn-ntw-augmentations:y-1731-profile}?>
+                        <y-1731-profile>
+                          <name>{.}</name>
+                          <schedule>
+                            <interval>{schedule/interval}</interval>
+                            <duration>{schedule/duration}</duration>
+                          </schedule>
+                        </y-1731-profile>
+                      <?end?>
+                    </y-1731>
+                  <?end?>
+                </ethernet-service-oam>
+              <?end?>
+              <?switch-context vpn-node?>
+            </remote-site>
+            <local-site>
+              <xconnect-local-ip>{signaling-options[position()=1]/t-ldp-pwe/ac-pw-list[position()=1]/peer-addr}</xconnect-local-ip>
+              <mpls-remote-label>{signaling-options[position()=1]/t-ldp-pwe/ac-pw-list[position()=1]/mpls-label}</mpls-remote-label>
+            </local-site>
+          <?end?>
+        </flat-L2vpn-p2p>
+      <?end?> <!-- ends VPN_SVC_TYPE = t-ldp -->
+
+      <?if {$VPN_SVC_TYPE='vpn-common:evpn-bgp'}?>
+        <service-type>evpn-vpws</service-type>
+        <flat-L2vpn-evpn-vpws>
+          <evi-id>{$EVI_ID}</evi-id>
+          <?if {vpn-node-id=$L2NM_LOCAL_SITE}?>
+            <local-site>
+              <evi-source>{$EVI_SOURCE}</evi-source>
+              <evi-target>{$EVI_TARGET}</evi-target>
+              <pe>{vpn-node-id}</pe>
+              <if-id>{$INTERFACE_ID}</if-id>
+              <if-type>{$INTERFACE_TYPE}</if-type>
+              <if-encap>{$INTERFACE_ENCAP}</if-encap>
+              <p2p-name>{$VPN_ID}</p2p-name>
+              <xconnect-group-name>{$VPN_ID}</xconnect-group-name>
+              <?if {multi-home/esi-value}?>
+                <multi-home>
+                  <esi-value>{multi-home/esi-value}</esi-value>
+                </multi-home>
+              <?end?>
+              <?if {te-service-mapping/te-mapping/sr-policy}?>
+                <sr-te>
+                  <preferred-path>
+                    <!-- TODO: Circuit Style, ETA: TSDN 5.0 -->
+                    <!--policy-type>{te-service-mapping/te-mapping/sr-policy/policy-type}</policy-type-->
+                    <policy>{te-service-mapping/te-mapping/sr-policy/policy}</policy>
+                    <fallback>{te-service-mapping/te-mapping/sr-policy/fallback}</fallback>
+                  </preferred-path>
+                </sr-te>
+                <pw-class>{$VPN_ID}</pw-class>
+              <?end?>
+              <?if {te-service-mapping/te-mapping/odn}?>
+                <sr-te>
+                  <odn>
+                    <route-policy>{te-service-mapping/te-mapping/odn/route-policy}</route-policy>
+                    <attach-point>
+                      <parent-rr-route-policy>{te-service-mapping/te-mapping/odn/attach-point/parent-rr-route-policy}</parent-rr-route-policy>
+                    </attach-point>
+                  </odn>
+                </sr-te>
+              <?end?>
+              <?if {te-service-mapping/srv6}?>
+                <srv6>
+                  <?copy-tree {te-service-mapping/srv6}?>
+                </srv6>
+              <?end?>
+              <?foreach {custom-template}?>
+                <custom-template>
+                  <name>{name}</name>
+                  <?copy-tree {.}?>
+                </custom-template>
+              <?end?>
+
+              <?switch-context vpn-network-access?>
+              <mtu>{Interface-mtu}</mtu>
+              <?if {$INTERFACE_ENCAP='dot1q'}?>
+                <vlan-id>{$VLAN_ID}</vlan-id>
+                <sub-if-id>{$VLAN_ID}</sub-if-id>
+                <?if {connection/dot1q-interface/dot1q/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/dot1q-interface/dot1q/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {$INTERFACE_ENCAP='untagged'}?>
+                <sub-if-id>{$SUB_IF_ID}</sub-if-id>
+                <?if {connection/untagged-interface/untagged/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/untagged-interface/untagged/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {ethernet-service-oam/md-name and count(ethernet-service-oam/y-1731)>0}?>
+                <ethernet-service-oam>
+                  <?copy-tree {ethernet-service-oam}?>
+                  <?foreach {ethernet-service-oam/y-1731}?>
+                    <y-1731>
+                      <maid>{maid}</maid>
+                      <id-type>{id-type}</id-type>
+                      <?foreach {l2vpn-ntw-augmentations:y-1731-profile}?>
+                        <y-1731-profile>
+                          <name>{.}</name>
+                          <schedule>
+                            <interval>{schedule/interval}</interval>
+                            <duration>{schedule/duration}</duration>
+                          </schedule>
+                        </y-1731-profile>
+                      <?end?>
+                    </y-1731>
+                  <?end?>
+                </ethernet-service-oam>
+              <?end?>
+              <?switch-context vpn-node?>
+            </local-site>
+          <?end?>
+
+          <?if {vpn-node-id!=$L2NM_LOCAL_SITE}?>
+            <remote-site>
+              <pe>{vpn-node-id}</pe>
+              <if-id>{$INTERFACE_ID}</if-id>
+              <if-type>{$INTERFACE_TYPE}</if-type>
+              <if-encap>{$INTERFACE_ENCAP}</if-encap>
+              <p2p-name>{$VPN_ID}</p2p-name>
+              <xconnect-group-name>{$VPN_ID}</xconnect-group-name>
+              <?if {multi-home/esi-value}?>
+                <multi-home>
+                  <esi-value>{multi-home/esi-value}</esi-value>
+                </multi-home>
+              <?end?>
+              <?if {te-service-mapping/te-mapping/sr-policy}?>
+                <sr-te>
+                  <preferred-path>
+                    <!-- TODO: Circuit Style, ETA: TSDN 5.0 -->
+                    <!-- policy-type>{te-service-mapping/te-mapping/sr-policy/policy-type}</policy-type -->
+                    <policy>{te-service-mapping/te-mapping/sr-policy/policy}</policy>
+                    <fallback>{te-service-mapping/te-mapping/sr-policy/fallback}</fallback>
+                  </preferred-path>
+                </sr-te>
+                <pw-class>{$VPN_ID}</pw-class>
+              <?end?>
+              <?if {te-service-mapping/te-mapping/odn}?>
+                <sr-te>
+                  <odn>
+                    <route-policy>{te-service-mapping/te-mapping/odn/route-policy}</route-policy>
+                    <attach-point>
+                      <parent-rr-route-policy>{te-service-mapping/te-mapping/odn/attach-point/parent-rr-route-policy}</parent-rr-route-policy>
+                    </attach-point>
+                  </odn>
+                </sr-te>
+              <?end?>
+              <?if {te-service-mapping/srv6}?>
+                <srv6>
+                  <?copy-tree {te-service-mapping/srv6}?>
+                </srv6>
+              <?end?>
+              <?foreach {custom-template}?>
+                <custom-template>
+                  <name>{name}</name>
+                  <?copy-tree {.}?>
+                </custom-template>
+              <?end?>
+
+              <?switch-context vpn-network-access?>
+              <mtu>{Interface-mtu}</mtu>
+              <?if {$INTERFACE_ENCAP='dot1q'}?>
+                <vlan-id>{$VLAN_ID}</vlan-id>
+                <sub-if-id>{$VLAN_ID}</sub-if-id>
+                <?if {connection/dot1q-interface/dot1q/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/dot1q-interface/dot1q/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {$INTERFACE_ENCAP='untagged'}?>
+                <sub-if-id>{$SUB_IF_ID}</sub-if-id>
+                <?if {connection/untagged-interface/untagged/rewrite/ingress}?>
+                  <rewrite>
+                    <?copy-tree {connection/untagged-interface/untagged/rewrite}?>
+                  </rewrite>
+                <?end?>
+              <?end?>
+              <?if {ethernet-service-oam/md-name and count(ethernet-service-oam/y-1731)>0}?>
+                <ethernet-service-oam>
+                  <?copy-tree {ethernet-service-oam}?>
+                  <?foreach {ethernet-service-oam/y-1731}?>
+                    <y-1731>
+                      <maid>{maid}</maid>
+                      <id-type>{id-type}</id-type>
+                      <?foreach {l2vpn-ntw-augmentations:y-1731-profile}?>
+                        <y-1731-profile>
+                          <name>{.}</name>
+                          <schedule>
+                            <interval>{schedule/interval}</interval>
+                            <duration>{schedule/duration}</duration>
+                          </schedule>
+                        </y-1731-profile>
+                      <?end?>
+                    </y-1731>
+                  <?end?>
+                </ethernet-service-oam>
+              <?end?>
+              <?switch-context vpn-node?>
+            </remote-site>
+          <?end?>
+        </flat-L2vpn-evpn-vpws>
+      <?end?> <!-- ends VPN_SVC_TYPE = evpn-bgp -->
+
+  <?end?> <!--ends for-each vpn-nodes/vpn-node-->
+
+</flat-L2vpn>

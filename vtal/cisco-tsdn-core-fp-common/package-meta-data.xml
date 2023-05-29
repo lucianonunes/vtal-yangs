@@ -1,0 +1,33 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>cisco-tsdn-core-fp-common</name>
+  <package-version>4.1.0</package-version>
+  <description>TSDN Common Package</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <python-package>
+    <vm-name>cisco-tsdn-core-fp-common</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>core-fp-common</name>
+  </required-package>
+
+  <required-package>
+    <name>custom-template-utils</name>
+  </required-package>
+
+  <required-package>
+    <name>core-fp-plan-notif-generator</name>
+  </required-package>
+
+  <required-package>
+    <name>lsa-utils</name>
+  </required-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>cisco_tsdn_core_fp_common.tsdn_common_init.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

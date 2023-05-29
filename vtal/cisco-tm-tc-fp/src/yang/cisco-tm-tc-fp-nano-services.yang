@@ -1,0 +1,81 @@
+module cisco-tm-tc-fp-nano-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tm-tc-fp-nano-services";
+  prefix cisco-tm-tc-fp-nano-services;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import cisco-tm-tc-fp-internal {
+    prefix cisco-tm-tc-fp-internal;
+  }
+
+  description "Models for telemetry nano service";
+
+  revision 2020-01-27 {
+    description "Initial Revision";
+  }
+
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline tm-tc-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "cisco-tm-tc-fp-nano-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          ncs:pre-condition {
+            ncs:monitor "$PLAN/component[type='ncs:self'][name='self']/state"
+                        + "[name='ncs:ready']" {
+              ncs:trigger-expr "post-action-status = 'delete-reached'";
+            }
+          }
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        // This dummy action is added to break the service transaction,
+        // so that NSO generates service-activation-failure alarms in case of device failures.
+        // These alarms help with auto-cleanup of the service.
+        ncs:delete {
+          ncs:post-action-node "/cisco-tm-tc-fp-internal:action" {
+            ncs:action-name "no-op";
+          }
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree tm-tc-internal-servicepoint {
+    ncs:plan-outline-ref "cisco-tm-tc-fp-nano-services:tm-tc-nano-plan";
+    ncs:plan-location "/cisco-tm-tc-fp-internal:tm-tc-internal/cisco-tm-tc-fp-internal:tm-tc-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+      ncs:variable "NODE" {
+        ncs:value-expr "node-name";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+    }
+  }
+}

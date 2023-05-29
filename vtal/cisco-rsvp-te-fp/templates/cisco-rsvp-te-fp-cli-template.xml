@@ -1,0 +1,114 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{head-end}</name>
+      <config>
+        <?foreach {path-option}?>
+          <?if {explicit/identifier or explicit/name}?>
+            <?save-context PATH?>
+            <?if {explicit/name}?>
+              <?set-context-node {deref(explicit/name)/..}?>
+              <explicit-path xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                <name>
+                  <pathname>{id}</pathname>
+                  <index foreach="{index}">
+                    <index-id>{index-id}</index-id>
+                    <keyword>{keyword}</keyword>
+                    <hop-type>{hop-type}</hop-type>
+                    <label>{label}</label>
+                    <ipv4 when="{ipv4}">
+                      <unicast>{ipv4/unicast}</unicast>
+                    </ipv4>
+                  </index>
+                </name>
+              </explicit-path>
+            <?else?>
+              <?set-context-node {deref(explicit/identifier)/..}?>
+              <explicit-path xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                <identifier>
+                  <identifier>{id}</identifier>
+                  <index foreach="{index}">
+                    <index-id>{index-id}</index-id>
+                    <keyword>{keyword}</keyword>
+                    <hop-type>{hop-type}</hop-type>
+                    <label>{label}</label>
+                    <ipv4 when="{ipv4}">
+                      <unicast>{ipv4/unicast}</unicast>
+                    </ipv4>
+                  </index>
+                </identifier>
+              </explicit-path>
+            <?end?>
+            <?switch-context PATH?>
+          <?end?>
+        <?end?>
+        <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <tunnel-te>
+            <id>{id}</id>
+            <description>{description}</description>
+            <priority>
+              <setup>{setup-priority}</setup>
+              <hold-value>{hold-priority}</hold-value>
+            </priority>
+            <ipv4>
+              <unnumbered>
+                <Loopback>{$LOOPBACK}</Loopback>
+              </unnumbered>
+            </ipv4>
+            <destination>{destination}</destination>
+            <signalled-name>{signalled-name}</signalled-name>
+            <signalled-bandwidth when="{signalled-bandwidth}">
+              <sub-pool when="{signalled-bandwidth/sub-pool}" />
+              <bandwidth>{signalled-bandwidth/bandwidth}</bandwidth>
+            </signalled-bandwidth>
+            <path-selection when="{path-selection}">
+              <metric when="{path-selection/metric}">
+                <metric-type>{path-selection/metric/metric-type}</metric-type>
+              </metric>
+              <hop-limit>{path-selection/hop-limit}</hop-limit>
+              <cost-limit>{path-selection/cost-limit}</cost-limit>
+              <delay-limit>{path-selection/delay-limit}</delay-limit>
+            </path-selection>
+            <path-option foreach="{path-option}">
+              <preference-priority>{preference-priority}</preference-priority>
+               <?if {dynamic}?>
+                 <dynamic />
+               <?end?>
+               <?if {explicit}?>
+                 <explicit>
+                   <name>{explicit/name}</name>
+                   <identifier>{explicit/identifier}</identifier>
+                 </explicit>
+                 <verbatim when="{explicit/verbatim}" />
+               <?end?>
+            </path-option>
+            <pce when="{pce}">
+              <delegation when="{pce/delegation}" />
+            </pce>
+            <?if {traffic-steering}?>
+              <autoroute when="{traffic-steering/autoroute}">
+                <announce when="{traffic-steering/autoroute/announce}">
+                  <metric when="{traffic-steering/autoroute/announce/metric}">
+                    <constant>{traffic-steering/autoroute/announce/metric/constant}</constant>
+                    <absolute>{traffic-steering/autoroute/announce/metric/absolute}</absolute>
+                    <relative>{traffic-steering/autoroute/announce/metric/relative}</relative>
+                  </metric>
+                  <exclude-traffic when="{not(pce/delegation)}">
+                    <segment-routing/>
+                  </exclude-traffic>
+                </announce>
+                <destination foreach="{traffic-steering/autoroute/destination}">
+                  <addr>{address}</addr>
+                </destination>
+              </autoroute>
+              <forwarding-adjacency when="{traffic-steering/forwarding-adjacency}">
+                <holdtime>{traffic-steering/forwarding-adjacency/holdtime}</holdtime>
+                <include-ipv6 when="{traffic-steering/forwarding-adjacency/include-ipv6}"/>
+              </forwarding-adjacency>
+            <?end?>
+          </tunnel-te>
+        </interface>
+      </config>
+    </device>
+  </devices>
+</config>

@@ -1,0 +1,13 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>core-fp-delete-tag-service</name>
+  <package-version>1.0.5</package-version>
+  <description>Generic service package to enable device interface</description>
+  <ncs-min-version>5.3.1</ncs-min-version>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>core_fp_delete_tag_service.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

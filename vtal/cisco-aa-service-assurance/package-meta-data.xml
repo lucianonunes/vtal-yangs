@@ -1,0 +1,21 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>cisco-aa-service-assurance</name>
+  <package-version>4.1.0</package-version>
+  <description>TSDN Common Service Assurance Package</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <python-package>
+    <vm-name>cisco-aa-service-assurance</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>cisco-tsdn-core-fp-common</name>
+  </required-package>
+
+  <component>
+    <name>cisco_aa_service_assurance</name>
+    <application>
+      <python-class-name>cisco_aa_service_assurance.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

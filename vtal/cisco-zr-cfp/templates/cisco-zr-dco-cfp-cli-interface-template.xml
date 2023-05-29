@@ -1,0 +1,75 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <Bundle-Ether when="{$INTERFACE_TYPE='Bundle-Ether'}">
+            <id>{$BUNDLE_ID}</id>
+            <description>{$DESCRIPTION}</description>
+            <ipv4 when="{$IPV4_ADDR!=''}">
+              <address>
+                <ip>{$IPV4_ADDR}</ip>
+                <mask>{$IPV4_MASK}</mask>
+              </address>
+            </ipv4>
+            <ipv6 when="{$IPV6_PREFIX!=''}">
+              <address>
+                <prefix-list>
+                  <prefix>{$IPV6_PREFIX}</prefix>
+                </prefix-list>
+              </address>
+            </ipv6>
+            <shutdown tags="delete"/>
+          </Bundle-Ether>
+          <HundredGigE when="{$INTERFACE_TYPE='HundredGigE'}">
+            <id>{$INTERFACE_ID}</id>
+            <ipv4 when="{$IPV4_ADDR!=''}">
+              <address>
+                <ip>{$IPV4_ADDR}</ip>
+                <mask>{$IPV4_MASK}</mask>
+              </address>
+            </ipv4>
+            <ipv6 when="{$IPV6_PREFIX!=''}">
+              <address>
+                <prefix-list>
+                  <prefix>{$IPV6_PREFIX}</prefix>
+                </prefix-list>
+              </address>
+            </ipv6>
+            <bundle when="{$BUNDLE_ID!=''}">
+              <id>
+                <id-value>{$BUNDLE_ID}</id-value>
+                <mode>{$BUNDLE_MODE}</mode>
+              </id>
+            </bundle>
+            <shutdown tags="delete"/>
+          </HundredGigE>
+          <FourHundredGigE when="{$INTERFACE_TYPE='FourHundredGigE'}">
+            <id>{$INTERFACE_ID}</id>
+            <ipv4 when="{$IPV4_ADDR!=''}">
+              <address>
+                <ip>{$IPV4_ADDR}</ip>
+                <mask>{$IPV4_MASK}</mask>
+              </address>
+            </ipv4>
+            <ipv6 when="{$IPV6_PREFIX!=''}">
+              <address>
+                <prefix-list>
+                  <prefix>{$IPV6_PREFIX}</prefix>
+                </prefix-list>
+              </address>
+            </ipv6>
+            <bundle when="{$BUNDLE_ID!=''}">
+              <id>
+                <id-value>{$BUNDLE_ID}</id-value>
+                <mode>{$BUNDLE_MODE}</mode>
+              </id>
+            </bundle>
+            <shutdown tags="delete"/>
+          </FourHundredGigE>
+        </interface>
+      </config>
+    </device>
+  </devices>
+</config>

@@ -1,0 +1,192 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <?macro evpn-route-target rtType={rt-type}?>
+    <?if-ned-id cisco-iosxr-nc-7.3:cisco-iosxr-nc-7.3
+                cisco-iosxr-nc-7.315:cisco-iosxr-nc-7.315?>
+      <evpn-route-target>
+        <role>$rtType</role>
+        <format>{$AS_TYPE}</format>
+        <?if {$AS_TYPE !='ipv4-address'}?>
+          <two-byte-as-or-four-byte-as>
+            <as>{$AS_OR_ADDR}</as>
+            <as-index>{$INDEX}</as-index>
+            <stitching>no-stitching</stitching>
+          </two-byte-as-or-four-byte-as>
+        <?else?>
+          <ipv4-address>
+            <address>{$AS_OR_ADDR}</address>
+            <addr-index>{$INDEX}</addr-index>
+            <stitching>no-stitching</stitching>
+          </ipv4-address>
+        <?end?>
+      </evpn-route-target>
+    <?elif-ned-id cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4?>
+      <?if {$AS_TYPE = 'ipv4-address'}?>
+        <evpn-route-target-ipv4-address>
+          <role>$rtType</role>
+          <address>{$AS_OR_ADDR}</address>
+          <addr-index>{$INDEX}</addr-index>
+          <stitching>no-stitching</stitching>
+        </evpn-route-target-ipv4-address>
+      <?elif {$AS_TYPE = 'two-byte-as'?>
+        <evpn-route-target-two-byte-as>
+          <role>$rtType</role>
+          <as>{$AS_OR_ADDR}</as>
+          <as-index>{$INDEX}</as-index>
+          <stitching>no-stitching</stitching>
+        </evpn-route-target-two-byte-as>
+      <?else?>
+        <evpn-route-target-four-byte-as>
+          <role>$rtType</role>
+          <as>{$AS_OR_ADDR}</as>
+          <as-index>{$INDEX}</as-index>
+          <stitching>no-stitching</stitching>
+        </evpn-route-target-four-byte-as>
+        <?end?>
+    <?end?>
+  <?endmacro?>
+
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+      <?set DEVICE_NAME={string(pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set SERVICE_NAME={string(../../name)}?>
+      <?if {string-length($SERVICE_NAME)>14 and starts-with($SERVICE_NAME,'L2NM-') and (substring($SERVICE_NAME, (string-length($SERVICE_NAME) - 8))='-internal')}?>
+        <?set SERVICE_NAME={substring($SERVICE_NAME,6,string-length($SERVICE_NAME)-14)}?>
+      <?end?>
+      <?set EVI_ID ={string(../evi-id)}?>
+      <config>
+        <!-- Configure CE-facing interface for L2Transport -->
+        <?set INTERFACE_NAME={if-type}{if-id}?>
+        <?if {sub-if-id or vlan-id}?>
+          <?if {sub-if-id}?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{sub-if-id}?>
+          <?else?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+          <?end?>
+        <?end?>
+        <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+          <interface-configuration>
+            <active>act</active>
+            <interface-name>{$INTERFACE_NAME}</interface-name>
+            <?set IF_NAME={$INTERFACE_NAME}?>
+            <?expand native-intf-desc-shut-mtu-encap-rewrite-eth-service?>
+          </interface-configuration>
+          <?expand native-intf-config-desc-shut-if-sub-vlan-id?>
+        </interface-configurations>
+        <l2vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-l2vpn-cfg">
+          <enable/>
+          <database>
+            <bridge-domain-groups>
+              <?set GROUP_NAME={../bridge-group}?>
+              <bridge-domain-group>
+                <name>{$GROUP_NAME}</name>
+                <bridge-domains>
+                  <bridge-domain>
+                    <name>{$GROUP_NAME}_evi_{$EVI_ID}</name>
+                    <bridge-domain-evis>
+                      <bridge-domain-evi>
+                        <vpn-id>{$EVI_ID}</vpn-id>
+                      </bridge-domain-evi>
+                    </bridge-domain-evis>
+                    <bd-attachment-circuits>
+                      <bd-attachment-circuit>
+                        <name>{$INTERFACE_NAME}</name>
+                        <split-horizon when="{split-horizon/enable = 'true'}">
+                          <split-horizon-group-id>
+                            <enable/>
+                          </split-horizon-group-id>
+                        </split-horizon>
+                      </bd-attachment-circuit>
+                    </bd-attachment-circuits>
+                  </bridge-domain>
+                </bridge-domains>
+              </bridge-domain-group>
+            </bridge-domain-groups>
+          </database>
+        </l2vpn>
+        <?set POLICY_NAME=EVPN_MP_{$SERVICE_NAME}_{$EVI_ID}?>
+        <?if {sr-te/odn/route-policy-name}?>
+          <?set POLICY_NAME={sr-te/odn/route-policy-name}?>
+        <?end?>
+        <?set RPL_NAME={concat("SET_COLOR_EVPN_MP_service_", string($POLICY_NAME))}?>
+        <!-- Configure RPL -->
+        <routing-policy xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-policy-repository-cfg">
+          <?if {sr-te/odn}?>
+            <sets>
+              <extended-community-opaque-sets>
+                <extended-community-opaque-set foreach="{sr-te/odn/color}">
+                  <set-name>COLOR_{id}</set-name>
+                  <rpl-extended-community-opaque-set>extcommunity-set opaque COLOR_{id}
+                                  {id}
+                                  end-set</rpl-extended-community-opaque-set>
+                </extended-community-opaque-set>
+              </extended-community-opaque-sets>
+            </sets>
+          <?end ?>
+          <route-policies>
+            <?set RPL_EVPN_MP={concat("route-policy ",  string($RPL_NAME), string($COLOR_EVPN_MP), "end-policy")}?>
+            <route-policy when="{$COLOR_EVPN_MP!=''}">
+              <route-policy-name>{$RPL_NAME}</route-policy-name>
+              <rpl-route-policy>{$RPL_EVPN_MP}</rpl-route-policy>
+            </route-policy>
+          </route-policies>
+        </routing-policy>
+        <evpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-l2vpn-cfg">
+          <evpn-tables>
+            <evpn-instances>
+              <evpn-instance>
+                <vpn-id>{$EVI_ID}</vpn-id>
+                <encapsulation>evpn-encapsulation-mpls</encapsulation>
+                <side>evpn-side-regular</side>
+                <evpn-instance-bgp-auto-discovery>
+                  <evpn-route-policy when="{sr-te/odn and $RPL_NAME!='' and not(sr-te/odn/attach-point/parent-rr-route-policy)}">
+                    <export when="{sr-te/odn/route-policy-type = 'both' or sr-te/odn/route-policy-type = 'export'}">{$RPL_NAME}</export>
+                    <import when="{sr-te/odn/route-policy-type = 'both' or sr-te/odn/route-policy-type = 'import'}">{$RPL_NAME}</import>
+                  </evpn-route-policy>
+                  <evpn-route-targets>
+                    <?foreach {vpn-target}?>
+                      <?set AS_TYPE="two-byte-as"?>
+                      <?set AS_OR_ADDR={substring-before(string(rt-value), ':')}?>
+                      <?set INDEX={substring-after(string(rt-value), ':')}?>
+                      <?if {contains(string(rt-value), '.')}?>
+                        <?set AS_TYPE="ipv4-address"?>
+                      <?else?>
+                        <?if {$AS_OR_ADDR > 65535}?>
+                          <?set AS_TYPE="four-byte-as"?>
+                        <?end?>
+                      <?end?>
+                      <?if {rt-type = 'both'}?>
+                        <?expand evpn-route-target rtType='import'?>
+                        <?expand evpn-route-target rtType='export'?>
+                      <?else?>
+                        <?expand evpn-route-target?>
+                      <?end?>
+                    <?end?>
+                  </evpn-route-targets>
+                  <enable/>
+                </evpn-instance-bgp-auto-discovery>
+                <evpn-instance-etree when="{multi-home and (leaf='multi-homing')}">
+                  <evpn-instance-etree-rt-leaf/>
+                  <enable/>
+                </evpn-instance-etree>
+                <evpn-instance-etree when="{not (vpn-target) and (leaf='single-homing')}">
+                  <evpn-instance-etree-leaf/>
+                  <enable/>
+                </evpn-instance-etree>
+                <evpn-instance-advertise-mac when="{advertise-mac/enable = 'true'}">
+                  <enable/>
+                </evpn-instance-advertise-mac>
+                <evpn-evi-cw-disable when="{control-word-disable = 'true'}"/>
+              </evpn-instance>
+            </evpn-instances>
+            <evpn-interfaces when="{multi-home}">
+              <?expand native-evpn-interface?>
+              </evpn-interfaces>
+            </evpn-tables>
+          <enable/>
+        </evpn>
+      </config>
+    </device>
+  </devices>
+</config-template>

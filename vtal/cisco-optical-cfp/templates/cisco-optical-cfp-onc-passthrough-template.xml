@@ -1,0 +1,370 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{controller}</name>
+      <config>
+        <context xmlns="urn:onf:otcc:yang:tapi-common">
+          <connectivity-context xmlns="urn:onf:otcc:yang:tapi-connectivity">
+            <connectivity-service>
+              <uuid>{uuid}</uuid>
+              <?foreach {end-point}?>
+                <end-point>
+                  <local-id>{local-id}</local-id>
+                  <layer-protocol-name>{layer-protocol-name}</layer-protocol-name>
+                  <layer-protocol-qualifier xmlns:tapi-photonic-media="urn:onf:otcc:yang:tapi-photonic-media">{layer-protocol-qualifier}</layer-protocol-qualifier>
+                  <service-interface-point when="{service-interface-point}">
+                    <service-interface-point-uuid>{service-interface-point/service-interface-point-uuid}</service-interface-point-uuid>
+                  </service-interface-point>
+                  <capacity when="{capacity}">
+                    <total-size when="{capacity/total-size}">
+                      <value>{capacity/total-size/value}</value>
+                      <unit>{capacity/total-size/unit}</unit>
+                    </total-size>
+                    <bandwidth-profile when="{capacity/bandwidth-profile}">
+                      <bw-profile-type>{capacity/bandwidth-profile/bw-profile-type}</bw-profile-type>
+                      <committed-information-rate when="{capacity/bandwidth-profile/committed-information-rate}">
+                        <value>{capacity/bandwidth-profile/committed-information-rate/value}</value>
+                        <unit>{capacity/bandwidth-profile/committed-information-rate/unit}</unit>
+                      </committed-information-rate>
+                      <committed-burst-size when="{capacity/bandwidth-profile/committed-burst-size}">
+                        <value>{capacity/bandwidth-profile/committed-burst-size/value}</value>
+                        <unit>{capacity/bandwidth-profile/committed-burst-size/unit}</unit>
+                      </committed-burst-size>
+                      <peak-information-rate when="{capacity/bandwidth-profile/peak-information-rate}">
+                        <value>{capacity/bandwidth-profile/peak-information-rate/value}</value>
+                        <unit>{capacity/bandwidth-profile/peak-information-rate/unit}</unit>
+                      </peak-information-rate>
+                      <peak-burst-size when="{capacity/bandwidth-profile/peak-burst-size}">
+                        <value>{capacity/bandwidth-profile/peak-burst-size/value}</value>
+                        <unit>{capacity/bandwidth-profile/peak-burst-size/unit}</unit>
+                      </peak-burst-size>
+                      <color-aware>{capacity/bandwidth-profile/color-aware}</color-aware>
+                      <coupling-flag>{capacity/bandwidth-profile/coupling-flag}</coupling-flag>
+                    </bandwidth-profile>
+                  </capacity>
+                  <direction>{direction}</direction>
+                  <role>{role}</role>
+                  <protection-role>{protection-role}</protection-role>
+                  <peer-fwd-connectivity-service-end-point when="{peer-fwd-connectivity-service-end-point}">
+                    <connectivity-service-uuid>{peer-fwd-connectivity-service-end-point/connectivity-service-uuid}</connectivity-service-uuid>
+                    <connectivity-service-end-point-local-id>{peer-fwd-connectivity-service-end-point/connectivity-service-end-point-local-id}</connectivity-service-end-point-local-id>
+                  </peer-fwd-connectivity-service-end-point>
+                  <protecting-connectivity-service-end-point when="{peer-fwd-connectivity-service-end-point/protecting-connectivity-service-end-point}">
+                    <connectivity-service-uuid>{peer-fwd-connectivity-service-end-point/protecting-connectivity-service-end-point/connectivity-service-uuid}</connectivity-service-uuid>
+                    <connectivity-service-end-point-local-id>{peer-fwd-connectivity-service-end-point/protecting-connectivity-service-end-point/connectivity-service-end-point-local-id}</connectivity-service-end-point-local-id>
+                  </protecting-connectivity-service-end-point>
+                  <server-connectivity-service-end-point when="{server-connectivity-service-end-point}">
+                    <connectivity-service-uuid>{server-connectivity-service-end-point/connectivity-service-uuid}</connectivity-service-uuid>
+                    <connectivity-service-end-point-local-id>{server-connectivity-service-end-point/connectivity-service-end-point-local-id}</connectivity-service-end-point-local-id>
+                  </server-connectivity-service-end-point>
+                  <?foreach {name}?>
+                    <name>
+                      <value-name>{value-name}</value-name>
+                      <value>{value}</value>
+                    </name>
+                  <?end?>
+                  <administrative-state>{administrative-state}</administrative-state>
+                  <otsi-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media" when="{otsi-connectivity-service-end-point-spec}">
+                    <otsi-config when="{otsi-connectivity-service-end-point-spec/otsi-config}">
+                      <central-frequency when="{otsi-connectivity-service-end-point-spec/otsi-config/central-frequency}">
+                        <frequency-constraint when="{otsi-connectivity-service-end-point-spec/otsi-config/central-frequency/frequency-constraint}">
+                          <adjustment-granularity>{otsi-connectivity-service-end-point-spec/otsi-config/central-frequency/frequency-constraint/adjustment-granularity}</adjustment-granularity>
+                          <grid-type>{otsi-connectivity-service-end-point-spec/otsi-config/central-frequency/frequency-constraint/grid-type}</grid-type>
+                        </frequency-constraint>
+                        <central-frequency>{otsi-connectivity-service-end-point-spec/otsi-config/central-frequency/central-frequency}</central-frequency>
+                      </central-frequency>
+                      <spectrum when="{otsi-connectivity-service-end-point-spec/otsi-config/spectrum}">
+                        <upper-frequency>{otsi-connectivity-service-end-point-spec/otsi-config/spectrum/upper-frequency}</upper-frequency>
+                        <lower-frequency>{otsi-connectivity-service-end-point-spec/otsi-config/spectrum/lower-frequency}</lower-frequency>
+                        <frequency-constraint when="{otsi-connectivity-service-end-point-spec/otsi-config/spectrum/frequency-constraint}">
+                          <adjustment-granularity>{otsi-connectivity-service-end-point-spec/otsi-config/spectrum/frequency-constraint/adjustment-granularity}</adjustment-granularity>
+                          <grid-type>{otsi-connectivity-service-end-point-spec/otsi-config/spectrum/frequency-constraint/grid-type}</grid-type>
+                        </frequency-constraint>
+                      </spectrum>
+                      <application-identifier when="{otsi-connectivity-service-end-point-spec/otsi-config/application-identifier}">
+                        <application-identifier-type>{otsi-connectivity-service-end-point-spec/otsi-config/application-identifier/application-identifier-type}</application-identifier-type>
+                        <application-code>{otsi-connectivity-service-end-point-spec/otsi-config/application-identifier/application-code}</application-code>
+                      </application-identifier>
+                      <modulation>{otsi-connectivity-service-end-point-spec/otsi-config/modulation}</modulation>
+                      <laser-control>{otsi-connectivity-service-end-point-spec/otsi-config/laser-control}</laser-control>
+                      <transmit-power when="{otsi-connectivity-service-end-point-spec/otsi-config/transmit-power}">
+                        <total-power>{otsi-connectivity-service-end-point-spec/otsi-config/transmit-power/total-power}</total-power>
+                      </transmit-power>
+                      <total-power-warn-threshold-upper>{otsi-connectivity-service-end-point-spec/otsi-config/total-power-warn-threshold-upper}</total-power-warn-threshold-upper>
+                      <total-power-warn-threshold-lower>{otsi-connectivity-service-end-point-spec/otsi-config/total-power-warn-threshold-lower}</total-power-warn-threshold-lower>
+                      <local-id>{otsi-connectivity-service-end-point-spec/otsi-config/local-id}</local-id>
+                      <?foreach {otsi-connectivity-service-end-point-spec/otsi-config/name}?>
+                        <name>
+                          <value-name>{value-name}</value-name>
+                          <value>{value}</value>
+                        </name>
+                      <?end?>
+                    </otsi-config>
+                  </otsi-connectivity-service-end-point-spec>
+                  <media-channel-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media" when="{media-channel-connectivity-service-end-point-spec}">
+                    <mc-config when="{media-channel-connectivity-service-end-point-spec/mc-config}">
+                      <spectrum when="{media-channel-connectivity-service-end-point-spec/mc-config/spectrum}">
+                        <upper-frequency>{media-channel-connectivity-service-end-point-spec/mc-config/spectrum/upper-frequency}</upper-frequency>
+                        <lower-frequency>{media-channel-connectivity-service-end-point-spec/mc-config/spectrum/lower-frequency}</lower-frequency>
+                        <frequency-constraint when="{media-channel-connectivity-service-end-point-spec/mc-config/spectrum/frequency-constraint}">
+                          <adjustment-granularity>{media-channel-connectivity-service-end-point-spec/mc-config/spectrum/frequency-constraint/adjustment-granularity}</adjustment-granularity>
+                          <grid-type>{media-channel-connectivity-service-end-point-spec/mc-config/spectrum/frequency-constraint/grid-type}</grid-type>
+                        </frequency-constraint>
+                      </spectrum>
+                      <power-management-config-pac when="{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac}">
+                        <intended-maximum-output-power when="{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/intended-maximum-output-power}">
+                          <total-power>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/intended-maximum-output-power/total-power}</total-power>
+                          <power-spectral-density>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/intended-maximum-output-power/power-spectral-density}</power-spectral-density>
+                        </intended-maximum-output-power>
+                        <intended-minimum-output-power when="{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/intended-minimum-output-power}">
+                          <total-power>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/intended-minimum-output-power/total-power}</total-power>
+                          <power-spectral-density>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/intended-minimum-output-power/power-spectral-density}</power-spectral-density>
+                        </intended-minimum-output-power>
+                        <expected-maximum-input-power when="{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/expected-maximum-input-power}">
+                          <total-power>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/expected-maximum-input-power/total-power}</total-power>
+                          <power-spectral-density>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/expected-maximum-input-power/power-spectral-density}</power-spectral-density>
+                        </expected-maximum-input-power>
+                        <expected-minimum-input-power when="{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/expected-minimum-input-power}">
+                          <total-power>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/expected-minimum-input-power/total-power}</total-power>
+                          <power-spectral-density>{media-channel-connectivity-service-end-point-spec/mc-config/power-management-config-pac/expected-minimum-input-power/power-spectral-density}</power-spectral-density>
+                        </expected-minimum-input-power>
+                      </power-management-config-pac>
+                      <local-id>{media-channel-connectivity-service-end-point-spec/mc-config/local-id}</local-id>
+                      <?foreach {media-channel-connectivity-service-end-point-spec/mc-config/name}?>
+                        <name>
+                          <value-name>{value-name}</value-name>
+                          <value>{value}</value>
+                        </name>
+                      <?end?>
+                    </mc-config>
+                  </media-channel-connectivity-service-end-point-spec>
+                  <otsia-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media" when="{otsia-connectivity-service-end-point-spec}">
+                    <?foreach {otsia-connectivity-service-end-point-spec/otsi-config}?>
+                      <otsi-config>
+                        <local-id>{local-id}</local-id>
+                        <central-frequency when="{central-frequency}">
+                          <frequency-constraint when="{central-frequency/frequency-constraint}">
+                            <adjustment-granularity>{central-frequency/frequency-constraint/adjustment-granularity}</adjustment-granularity>
+                            <grid-type>{central-frequency/frequency-constraint/grid-type}</grid-type>
+                          </frequency-constraint>
+                          <central-frequency>{central-frequency/central-frequency}</central-frequency>
+                        </central-frequency>
+                        <spectrum when="{spectrum}">
+                          <upper-frequency>{spectrum/upper-frequency}</upper-frequency>
+                          <lower-frequency>{spectrum/lower-frequency}</lower-frequency>
+                          <frequency-constraint when="{spectrum/frequency-constraint}">
+                            <adjustment-granularity>{spectrum/frequency-constraint/adjustment-granularity}</adjustment-granularity>
+                            <grid-type>{spectrum/frequency-constraint/grid-type}</grid-type>
+                          </frequency-constraint>
+                        </spectrum>
+                        <application-identifier when="{application-identifier}">
+                          <application-identifier-type>{application-identifier/application-identifier-type}</application-identifier-type>
+                          <application-code>{application-identifier/application-code}</application-code>
+                        </application-identifier>
+                        <modulation>{modulation}</modulation>
+                        <laser-control>{laser-control}</laser-control>
+                        <transmit-power when="{transmit-power}">
+                          <total-power>{transmit-power/total-power}</total-power>
+                        </transmit-power>
+                        <total-power-warn-threshold-upper>{total-power-warn-threshold-upper}</total-power-warn-threshold-upper>
+                        <total-power-warn-threshold-lower>{total-power-warn-threshold-lower}</total-power-warn-threshold-lower>
+                        <modulation>{modulation}</modulation>
+                        <?foreach {name}?>
+                          <name>
+                            <value-name>{value-name}</value-name>
+                            <value>{value}</value>
+                          </name>
+                        <?end?>
+                      </otsi-config>
+                    <?end?>
+                    <number-of-otsi>{otsia-connectivity-service-end-point-spec/number-of-otsi}</number-of-otsi>
+                  </otsia-connectivity-service-end-point-spec>
+                  <mca-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media" when="{mca-connectivity-service-end-point-spec}">
+                    <?foreach {mca-connectivity-service-end-point-spec/mc-config}?>
+                      <mc-config>
+                        <local-id>{local-id}</local-id>
+                        <spectrum when="{spectrum}">
+                          <upper-frequency>{spectrum/upper-frequency}</upper-frequency>
+                          <lower-frequency>{spectrum/lower-frequency}</lower-frequency>
+                          <frequency-constraint when="{spectrum/frequency-constraint}">
+                            <adjustment-granularity>{spectrum/frequency-constraint/adjustment-granularity}</adjustment-granularity>
+                            <grid-type>{spectrum/frequency-constraint/grid-type}</grid-type>
+                          </frequency-constraint>
+                        </spectrum>
+                        <power-management-config-pac when="{power-management-config-pac}">
+                          <intended-maximum-output-power when="power-management-config-pac/intended-maximum-output-power}">
+                            <total-power>{power-management-config-pac/intended-maximum-output-power/total-power}</total-power>
+                            <power-spectral-density>{power-management-config-pac/intended-maximum-output-power/power-spectral-density}</power-spectral-density>
+                          </intended-maximum-output-power>
+                          <intended-minimum-output-power when="{power-management-config-pac/intended-minimum-output-power}">
+                            <total-power>{power-management-config-pac/intended-minimum-output-power/total-power}</total-power>
+                            <power-spectral-density>{power-management-config-pac/intended-minimum-output-power/power-spectral-density}</power-spectral-density>
+                          </intended-minimum-output-power>
+                          <expected-maximum-input-power when="{power-management-config-pac/expected-maximum-input-power}">
+                            <total-power>{power-management-config-pac/expected-maximum-input-power/total-power}</total-power>
+                            <power-spectral-density>{power-management-config-pac/expected-maximum-input-power/power-spectral-density}</power-spectral-density>
+                          </expected-maximum-input-power>
+                          <expected-minimum-input-power when="{power-management-config-pac/expected-minimum-input-power}">
+                            <total-power>{power-management-config-pac/expected-minimum-input-power/total-power}</total-power>
+                            <power-spectral-density>{power-management-config-pac/expected-minimum-input-power/power-spectral-density}</power-spectral-density>
+                          </expected-minimum-input-power>
+                        </power-management-config-pac>
+                        <?foreach {name}?>
+                          <name>
+                            <value-name>{value-name}</value-name>
+                            <value>{value}</value>
+                          </name>
+                        <?end?>
+                      </mc-config>
+                    <?end?>
+                    <number-of-mc>{mca-connectivity-service-end-point-spec/number-of-mc}</number-of-mc>
+                    <capacity when="{mca-connectivity-service-end-point-spec/capacity}">
+                      <value>{mca-connectivity-service-end-point-spec/capacity/value}</value>
+                      <unit>{mca-connectivity-service-end-point-spec/capacity/unit}</unit>
+                    </capacity>
+                  </mca-connectivity-service-end-point-spec>
+                </end-point>
+              <?end?>
+              <?foreach {name}?>
+                <name>
+                  <value-name>{value-name}</value-name>
+                  <value>{value}</value>
+                </name>
+              <?end?>
+              <service-layer>{service-layer}</service-layer>
+              <service-type>{service-type}</service-type>
+              <service-level>{service-level}</service-level>
+              <requested-capacity when="{requested-capacity}">
+                <total-size when="{requested-capacity/total-size}">
+                  <value>{requested-capacity/total-size/value}</value>
+                  <unit>{requested-capacity/total-size/unit}</unit>
+                </total-size>
+                <bandwidth-profile when="{requested-capacity/bandwidth-profile}">
+                  <bw-profile-type>{requested-capacity/bandwidth-profile/bw-profile-type}</bw-profile-type>
+                  <committed-information-rate when="{requested-capacity/bandwidth-profile/committed-information-rate}">
+                    <value>{requested-capacity/bandwidth-profile/committed-information-rate/value}</value>
+                    <unit>{requested-capacity/bandwidth-profile/committed-information-rate/unit}</unit>
+                  </committed-information-rate>
+                  <committed-burst-size when="{requested-capacity/bandwidth-profile/committed-burst-size}">
+                    <value>{requested-capacity/bandwidth-profile/committed-burst-size/value}</value>
+                    <unit>{requested-capacity/bandwidth-profile/committed-burst-size/unit}</unit>
+                  </committed-burst-size>
+                  <peak-information-rate when="{requested-capacity/bandwidth-profile/peak-information-rate}">
+                    <value>{requested-capacity/bandwidth-profile/peak-information-rate/value}</value>
+                    <unit>{requested-capacity/bandwidth-profile/peak-information-rate/unit}</unit>
+                  </peak-information-rate>
+                  <peak-burst-size when="{requested-capacity/bandwidth-profile/peak-burst-size}">
+                    <value>{requested-capacity/bandwidth-profile/peak-burst-size/value}</value>
+                    <unit>{requested-capacity/bandwidth-profile/peak-burst-size/unit}</unit>
+                  </peak-burst-size>
+                  <color-aware>{requested-capacity/bandwidth-profile/color-aware}</color-aware>
+                  <coupling-flag>{requested-capacity/bandwidth-profile/coupling-flag}</coupling-flag>
+                </bandwidth-profile>
+              </requested-capacity>
+              <connectivity-direction>{connectivity-direction}</connectivity-direction>
+              <schedule when="{schedule}">
+                <end-time>{schedule/end-time}</end-time>
+                <start-time>{schedule/start-time}</start-time>
+              </schedule>
+              <coroute-inclusion when="{coroute-inclusion}">
+                <connectivity-service-uuid>{coroute-inclusion/connectivity-service-uuid}</connectivity-service-uuid>
+              </coroute-inclusion>
+              <?foreach {diversity-exclusion}?>
+                <diversity-exclusion>
+                  <connectivity-service-uuid>{connectivity-service-uuid}</connectivity-service-uuid>
+                </diversity-exclusion>
+              <?end?>
+              <?foreach {connection-exclusion}?>
+                <connection-exclusion>{current()}</connection-exclusion>
+              <?end?>
+              <?foreach {connection-inclusion}?>
+                <connection-inclusion>{current()}</connection-inclusion>
+              <?end?>
+              <?foreach {cost-characteristic}?>
+                <cost-characteristic>
+                  <cost-name>{cost-name}</cost-name>
+                  <cost-value>{cost-value}</cost-value>
+                  <cost-algorithm>{cost-algorithm}</cost-algorithm>
+                </cost-characteristic>
+              <?end?>
+              <?foreach {latency-characteristic}?>
+                <latency-characteristic>
+                  <traffic-property-name>{traffic-property-name}</traffic-property-name>
+                  <queing-latency-characteristic>{queing-latency-characteristic}</queing-latency-characteristic>
+                </latency-characteristic>
+              <?end?>
+              <?foreach {risk-diversity-characteristic}?>
+                <risk-diversity-characteristic>
+                  <risk-characteristic-name>{risk-characteristic-name}</risk-characteristic-name>
+                  <?foreach {risk-identifier-list}?>
+                    <risk-identifier-list>{current()}</risk-identifier-list>
+                  <?end?>
+                </risk-diversity-characteristic>
+              <?end?>
+              <diversity-policy>{diversity-policy}</diversity-policy>
+              <route-objective-function>{route-objective-function}</route-objective-function>
+              <route-direction>{route-direction}</route-direction>
+              <is-exclusive>{is-exclusive}</is-exclusive>
+              <max-allowed-cost when="{max-allowed-cost}">
+                <value>{max-allowed-cost/value}</value>
+                <priority>{max-allowed-cost/priority}</priority>
+              </max-allowed-cost>
+              <max-allowed-hops when="{max-allowed-hops}">
+                <value>{max-allowed-hops/value}</value>
+                <priority>{max-allowed-hops/priority}</priority>
+              </max-allowed-hops>
+              <max-allowed-delay when="{max-allowed-delay}">
+                <value>{max-allowed-delay/value}</value>
+                <priority>{max-allowed-delay/priority}</priority>
+              </max-allowed-delay>
+              <?foreach {include-topology}?>
+                <include-topology>{current()}</include-topology>
+              <?end?>
+              <?foreach {avoid-topology}?>
+                <avoid-topology>{current()}</avoid-topology>
+              <?end?>
+              <?foreach {include-path}?>
+                <include-path>{current()}</include-path>
+              <?end?>
+              <?foreach {exclude-path}?>
+                <exclude-path>{current()}</exclude-path>
+              <?end?>
+              <?foreach {include-link}?>
+                <include-link>{current()}</include-link>
+              <?end?>
+              <?foreach {exclude-link}?>
+                <exclude-link>{current()}</exclude-link>
+              <?end?>
+              <?foreach {include-node}?>
+                <include-node>{current()}</include-node>
+              <?end?>
+              <?foreach {exclude-node}?>
+                <exclude-node>{current()}</exclude-node>
+              <?end?>
+              <?foreach {preferred-transport-layer}?>
+                <preferred-transport-layer>{current()}</preferred-transport-layer>
+              <?end?>
+              <resilience-type when="{resilience-type}">
+                <restoration-policy>{resilience-type/restoration-policy}</restoration-policy>
+                <protection-type>{resilience-type/protection-type}</protection-type>
+              </resilience-type>
+              <restoration-coordinate-type>{restoration-coordinate-type}</restoration-coordinate-type>
+              <restore-priority>{restore-priority}</restore-priority>
+              <reversion-mode>{reversion-mode}</reversion-mode>
+              <wait-to-revert-time>{wait-to-revert-time}</wait-to-revert-time>
+              <hold-off-time>{hold-off-time}</hold-off-time>
+              <is-lock-out>{is-lock-out}</is-lock-out>
+              <is-frozen>{is-frozen}</is-frozen>
+              <is-coordinated-switching-both-ends>{is-coordinated-switching-both-ends}</is-coordinated-switching-both-ends>
+              <max-switch-times>{max-switch-times}</max-switch-times>
+              <?foreach {preferred-restoration-layer}?>
+                <preferred-restoration-layer>{current()}</preferred-restoration-layer>
+              <?end?>
+              <administrative-state>{administrative-state}</administrative-state>
+            </connectivity-service>
+          </connectivity-context>
+        </context>
+      </config>
+    </device>
+  </devices>
+</config>

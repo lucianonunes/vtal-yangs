@@ -1,0 +1,35 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <zr xmlns="http://cisco.com/ns/nso/cfp/cisco-ron-zr">
+    <dco>
+      <name>{$SERVICE_NAME}</name>
+      <router>{end-point-device}</router>
+      <line-port>{terminal-device-optical/line-port}</line-port>
+      <mode>{../mode}</mode>
+      <bandwidth>{../bandwidth}</bandwidth>
+      <circuit-id when="{../circuit-id}">{../circuit-id}</circuit-id>
+      <transceiver-pid>{$PLUGGABLE_PID}</transceiver-pid>
+      <platform-pid when="{$PLATFORM_PID != 'NA'}">{$PLATFORM_PID}</platform-pid>
+      <flexport-linecard-pid when="{$FLEX_ID != 'NA'}">{$FLEX_ID}</flexport-linecard-pid>
+      <dac-rate>{$DAC}</dac-rate>
+      <fec when="{$FEC != 'NA'}">{$FEC}</fec>
+      <transmit-power>{$TRANSMIT_POWER}</transmit-power>
+      <grid-type>{$GRID_TYPE}</grid-type>
+      <frequency>{$FREQUENCY}</frequency>
+      <bundle foreach="{terminal-device-packet/bundle}">
+        <id>{id}</id>
+        <?copy-tree {.}?>
+      </bundle>
+      <interface foreach="{terminal-device-packet/interface}">
+        <index>{index}</index>
+        <?copy-tree {.}?>
+      </interface>
+      <custom-template foreach="{terminal-device-packet/custom-template}">
+        <name>{name}</name>
+        <?copy-tree {.}?>
+      </custom-template>
+      <srlg>
+        <?copy-tree {../srlg}?>
+      </srlg>
+    </dco>
+  </zr>
+</config>

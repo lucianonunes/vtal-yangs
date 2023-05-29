@@ -1,0 +1,53 @@
+<config-template  xmlns="http://tail-f.com/ns/config/1.0">
+  <flat-L2vpn-internal-site-service xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-internal-site">
+    <name>{$SERVICE_NAME}</name>
+    <site-name>{$SITE}</site-name>
+    <?foreach {custom-template}?>
+      <custom-template>
+        <name>{name}</name>
+        <?copy-tree {.}?>
+      </custom-template>
+    <?end?>
+    <?if {service-assurance}?>
+      <service-assurance>
+        <?copy-tree {service-assurance}?>
+      </service-assurance>
+    <?end?>
+    <service-type>{service-type}</service-type>
+    <flat-L2vpn-evpn-multipoint when="{flat-L2vpn-evpn-multipoint}">
+      <evi-id>{flat-L2vpn-evpn-multipoint/evi-id}</evi-id>
+      <topology>{flat-L2vpn-evpn-multipoint/topology}</topology>
+      <bridge-group>{flat-L2vpn-evpn-multipoint/bridge-group}</bridge-group>
+      <?save-context service?>
+      <?set-context-node {flat-L2vpn-evpn-multipoint/site[site-name=$SITE]}?>
+      <site>
+        <site-name>{$SITE}</site-name>
+        <?copy-tree {.}?>
+        <?if {../topology = 'E-LAN'}?>
+          <?expand copy-site-vpn-target rtValue={../vpn-target/root-rt-value} rtType='both'?>
+        <?end?>
+        <?if {../topology = 'E-TREE'}?>
+          <?if {leaf}?>
+            <?expand copy-site-vpn-target rtValue={../vpn-target/root-rt-value} rtType='import'?>
+            <?expand copy-site-vpn-target rtValue={../vpn-target/leaf-rt-value} rtType='export'?>
+          <?else?>
+            <?expand copy-site-vpn-target rtValue={../vpn-target/root-rt-value} rtType='both'?>
+            <?expand copy-site-vpn-target rtValue={../vpn-target/leaf-rt-value} rtType='import'?>
+          <?end?>
+        <?end?>
+        <?if {sr-te}?>
+          <sr-te>
+            <?if {sr-te/odn}?>
+              <odn>
+                <?copy-tree {sr-te/odn}?>
+                <?copy-tree {deref(sr-te/odn/route-policy)/..}?>
+                <route-policy-name>{deref(sr-te/odn/route-policy)}</route-policy-name>
+              </odn>
+            <?end?>
+          </sr-te>
+        <?end?>
+      </site>
+      <?switch-context service?>
+    </flat-L2vpn-evpn-multipoint>
+  </flat-L2vpn-internal-site-service>
+</config-template>

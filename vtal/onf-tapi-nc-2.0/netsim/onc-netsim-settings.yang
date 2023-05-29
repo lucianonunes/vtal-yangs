@@ -1,0 +1,74 @@
+module onc-netsim-settings {
+  namespace "http://tail-f.com/pkg/onc-netsim-settings";
+  prefix onc-netsim-settings;
+
+  import tailf-common { prefix tailf; }
+  import tapi-common { prefix tapi-common; }
+  import tapi-connectivity { prefix tapi-connectivity; }
+  import tapi-photonic-media { prefix tapi-photonic-media; }
+  description "ONC netsim control settings module.";
+
+  revision 2021-09-15 {
+    description "Initial version.";
+  }
+
+
+  container onc-netsim-settings {
+    tailf:info "ONC netsim device settings to control lifecycle-state value and netconf-config-change notifications.";
+    description "ONC netsim device settings to control lifecycle-state value and netconf-config-change notifications.";
+    tailf:action lifecycle-state-change {
+      tailf:info "Action to update the lifecycle-state and generate netconf-config-change.";
+      description "Action to update the lifecycle-state and generate netconf-config-change.";
+      tailf:actionpoint lifecycle-state-change;
+      input {
+        leaf uuid {
+          tailf:info "Connectivity-service UUID";
+          description "Connectivity-service UUID";
+          type string;
+          mandatory true;
+        }
+        leaf lifecycle-state {
+          tailf:info "Lifecycle state of the connectivity service.";
+          description "Lifecycle state of the connectivity service.";
+          type enumeration {
+            enum PLANNED {
+              description "The resource is planned but is not present in the network.";
+            }
+            enum INSTALLED {
+              description "The resource is present in the network and is capable of providing the service expected.";
+            }
+            enum PENDING_REMOVAL {
+              description "The resource has been marked for removal";
+            }
+          }
+          mandatory true;
+        }
+      }
+    }
+
+    leaf delay {
+      description "Delay in sending auto-generated lifecycle-state change notification, expressed in seconds.";
+      tailf:info "Delay in sending auto-generated lifecycle-state change notification, expressed in seconds.";
+      type int32;
+    }
+
+    leaf disable {
+      tailf:info "Disable auto-generation of lifecycle-state change notification.";
+      description "Disable auto-generation of lifecycle-state change notification.";
+      type boolean;
+      default false;
+    }
+
+    leaf restricted-frequency {
+      tailf:info "If ONC netsim should consider user-defined frequency as invalid.";
+      description "If ONC netsim should consider user-defined frequency as invalid.";
+      type boolean;
+      default false;
+      must ". = 'false' or not(/tapi-common:context/tapi-connectivity:connectivity-context/tapi-connectivity:connectivity-service/tapi-connectivity:end-point/tapi-photonic-media:otsia-connectivity-service-end-point-spec/tapi-photonic-media:otsi-config/tapi-photonic-media:central-frequency/tapi-photonic-media:central-frequency)" {
+        error-message "PCE Channel failed: central-frequency cannot be set";
+        tailf:dependency ".";
+        tailf:dependency "/tapi-common:context/tapi-connectivity:connectivity-context/tapi-connectivity:connectivity-service/tapi-connectivity:end-point/tapi-photonic-media:otsia-connectivity-service-end-point-spec/tapi-photonic-media:otsi-config/tapi-photonic-media:central-frequency/tapi-photonic-media:central-frequency";
+      }
+    }
+  }
+}

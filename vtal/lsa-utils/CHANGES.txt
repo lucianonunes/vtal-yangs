@@ -1,0 +1,12 @@
+lsa-utils 1.0.1
+======================================
+   NSOTOOLING-21 : LSA-Utils: get all the rfs nodes present on CFS
+   NSOTOOLING-22 : LSA-Utils: Incorrect output in python api "get_all_remote_nso"
+   NSOTOOLING-28 : [LSA-Utils] : Remove marking local devices in dispatch-map with local-tag
+   NSOTOOLING-8 : [LSA-Utils] standalone/LSA differentiation with some flag or check from NSO CLI
+
+lsa-utils 1.0.0
+======================================
+   ENG-27561 - Initial Release
+   Utilities to improve ease-of-use of Layered Services Architecture (LSA)
+   

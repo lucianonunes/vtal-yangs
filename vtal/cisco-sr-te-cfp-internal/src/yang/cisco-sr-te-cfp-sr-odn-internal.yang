@@ -1,0 +1,190 @@
+module cisco-sr-te-cfp-sr-odn-internal {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn-internal";
+  prefix cisco-sr-te-cfp-sr-odn-internal;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import ietf-yang-types {
+    prefix yang;
+  }
+
+  import cisco-sr-te-cfp-internal {
+    prefix cisco-sr-te-cfp-internal;
+  }
+
+  import cisco-sr-te-cfp-sr-types-internal {
+    prefix cisco-sr-te-cfp-sr-types-internal;
+  }
+
+  import cisco-sr-te-cfp-sr-common-internal {
+    prefix cisco-sr-te-cfp-sr-common-internal;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  description "SR ODN Template Internal module";
+
+  revision 2021-09-27 {
+    description "Added: When condition for
+                 sr-te -> policies -> policy -> bandwidth";
+  }
+
+  revision 2021-06-17 {
+    description "Updated: tailf info for
+                  odn -> odn-template -> source-address";
+  }
+
+  revision 2021-03-10 {
+    description "Add SRv6 support";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-05 {
+    description "Added source under disjointness for XE devices.";
+  }
+
+  revision 2020-06-23 {
+    description "Initial revision. Separated from original cisco-sr-te-cfp package.
+                  Removed: redeploy-flag & head-end-redeploy-flag
+                  Removed: odn-template-oper-data
+                  Removed: no-op action used as workaround for delete in subscriber based arch.";
+  }
+
+  revision 2020-04-13 {
+    description "Added: sr-te -> odn -> odn-template-oper-data -> status-code-oper";
+  }
+
+  revision 2020-03-16 {
+    description "Initial Revision";
+  }
+
+  augment /cisco-sr-te-cfp-internal:sr-te {
+    container odn {
+      tailf:hidden tsdn;
+      tailf:info "SR-TE ODN";
+      description "SR-TE ODN";
+      list odn-template {
+        tailf:info "SR-TE ODN template";
+        description "SR-TE ODN template";
+
+        key "name head-end";
+        uses ncs:service-data;
+        ncs:servicepoint sr-odn-servicepoint;
+
+        tailf:validate "sr-odn-internal-validation" {
+            tailf:dependency ".";
+        }
+
+        uses ct-hook:template-hook;
+
+        leaf name {
+          tailf:info "Unique identifier for a ODN template";
+          description "Unique identifier for a ODN template";
+          type cisco-sr-te-cfp-sr-types-internal:Cisco-ios-xr-string;
+          tailf:cli-allow-range;
+        }
+        leaf head-end {
+          tailf:info "Head-End Router";
+          description "Head-End Router";
+          type leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+          tailf:cli-allow-range;
+        }
+
+        uses cisco-sr-te-cfp-sr-common-internal:srv6-grp;
+
+        leaf maximum-sid-depth {
+            tailf:info "<1-255> - Maximum SID Depth";
+            description "<1-255> - Maximum SID Depth";
+            type uint8 {
+                tailf:info "Maximum SID Depth <1-255>";
+                range "1..255";
+            }
+        }
+
+        leaf color {
+          tailf:info "<1..4294967295> - SR policy color";
+          description "<1..4294967295> - SR policy color";
+          type uint32 {
+            range  "1..4294967295";
+          }
+          mandatory true;
+        }
+
+        leaf bandwidth {
+          when "not(../srv6)" {
+            description "bandwidth is not supported for SRv6 in the current release.";
+          }
+          tailf:info "<1-4294967295> - Requested Bandwidth value in kbps";
+          description "<1-4294967295> - Requested Bandwidth value in kbps";
+          type uint32 {
+            range "1..4294967295";
+          }
+        }
+
+        uses cisco-sr-te-cfp-sr-common-internal:dynamic-path {
+          augment "dynamic" {
+            leaf flex-alg {
+              tailf:info "<128-255> - Prefix-SID algorithm";
+              description "<128-255> - Prefix-SID algorithm";
+              type uint32 {
+                range "128..255";
+              }
+            }
+            uses cisco-sr-te-cfp-sr-common-internal:constraints-grp {
+              augment "disjoint-path" {
+                leaf source {
+                  tailf:info "<A.B.C.D> - Association source, applicable only on XE device";
+                  description "<A.B.C.D> - Association source, applicable only on XE device";
+                  type inet:ipv4-address;
+                }
+              }
+            }
+          }
+        }
+
+        leaf source-address {
+          tailf:info "Source address of policy. The value set on a per-policy basis
+                        will override the value set globally on the device.";
+          description "Source address of policy. The value set on a per-policy basis
+                        will override the value set globally on the device.";
+          type inet:ip-address;
+        }
+      }
+
+      list odn-template-plan {
+        config false;
+        tailf:cdb-oper {
+          tailf:persistent true;
+        }
+        key "name head-end";
+
+        leaf name {
+          type string;
+        }
+
+        leaf head-end {
+          type string;
+        }
+
+        uses ncs:nano-plan-data;
+        uses ncs:nano-plan-history;
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+module cisco-sr-te-cfp-sr-odn-nano-services {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn-nano-services";
+  prefix cisco-sr-te-cfp-sr-odn-nano-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-sr-te-cfp-internal { prefix cisco-sr-te-cfp-internal; }
+  import cisco-sr-te-cfp-sr-odn-internal {prefix cisco-sr-te-cfp-sr-odn-internal; }
+
+  description "Models for SR ODN nano services.";
+
+  revision 2020-06-23 {
+    description "Initial revision. Separated from original cisco-sr-te-cfp package.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline sr-odn-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "cisco-sr-te-cfp-sr-odn-nano-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state as failed in case device transaction is invalidated
+          // this is needed due to CQ, where in device's last-transaction-id is set to INVALIDATED
+          // in case of CQ failures. During redeploy's we do not want the service to go to 'reached'
+          // state unless the device transaction is fixed.
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree sr-odn-servicepoint {
+    ncs:plan-outline-ref "cisco-sr-te-cfp-sr-odn-nano-services:sr-odn-nano-plan";
+    ncs:plan-location "/cisco-sr-te-cfp-internal:sr-te/cisco-sr-te-cfp-sr-odn-internal:odn/
+                                          cisco-sr-te-cfp-sr-odn-internal:odn-template-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+      ncs:variable "HEAD_END" {
+        ncs:value-expr "head-end";
+      }
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+<!--
+ ***************************************************
+ * Copyright (c) 2020 Cisco Systems, Inc.
+ * All rights reserved.
+ ***************************************************
+-->
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>custom-template-utils</name>
+  <package-version>2.0.9</package-version>
+  <description>Custom Template Utils</description>
+  <ncs-min-version>5.3</ncs-min-version>
+
+  <component>
+    <name>Custom Template Info Actions</name>
+    <callback>
+      <java-class-name>com.cisco.nso.common.ctutils.CTInfoAction</java-class-name>
+    </callback>
+  </component>
+  <component>
+    <name>Custom Template Info Subscriber</name>
+    <application>
+      <java-class-name>com.cisco.nso.common.ctutils.CTInfoSub</java-class-name>
+    </application>
+  </component>
+  <component>
+    <name>Custom Template Subscriber</name>
+    <application>
+      <java-class-name>com.cisco.nso.common.ctutils.CTSubscriber</java-class-name>
+    </application>
+  </component>
+  <component>
+    <name>Custom Template RFS</name>
+    <callback>
+      <java-class-name>com.cisco.nso.common.ctutils.CTRFS</java-class-name>
+    </callback>
+  </component>
+  <component>
+    <name>Customization Notification</name>
+    <application>
+      <java-class-name>com.cisco.nso.common.ctutils.CTNotif</java-class-name>
+    </application>
+  </component>
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>custom_template_utils.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

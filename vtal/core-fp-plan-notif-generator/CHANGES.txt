@@ -1,0 +1,29 @@
+core-fp-plan-notif-generator 1.0.6
+=======================================
+TSDN-999: Fix bug with notification context
+TSDN-1034: Add a simple test package and run a test with it
+
+core-fp-plan-notif-generator 1.0.5
+=======================================
+TSDN-999: Refactor notification sending and simplify usage for other modules
+
+core-fp-plan-notif-generator 1.0.4
+=======================================
+CFPRON-167: Updated PlanNotifAction() diff_iterate logic to generate delete notif as expected
+
+core-fp-plan-notif-generator 1.0.3
+=======================================
+   TSDN-970: Python 3 f-strings migration for all the string format's in common packages.
+   TSDN-938: core-fp-plan-notif-generator flake8 compliance
+
+core-fp-plan-notif-generator 1.0.2
+=======================================
+   TSDN-899: Update build method for remote packages
+
+core-fp-plan-notif-generator 1.0.1
+=======================================
+   CFPRON-101: Plan failed notification was not generated
+
+core-fp-plan-notif-generator 1.0.0
+=======================================
+  TSDN-685 : Change to utcnow for current time

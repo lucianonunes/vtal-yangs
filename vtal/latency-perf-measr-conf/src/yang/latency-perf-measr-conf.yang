@@ -1,0 +1,67 @@
+module latency-perf-measr-conf {
+  namespace "http://com/example/latencyperfmeasrconf";
+  prefix latency-perf-measr-conf;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+
+  list latency-perf-measr-conf {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "latency-perf-measr-conf";
+
+    leaf name {
+      tailf:info "Service Name to Configure Latency for Performance Measurement";
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    list interface_xr {
+      description "Interfaces for delay measurement";
+      key interface_id;
+      typedef physical_interface_type {
+       type enumeration {
+        enum FiftyGigE;
+        enum FortyGigE;
+        enum FourHundredGigE;
+        enum GigabitEthernet;
+        enum HundredGigE;
+        enum TenGigE;
+        enum TwentyFiveGigE;
+        enum TwoHundredGigE;
+       }
+       description
+          "Physical Interface Type";
+      }
+
+      leaf PHYSICAL_INTERFACE_TYPE {
+        tailf:info "Select physical interface type";
+        type physical_interface_type;
+      }
+
+      leaf interface_id {
+        description "Select Interfaces";
+        type string;
+      }
+ 
+      leaf delay_usec {
+        description "Enter delay measurement in uSec";
+        type uint64;
+      }
+    }
+  }
+}

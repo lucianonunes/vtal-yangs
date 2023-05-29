@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- This file has been generated. Do NOT edit it.
+     For changes edit the original instead.
+-->
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>onf-tapi-nc-2.0</name>
+  <package-version>2.0</package-version>
+  <description>Generated netconf package</description>
+  <ncs-min-version>5.5</ncs-min-version>
+  <component>
+    <name>onf-tapi</name>
+    <ned>
+      <netconf>
+        <ned-id xmlns:id="http://tail-f.com/ns/ned-id/onf-tapi-nc-2.0">id:onf-tapi-nc-2.0</ned-id>
+      </netconf>
+      <device>
+        <vendor>Cisco</vendor>
+      </device>
+    </ned>
+  </component>
+</ncs-package>

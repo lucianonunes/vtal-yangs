@@ -1,0 +1,92 @@
+module cisco-sr-te-cfp-sr-odn-nano-plan-services {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn-nano-plan-services";
+  prefix cisco-sr-te-cfp-sr-odn-nano-plan-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-sr-te-cfp { prefix cisco-sr-te-cfp; }
+  import cisco-sr-te-cfp-sr-odn {prefix cisco-sr-te-cfp-sr-odn; }
+
+  description "Models for SR ODN external nano plan.";
+
+  revision 2020-06-23 {
+    description "Modified: Plan state pre-conditions to support nano+CQ architecture.";
+  }
+
+  revision 2020-03-16 {
+    description "Initial Revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity head-end {
+    base ncs:plan-component-type;
+  }
+
+  ncs:plan-outline sr-odn-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // this checks if there are errors in another components, show it in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-sr-te-cfp-sr-odn-nano-plan-services:head-end" {
+      ncs:state "ncs:init" {
+        ncs:delete {
+          // marks failure - internal ODN plan failures (delete only)
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-sr-te-cfp-sr-odn-nano-plan-services:config-apply" {
+        ncs:create {
+          // create internal stacked service for this device.
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree sr-odn-external-servicepoint {
+    ncs:plan-outline-ref "cisco-sr-te-cfp-sr-odn-nano-plan-services:sr-odn-nano-plan";
+    ncs:plan-location "/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-odn:odn/
+                                          cisco-sr-te-cfp-sr-odn:odn-template-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:multiplier {
+        ncs:foreach "head-end" {
+          ncs:variable "HEAD_END" {
+            ncs:value-expr "name";
+          }
+          ncs:create-component "$HEAD_END" {
+            ncs:component-type-ref "cisco-sr-te-cfp-sr-odn-nano-plan-services:head-end";
+          }
+        }
+      }
+    }
+  }
+}

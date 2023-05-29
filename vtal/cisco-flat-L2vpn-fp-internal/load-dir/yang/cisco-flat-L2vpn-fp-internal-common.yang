@@ -1,0 +1,731 @@
+module cisco-flat-L2vpn-fp-internal-common {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-flat-L2vpn-fp-internal-common";
+  prefix cisco-flat-L2vpn-fp-internal-common;
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  description "L2vpn Common module";
+
+  revision 2022-08-12 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.40";
+  }
+
+   revision 2022-06-13 {
+    description
+      "Modified: pattern under srv6 -> locator -> type";
+  }
+
+  revision 2022-05-04 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.39";
+  }
+
+  revision 2022-04-15 {
+    description
+      "Modified: description under srv6 -> locator
+       Added: pattern under srv6 -> locator -> type";
+  }
+
+  revision 2022-03-30 {
+    description
+      "Removed: evpn-route-type under l2vpn-rr-parent-route-policy -> local-route-policy
+       Added: prefix under l2vpn-rr-parent-route-policy -> local-route-policy";
+  }
+
+  revision 2022-02-15 {
+    description
+      "Added: evpn-route-type under l2vpn-rr-parent-route-policy -> local-route-policy
+       Added: site-only under flat-L2vpn-internal-actions -> cleanup -> input -> site-type";
+  }
+
+  revision 2022-01-13 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.38";
+  }
+
+  revision 2022-01-13 {
+    description
+      "Added: grouping srv6-grp";
+  }
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference";
+  }
+
+  revision 2021-11-17 {
+    description
+      "Removed: must condition under y-1731-profile -> probe -> burst -> message-period
+       Removed: 'default 60' for y-1731-profile -> schedule -> duration
+       Removed: 'default 60' for y-1731-profile -> probe -> measurement-interval
+       Modified: default under cfp-configurations -> iosxr-default-ned-id
+       Modified: Changed to type union for y-1731-profile -> probe -> measurement-interval";
+  }
+
+  revision 2021-09-14 {
+    description
+      "Modified: description/tailf:info for y-1731-profile -> message-period
+       Modified: range for leaf interval in grouping ethernet-y-1731-grouping
+                 -> y-1731 -> y-1731-profile -> schedule";
+  }
+
+  revision 2021-08-31 {
+    description
+      "Added: ethernet-y-1731-grouping -> y-1731 -> type choice (icc-based|number)";
+  }
+
+  revision 2021-08-27 {
+    description
+      "Added: container probe in list y-1731-profile
+       Added: leaf message-count in y-1731-profile -> probe
+       Moved: y-1731-profile -> measurment-internal to y-1731-profile -> probe -> measurement-interval
+       Moved: y-1731-profile -> message-period to y-1731-profile -> probe -> burst -> message-period
+       Moved: y-1731-profile -> frame-size to y-1731-profile -> probe -> frame-size
+       Moved: y-1731-profile -> priority to y-1731-profile -> probe -> priority
+       Added: container schedule in grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Added: leaf interval in grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> schedule
+       Added: leaf duration in grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> schedule
+       Added: container bucket-details under ethernet-y-1731-grouping -> y-1731 -> y-1731-profile";
+  }
+
+  revision 2021-06-25 {
+    description
+      "Added: leaf statistic-id under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> delay-params -> statistic
+       Added: leaf cos under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> delay-params -> statistic
+       Added: leaf delay-type under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> delay-params -> statistic
+       Added: leaf statistic-id under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> loss-params -> statistic
+       Added: leaf cos under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> loss-params -> statistic
+       Added: enum synthetic-loss under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> type
+       Added: when condition to ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> frame-size
+       Removed: leaf synthetic-loss under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> loss-params";
+  }
+
+  revision 2021-05-28 {
+    description
+      "Added: leaf version under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> delay-params";
+  }
+
+  revision 2021-05-27 {
+    description
+      "Removed: leaf loss-measurement under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Removed: leaf synthetic-loss-measurement under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Removed: container delay-measurement under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Added: container delay-params under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Added: container loss-params under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile";
+  }
+
+  revision 2021-05-25 {
+    description
+      "Added: leaf priority under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile";
+  }
+
+  revision 2021-03-25 {
+    description "Added: new ethernet-service-oam";
+  }
+
+  revision 2021-02-15 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.33";
+  }
+
+  revision 2020-12-11 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.32";
+  }
+
+  revision 2020-11-24 {
+    description "Modified l2vpn-rr-parent-route-policy -> original-rr to original-rr-route-policy";
+  }
+
+  revision 2020-11-10 {
+    description "Added leaf sync-direction as mandatory input to error-recovery action";
+  }
+
+  revision 2020-11-06 {
+    description "Added: l2vpn-rr-parent-route-policy servicepoint";
+  }
+
+  typedef asn-ip-type {
+    type string {
+      tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+      pattern '(([0-9]+)|((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+        +'\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))):[0-9]+';
+    }
+  }
+
+  // Global RR Route Policy
+  list l2vpn-rr-parent-route-policy {
+    tailf:hidden tsdn;
+    key "name device";
+    leaf name {
+      type string;
+      tailf:info "Parent route-reflector route policy";
+      description "Parent route-reflector route policy";
+    }
+    leaf device {
+      type leafref {
+        tailf:no-leafref-check;
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    uses ncs:service-data;
+    ncs:servicepoint "l2vpn-rr-parent-route-policy";
+
+    leaf original-rr-route-policy {
+      tailf:info "Original value of parent route policy";
+      description "Original value of parent route policy";
+      type string;
+    }
+    list local-route-policy {
+      key "name";
+      leaf name {
+        tailf:info "Name of SR routing policy";
+        description "Name of SR routing policy";
+        type string;
+        mandatory true;
+      }
+      leaf prefix {
+        tailf:info "Specify prefix for policy name for single policy push to device";
+        description "Specify prefix for policy name for single policy push to device";
+        type string;
+      }
+      leaf ipv4 {
+        tailf:info "Flag to indicate color ipv4 existence";
+        description "Flag to indicate color ipv4 existence";
+        type empty;
+      }
+      leaf ipv6 {
+        tailf:info "Flag to indicate color ipv6 existence";
+        description "Flag to indicate color ipv6 existence";
+        type empty;
+      }
+    }
+  }
+
+  container cfp-configurations {
+    tailf:hidden tsdn;
+    list dynamic-device-mapping {
+      tailf:info "Dynamic Device Mapping";
+      description "Dynamic Device Mapping";
+      key "ned-id";
+      leaf ned-id {
+        tailf:info "Device NED ID, eg ned:netconf";
+        description "Device NED ID, eg ned:netconf";
+        type string;
+        tailf:cli-allow-range;
+      }
+      leaf python-impl-class-name {
+        tailf:info "Device Python implementation class, eg module.class";
+        description "Device Python implementation class, eg module.class";
+        type string;
+        mandatory true;
+      }
+    }
+    leaf l2vpn-validation-enabled {
+      tailf:info "If set to true, following validations are done for l2vpn service:
+                  1. All the site interfaces are available on the site.";
+      description "If set to true, following validations are done for l2vpn service:
+                  1. All the site interfaces are available on the site.";
+      type boolean;
+      default true;
+    }
+    leaf iosxr-default-ned-id {
+      tailf:info "NED ID of the default IOSXR Device.";
+      description "NED ID of the default IOSXR Device.";
+      tailf:hidden tsdn;
+      type string;
+      default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+    }
+  }
+
+  container flat-L2vpn-internal-actions {
+    tailf:hidden tsdn;
+    tailf:action cleanup {
+      tailf:actionpoint cisco-flat-L2vpn-fp-internal-cleanup;
+      tailf:info "Clean up L2vpn service configuration and operational data";
+      description "Clean up L2vpn service configuration and operational data";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        choice site-type {
+          leaf remote-site-only {
+            tailf:info "Clean up L2vpn service configuration for given remote site only";
+            description "Clean up L2vpn service configuration for given remote site only";
+            type leafref {
+              tailf:no-leafref-check;
+              path "/ncs:devices/ncs:device/ncs:name";
+            }
+          }
+          leaf local-site-only {
+            tailf:info "Clean up L2vpn service configuration for given local site only";
+            description "Clean up L2vpn service configuration for given local site only";
+            type leafref {
+              tailf:no-leafref-check;
+              path "/ncs:devices/ncs:device/ncs:name";
+            }
+          }
+          leaf site-only {
+            tailf:info "Clean up L2vpn service configuration for given site only";
+            description "Clean up L2vpn service configuration for given site only";
+            type string;
+          }
+        }
+        leaf no-networking {
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-flat-L2vpn-fp-internal-error-recovery;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+        choice site-type {
+          leaf remote-site-only {
+            tailf:info "Clean up L2vpn service configuration for given remote site only";
+            description "Clean up L2vpn service configuration for given remote site only";
+            type leafref {
+              tailf:no-leafref-check;
+              path "/ncs:devices/ncs:device/ncs:name";
+            }
+          }
+          leaf local-site-only {
+            tailf:info "Clean up L2vpn service configuration for given local site only";
+            description "Clean up L2vpn service configuration for given local site only";
+            type leafref {
+              tailf:no-leafref-check;
+              path "/ncs:devices/ncs:device/ncs:name";
+            }
+          }
+          leaf site-only {
+            tailf:info "Clean up L2vpn service configuration for given site only";
+            description "Clean up L2vpn service configuration for given site only";
+            type string;
+          }
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+  }// flat-L2vpn-actions ends
+
+  grouping action-grouping {
+    container action {
+      tailf:action self-test {
+        tailf:actionpoint cisco-flat-L2vpn-fp-internal-self-test;
+        input {
+        }
+        output {
+          leaf status {
+            type string;
+          }
+          leaf message {
+            type string;
+          }
+        }
+      }
+
+    }
+
+  }// action-grouping ends
+
+  grouping ethernet-y-1731-grouping {
+    container ethernet-service-oam {
+      presence "true";
+      description "Container for Ethernet service OAM.";
+      tailf:info "Container for Ethernet service OAM.";
+
+      leaf md-name {
+        description "Maintenance domain name";
+        tailf:info "Maintenance domain name";
+        type string;
+      }
+      leaf md-level {
+        description "<0-7>;;Maintenance domain level";
+        tailf:info "<0-7>;;Maintenance domain level";
+        type uint8 {
+          range "0..7";
+        }
+      }
+
+      list y-1731 {
+        description "List for y-1731.";
+        tailf:info "List for y-1731.";
+        key "maid";
+        leaf maid {
+          type string;
+          description "MA ID ";
+          tailf:info "MA ID ";
+        }
+        leaf mep-id {
+          type uint16;
+          description "Local MEP ID";
+          tailf:info "Local MEP ID";
+        }
+        leaf remote-mep-id {
+          type uint16;
+          description "Remote MEP ID";
+          tailf:info "Remote MEP ID";
+        }
+        choice type {
+          leaf icc-based {
+            description "<0-12>;;icc-based SMAN ID";
+            tailf:info "<0-12>;;icc-based SMAN ID";
+            type string {
+              length "0..12";
+            }
+          }
+          leaf number {
+            description "<0-65535>;;number SMAN ID";
+            tailf:info "<0-65535>;;number SMAN ID";
+            type uint16 {
+              range "0..65535";
+            }
+          }
+        }
+        leaf message-period {
+          description "Defines the interval between OAM messages. The message
+                       period is expressed in 3.3ms|10ms|100ms|1s|10s|1m|10m";
+          tailf:info "Defines the interval between OAM messages. The message
+                      period is expressed in 3.3ms|10ms|100ms|1s|10s|1m|10m";
+          type string {
+            pattern '(3\.3ms|10ms|100ms|1s|10s|1m|10m)';
+          }
+          default '1s';
+        }
+        list y-1731-profile {
+          description "Y-1731 profile.
+                       Can be standard profile or customized profile.";
+          tailf:info "Y-1731 profile.
+                      Can be standard profile or customized profile.";
+          key name;
+          leaf name {
+            type string;
+          }
+          leaf type {
+            type enumeration {
+              enum 'delay';
+              enum 'loss';
+              enum 'synthetic-loss';
+            }
+            description
+             "Performance monitor types";
+            tailf:info "Performance monitor types";
+          }
+          container probe {
+            description
+              "SLA Profile Probe. Only applicable to Cisco XR devices.";
+            tailf:info
+              "SLA Profile Probe. Only applicable to Cisco XR devices.";
+
+            leaf type {
+              description "Probe Type";
+              tailf:info  "Probe Type";
+              type enumeration {
+                enum burst;
+                enum packet;
+              }
+              default burst;
+            }
+            container burst {
+              when "../type = 'burst'";
+
+              description "Burst Parameters";
+              tailf:info  "Burst Parameters";
+
+              leaf message-count {
+                description
+                  "<2-1200>;;Defines number of OAM messages sent per interval";
+                tailf:info
+                  "<2-1200>;;Defines number of OAM messages sent per interval";
+                type uint16 {
+                  range "2..1200";
+                }
+                default 60;
+              }
+              leaf message-period {
+                type uint32 {
+                  range "50..30000";
+                }
+                default 1000;
+                description
+                  "<50-30000>;;Defines the interval between OAM messages. The message
+                    period is expressed in milliseconds";
+                tailf:info  "<50-30000>;;Defines the interval between OAM messages. The message
+                    period is expressed in milliseconds";
+              }
+            }
+            leaf measurement-interval {
+              type union {
+                type uint32 {
+                  range "1..3600";
+                }
+                type enumeration {
+                  enum once;
+                }
+              }
+              description
+                "<1-3600>;;Specifies the measurement interval for statistics. The
+                  measurement interval is expressed in seconds";
+              tailf:info "<1-3600>;;Specifies the measurement interval for statistics. The
+                  measurement interval is expressed in seconds";
+            }
+            leaf frame-size {
+              when "../../type != 'loss'";
+              type uint16 {
+                range "1..9000";
+              }
+              default 1000;
+              description
+                "<1-9000>;;Frame size";
+              tailf:info "<1-9000>;;Frame size";
+            }
+            leaf priority {
+              description "<0-7>;;Specify the priority to use when sending OAM messages";
+              tailf:info "<0-7>;;Specify the priority to use when sending OAM messages";
+              type uint8 {
+                range "0..7";
+              }
+            }
+          }
+          container delay-params {
+            when "../type = 'delay'";
+            description
+              "Delay Parameters";
+            tailf:info
+              "Delay Parameters";
+            list statistic {
+              description
+                "Statistic";
+              tailf:info
+                "Statistic";
+              key type;
+              leaf type {
+                description
+                  "Statistics Type. Jitter type only applicable for Cisco XR devices.";
+                tailf:info
+                  "Statistics Type. Jitter type only applicable for Cisco XR devices.";
+                type enumeration {
+                  enum 'delay-two-way';
+                  enum 'delay-sd';
+                  enum 'delay-ds';
+                  enum 'jitter-two-way';
+                  enum 'jitter-sd';
+                  enum 'jitter-ds';
+                }
+              }
+              leaf statistic-id {
+                tailf:info "id allocated by resource-manager id-allocator";
+                description "id allocated by resource-manager id-allocator";
+                type uint32 {
+                  range "1..2147483647";
+                }
+              }
+              leaf cos {
+                description
+                  "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+                tailf:info
+                  "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+                type uint8 {
+                  range "0..7";
+                }
+                default 0;
+              }
+            }
+            leaf version {
+              description
+                "Delay Version";
+              tailf:info
+                "Delay Version";
+              type enumeration {
+                enum 0;
+                enum 1;
+              }
+              default 1;
+            }
+            leaf delay-type {
+              description
+                "Delay type. Only applicable for Cisco XE devices.";
+              tailf:info
+                "Delay type. Only applicable for Cisco XE devices.";
+              type enumeration {
+                enum 'delay';
+                enum 'delay-variation';
+                enum 'both';
+              }
+              default "delay";
+            }
+          }
+          container loss-params {
+            when "../type = 'loss' or ../type = 'synthetic-loss'";
+            description
+              "Loss Parameters";
+            tailf:info
+              "Loss Parameters";
+            list statistic {
+              description
+                "Statistic";
+              tailf:info
+                "Statistic";
+              key type;
+              leaf type {
+                description
+                  "Statistics Type";
+                tailf:info
+                  "Statistics Type";
+                type enumeration {
+                  enum 'loss-sd';
+                  enum 'loss-ds';
+                }
+              }
+              leaf statistic-id {
+                tailf:info "id allocated by resource-manager id-allocator";
+                description "id allocated by resource-manager id-allocator";
+                type uint32 {
+                  range "1..2147483647";
+                }
+              }
+              leaf cos {
+                description
+                  "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+                tailf:info
+                  "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+                type uint8 {
+                  range "0..7";
+                }
+                default 0;
+              }
+            }
+          }
+          container schedule {
+            description
+                "Schedule Parameters";
+            tailf:info
+                "Schedule Parameters";
+
+            leaf interval {
+                description
+                  "<1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90>;;
+                  Interval between operations expressed in minutes. Must be a factor of 1440.
+                  Only applicable for Cisco XR devices.";
+                tailf:info
+                  "<1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90>;;
+                  Interval between operations expressed in minutes. Must be a factor of 1440.
+                  Only applicable for Cisco XR devices.";
+                type uint8 {
+                  range "1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90";
+                }
+              default 60;
+            }
+            leaf duration {
+              description
+                "<1-1440>;;Duration of operations expressed in minutes.
+                The 'forever' option will try to schedule infinitely if supported; otherwise,
+                maximum number of allowed minutes will be used";
+              tailf:info
+                "<1-1440>;;Duration of operations expressed in minutes.
+                The 'forever' option will try to schedule infinitely if supported; otherwise,
+                maximum number of allowed minutes will be used";
+              type union {
+                type uint16 {
+                  range "1..1440";
+                }
+                type enumeration {
+                  enum forever;
+                }
+              }
+            }
+          }
+          container bucket-details {
+            description
+              "Configuration for buckets in which statistics are collected. Only applicable for Cisco XR devices.";
+            leaf bucket-size {
+              description
+                "<1-100>;;Specifies the size of each bucket.
+                 The number of probes that each buckets may contain. Only applicable for Cisco XR devices.";
+              tailf:info
+                "<1-100>;;Specifies the size of each bucket.
+                 The number of probes that each buckets may contain. Only applicable for Cisco XR devices.";
+              type uint8 {
+                range "1..100";
+              }
+              default 1;
+            }
+            leaf bucket-archive {
+              description "<1-100>;;Number of buckets to store. Only applicable for Cisco XR devices.";
+              tailf:info "<1-100>;;Number of buckets to store. Only applicable for Cisco XR devices.";
+              type uint8 {
+                range "1..100";
+              }
+              default 100;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping srv6-grp {
+    container srv6 {
+      presence  "true";
+      tailf:info "SRv6 Options";
+      description "SRv6 Options";
+
+      leaf locator {
+        tailf:info "SRv6 locator name (1-58 chars) at individual evi service level,
+                    leave it empty if evi or global level locator is used. Special characters are not allowed.";
+        description "SRv6 locator name (1-58 chars) at individual evi service level,
+                     leave it empty if evi or global level locator is used. Special characters are not allowed.";
+        type string {
+          pattern '[0-9a-zA-Z_]*';
+          length "1..58";
+        }
+      }
+    }
+  }
+}

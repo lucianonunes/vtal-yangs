@@ -1,0 +1,56 @@
+ietf-l2vpn-nm (v2.0) [April 20, 2022]
+=================================================
+  A. Modified tailf:info for sr-policy and odn
+
+ietf-l2vpn-nm (v2.0) [October 1, 2021]
+=================================================
+  A. Modified tailf:info for sr-policy and odn
+  
+ietf-l2vpn-nm (v2.0) [September 24, 2021]
+=================================================
+  A. Modified tailf:info for interface-mtu
+
+ietf-l2vpn-nm (v2.0) [April 27, 2021]
+=================================================
+  A. Added deviation for vpn-service->vpn-id to filter invalid id
+
+ietf-l2vpn-nm (v2.0) [March 4, 2021]
+=================================================
+  A. Modified tailf:info for signaling-options, ac-pw-list, and vpn-network-access
+
+ietf-l2vpn-nm (v2.0) [February 15, 2021]
+=================================================
+A. Removed unused groupings;
+
+ietf-l2vpn-nm (v2.0) [January 27, 2021]
+=================================================
+A. Removed unused elements containing tailf:hidden full;
+
+ietf-l2vpn-nm (v2.0) [December 09, 2020]
+=================================================
+A. Added explicit option for evi-id, evi-source, and evi-target
+   Example Payload:
+
+   <config xmlns="http://tail-f.com/ns/config/1.0">
+    <l2vpn-ntw xmlns="urn:ietf:params:xml:ns:yang:ietf-l2vpn-ntw">
+      <vpn-services>
+        <vpn-service>
+          <vpn-id>l2nm-evpn</vpn-id>
+          <evi-id>123</evi-id>               <========= ADDED
+          <evi-source>124</evi-source>       <========= ADDED
+          <evi-target>125</evi-target>       <========= ADDED
+        </vpn-service>
+      </vpn-services>
+    </l2vpn-ntw>
+  </config>
+
+ietf-l2vpn-nm (v2.0) [November 16, 2020]
+=================================================
+A. Added validate callpoint to service.
+    tailf:validate "ietf-l2vpn-nm-validation" {
+      tailf:dependency ".";
+    }
+
+ietf-l2vpn-nm (v1.1.0) [September 11, 2020]
+=================================================
+  A. Initial Revision

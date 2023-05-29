@@ -1,0 +1,379 @@
+module cisco-sr-te-cfp-sr-odn {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn";
+  prefix cisco-sr-te-cfp-sr-odn;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import cisco-sr-te-cfp {
+    prefix cisco-sr-te-cfp;
+  }
+
+  import cisco-sr-te-cfp-sr-types {
+    prefix cisco-sr-te-cfp-sr-types;
+  }
+
+  import cisco-sr-te-cfp-sr-common {
+    prefix cisco-sr-te-cfp-sr-common;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  import tailf-kicker {
+    prefix kicker;
+  }
+  
+  import lsa-utils {
+	prefix lsa-utils;
+  }
+
+  import cisco-tsdn-core-fp-common { 
+    prefix tsdn-core-fp-common; 
+  }
+
+  description "SR ODN Template module";
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified: Read dispatch-map using lsa-utils";
+  }
+
+  revision 2021-09-27 {
+    description "Added: When condition for
+                 sr-te -> policies -> policy -> bandwidth";
+  }
+
+  revision 2021-07-08 {
+    description "Removed: hidden leaf ios-device under odn -> odn-template -> head-end
+                 Removed: when condition on disjoint-path -> source";
+  }
+
+  revision 2021-06-29 {
+    description "Added: hidden leaf ios-device under odn -> odn-template -> head-end
+                 Modified: when condition on disjoint-path -> source";
+  }
+
+  revision 2021-06-17 {
+    description "Updated: tailf info for
+                  odn -> odn-template -> source-address";
+  }
+
+  revision 2021-05-07 {
+    description 
+    "Modified: augment sr-te->od->plan to use tsdn-core-fp-common:status-code-plan-augmentation";
+  }
+
+  revision 2021-04-28 {
+    description "Added when condition on disjoint-path -> source to check for XE NED";
+  }
+
+  revision 2021-03-10 {
+    description "Add SRv6 support";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-09 {
+    description "Added: leaf sync-direction as mandatory input to error-recovery action under
+                        odn -> odn-template and odn -> odn-template -> head-end";
+  }
+
+  revision 2020-11-05 {
+    description "Added source under disjointness for XE devices.";
+  }
+
+  revision 2020-07-24 {
+    description "Added: Error Recovery actions for transient failures";
+  }
+
+  revision 2020-06-23 {
+    description "Modified: Head-end now leafref to dispatch-map
+                Removed: head-end-redeploy-flag
+                Removed: Head-end redeploy custom action
+                Removed: service redeploy-flag
+                Removed: service redeploy custom action
+                Removed: service get-modifications custom action
+                Added: Custom action to handle internal plan change.
+                ";
+  }
+
+  revision 2020-06-10 {
+    description "Added uses redeploy-input to redeploy action (reconcile options)";
+  }
+
+  revision 2020-06-09 {
+    description "
+      Removed: min-elements requirement for ODN head-ends to support transport slicing use-case.";
+  }
+
+  revision 2020-04-13 {
+    description "
+      Added: augment plan with : status-code-plan-augmentation
+      Added: augment plan-history with : status-code-plan-augmentation
+      Added: augment plan component with : status-code-component-augmentation
+      Added: augment plan-history component with : status-code-component-augmentation";
+  }
+
+  revision 2020-03-16 {
+    description "Initial Revision";
+  }
+
+  typedef outformat2 {
+    default cli;
+    type enumeration {
+      enum cli {
+        tailf:code-name outformat_cli;
+        description
+          "NCS CLI curly bracket format.";
+      }
+      enum xml {
+        tailf:code-name outformat_xml;
+        description
+          "NETCONF XML edit-config format, i.e., the edit-config that
+           would be applied locally (at NCS) to get a config
+           that is equal to that of the managed device.";
+      }
+    }
+  }
+
+  augment /cisco-sr-te-cfp:sr-te {
+    container odn {
+      tailf:info "SR-TE ODN";
+      description "SR-TE ODN";
+      list odn-template {
+        tailf:info "SR-TE ODN template";
+        description "SR-TE ODN template";
+
+        key "name";
+        uses ncs:service-data;
+        ncs:servicepoint sr-odn-external-servicepoint;
+
+        tailf:validate "sr-odn-validation" {
+            tailf:dependency ".";
+        }
+
+        uses ct-hook:template-hook;
+
+        leaf name {
+          tailf:info "Unique identifier for a ODN template";
+          description "Unique identifier for a ODN template";
+          type cisco-sr-te-cfp-sr-types:Cisco-ios-xr-string;
+          tailf:cli-allow-range;
+        }
+
+        uses cisco-sr-te-cfp-sr-common:srv6-grp;
+
+        list head-end {
+          tailf:info "List of headend routers";
+          description "List of headend routers";
+          key name;
+          leaf name {
+            type leafref {
+              path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+            }
+            tailf:cli-allow-range;
+          }
+          uses ct-hook:template-hook;
+          tailf:action error-recovery {
+            tailf:actionpoint cisco-sr-te-cfp-odn-head-end-error-recovery;
+            tailf:info "Action to recover this device during create/update from a transient failures
+                        like device connection issues once the device is reachable again.
+                        For create/update failures, this action issues a sync on the device
+                        & redeploys the service with reconcile option.";
+            description "Action to recover this device during create/update from a transient failures
+                        like device connection issues once the device is reachable again.
+                        For create/update failures, this action issues a sync on the device
+                        & redeploys the service with reconcile option.";
+            input {
+              leaf sync-direction {
+                tailf:info "sync device with sync-from or sync-to";
+                description "sync device with sync-from or sync-to";
+                type enumeration {
+                  enum sync-from;
+                  enum sync-to;
+                }
+                mandatory true;
+              }
+            }
+            output {
+              leaf success {
+                type boolean;
+                mandatory true;
+              }
+              leaf detail {
+                type string;
+              }
+            }
+            tailf:confirm-text "########################\n" +
+              "#        Warning       #\n" +
+              "########################\n" +
+              "You are about to recover a T-SDN service.\n" +
+              "This will issue a sync on the device.\n" +
+              "Are you sure you want to proceed?" {
+                tailf:confirm-default false;
+            }
+          }
+        }
+
+        leaf maximum-sid-depth {
+            tailf:info "<1-255> - Maximum SID Depth";
+            description "<1-255> - Maximum SID Depth";
+            type uint8 {
+                tailf:info "Maximum SID Depth <1-255>";
+                range "1..255";
+            }
+        }
+
+        leaf color {
+          tailf:info "<1-4294967295> - SR policy color";
+          description "<1-4294967295> - SR policy color";
+          type uint32 {
+            range  "1..4294967295";
+          }
+          mandatory true;
+        }
+
+        leaf bandwidth {
+          when "not(../srv6)" {
+            description "bandwidth is not supported for SRv6 in the current release.";
+          }
+          tailf:info "<1-4294967295> Requested Bandwidth value in kbps";
+          description "<1-4294967295> Requested Bandwidth value in kbps";
+          type uint32 {
+            range "1..4294967295";
+          }
+        }
+
+        uses cisco-sr-te-cfp-sr-common:dynamic-path {
+          augment "dynamic" {
+            leaf flex-alg {
+              tailf:info "<128-255> - Prefix-SID algorithm";
+              description "<128-255> - Prefix-SID algorithm";
+              type uint32 {
+                range "128..255";
+              }
+            }
+            uses cisco-sr-te-cfp-sr-common:constraints-grp {
+              augment "disjoint-path" {
+                leaf source {
+                  tailf:info "<A.B.C.D> - Association source, applicable only on XE device
+                    This config is mandatory when setting association-group.";
+                  description "<A.B.C.D> - Association source, applicable only on XE device
+                    This config is mandatory when setting association-group.";
+                  type inet:ipv4-address;
+                }
+              }
+            }
+          }
+        }
+
+        leaf source-address {
+          tailf:info "Source address of policy. The value set on a per-policy basis
+                        will override the value set globally on the device.";
+          description "Source address of policy. The value set on a per-policy basis
+                        will override the value set globally on the device.";
+          type inet:ip-address;
+        }
+
+        tailf:action error-recovery {
+          tailf:actionpoint cisco-sr-te-cfp-odn-error-recovery;
+          tailf:info "Action to recover a service during create/update from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync on the device
+                      & redeploys the service with reconcile option.";
+          description "Action to recover a service during create/update from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync on the device
+                      & redeploys the service with reconcile option.";
+          input {
+            leaf sync-direction {
+              tailf:info "sync device with sync-from or sync-to";
+              description "sync device with sync-from or sync-to";
+              type enumeration {
+                enum sync-from;
+                enum sync-to;
+              }
+              mandatory true;
+            }
+          }
+          output {
+            leaf success {
+              type boolean;
+              mandatory true;
+            }
+            leaf detail {
+              type string;
+            }
+          }
+          tailf:confirm-text "########################\n" +
+            "#        Warning       #\n" +
+            "########################\n" +
+            "You are about to recover a T-SDN service.\n" +
+            "This will issue a sync on the device.\n" +
+            "Are you sure you want to proceed?" {
+              tailf:confirm-default false;
+          }
+        }
+      }
+
+      list odn-template-plan {
+        config false;
+        tailf:cdb-oper {
+          tailf:persistent true;
+        }
+        key "name";
+
+        leaf name {
+          type string;
+        }
+
+        uses ncs:nano-plan-data;
+        uses ncs:nano-plan-history;
+      }
+
+      container actions {
+        tailf:info "Action that redeploys external service/zombie based on internal plan change.";
+        description "Action that redeploys external service/zombie based on internal plan change.";
+        tailf:hidden full;
+        tailf:action internal-plan-change-handler {
+          tailf:actionpoint odn-internal-plan-change-handler;
+          input {
+            uses kicker:action-input-params;
+          }
+          output {
+          }
+        }
+      }
+    }
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan {
+    uses tsdn-core-fp-common:status-code-plan-augmentation;
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan-history/plan {
+    uses tsdn-core-fp-common:status-code-plan-augmentation;
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan/component {
+    uses tsdn-core-fp-common:status-code-component-augmentation;
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan-history/plan/component {
+    uses tsdn-core-fp-common:status-code-component-augmentation;
+  }
+}

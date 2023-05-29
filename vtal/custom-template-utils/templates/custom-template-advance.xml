@@ -1,0 +1,30 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <?foreach {custom-template}?>
+    <custom-template xmlns="http://cisco.com/yang/nso/common/custom-template">
+      <name>{name}</name>
+      <device>{$DEVICE}</device>
+      <owner>{$OWNER}</owner>
+
+      <?foreach {iteration}?>
+        <iteration>
+          <number>{number}</number>
+          <?foreach {variable}?>
+            <variable>
+              <name>{name}</name>
+              <value>{value}</value>
+            </variable>
+          <?end?>
+        </iteration>
+      <?end?>
+
+      <?foreach {variable}?>
+        <variable>
+          <name>{name}</name>
+          <value>{value}</value>
+        </variable>
+      <?end?>
+
+      <ctx-path when="{$CTX_PATH != ''}">{$CTX_PATH}</ctx-path>
+    </custom-template>
+  <?end?>
+</config-template>

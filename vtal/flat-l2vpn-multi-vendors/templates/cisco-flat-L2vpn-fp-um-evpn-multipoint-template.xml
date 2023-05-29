@@ -1,0 +1,138 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+      <?set DEVICE_NAME={string(pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set SERVICE_NAME={string(../../name)}?>
+      <?if {string-length($SERVICE_NAME)>14 and starts-with($SERVICE_NAME,'L2NM-') and (substring($SERVICE_NAME, (string-length($SERVICE_NAME) - 8))='-internal')}?>
+        <?set SERVICE_NAME={substring($SERVICE_NAME,6,string-length($SERVICE_NAME)-14)}?>
+      <?end?>
+      <?set EVI_ID ={string(../evi-id)}?>
+      <config>
+        <!-- Configure CE-facing interface for L2Transport -->
+        <?set INTERFACE_NAME={if-type}{if-id}?>
+        <?if {sub-if-id or vlan-id}?>
+          <?if {sub-if-id}?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{sub-if-id}?>
+          <?else?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+          <?end?>
+        <?end?>
+        <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+          <interface>
+            <interface-name>{$INTERFACE_NAME}</interface-name>
+            <?set IF_NAME={$INTERFACE_NAME}?>
+            <?expand um-intf-desc-shut-mtu-l2-rewrite?>
+          </interface>
+          <?expand um-intf-config-desc-shut-if-sub-vlan-id?>
+        </interfaces>
+        <l2vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2vpn-cfg">
+          <bridge>
+            <groups>
+              <?set GROUP_NAME={../bridge-group}?>
+              <group>
+                <group-name>{$GROUP_NAME}</group-name>
+                <bridge-domains>
+                  <bridge-domain>
+                    <bridge-domain-name>{$GROUP_NAME}_evi_{$EVI_ID}</bridge-domain-name>
+                    <evis>
+                      <evi>
+                        <vpn-id>{$EVI_ID}</vpn-id>
+                      </evi>
+                    </evis>
+                    <interfaces>
+                      <interface>
+                        <interface-name>{$INTERFACE_NAME}</interface-name>
+                        <split-horizon when="{split-horizon/enable = 'true'}">
+                          <group/>
+                        </split-horizon>
+                      </interface>
+                    </interfaces>
+                  </bridge-domain>
+                </bridge-domains>
+              </group>
+            </groups>
+          </bridge>
+        </l2vpn>
+        <?set POLICY_NAME=EVPN_MP_{$SERVICE_NAME}_{$EVI_ID}?>
+        <?if {sr-te/odn/route-policy-name}?>
+          <?set POLICY_NAME={sr-te/odn/route-policy-name}?>
+        <?end?>
+        <?set RPL_NAME={concat("SET_COLOR_EVPN_MP_service_", string($POLICY_NAME))}?>
+        <?if-ned-id cisco-iosxr-nc-7.6:cisco-iosxr-nc-7.6
+                    cisco-iosxr-nc-7.7:cisco-iosxr-nc-7.7?>
+          <!-- Configure RPL -->
+          <routing-policy xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-route-policy-cfg">
+            <?if {sr-te/odn}?>
+              <sets>
+                <extended-community-opaque-sets>
+                  <extended-community-opaque-set foreach="{sr-te/odn/color}">
+                    <set-name>COLOR_{id}</set-name>
+                    <rpl-extended-community-opaque-set>extcommunity-set opaque COLOR_{id}
+                    {id}
+                    end-set</rpl-extended-community-opaque-set>
+                  </extended-community-opaque-set>
+                </extended-community-opaque-sets>
+              </sets>
+            <?end ?>
+            <route-policies>
+              <?set RPL_EVPN_MP={concat("route-policy ",  string($RPL_NAME), string($COLOR_EVPN_MP), "end-policy")}?>
+              <route-policy when="{$COLOR_EVPN_MP!=''}">
+                <route-policy-name>{$RPL_NAME}</route-policy-name>
+                <rpl-route-policy>{$RPL_EVPN_MP}</rpl-route-policy>
+              </route-policy>
+            </route-policies>
+          </routing-policy>
+        <?elif-ned-id cisco-iosxr-nc-7.5:cisco-iosxr-nc-7.5?>
+          <!-- Configure RPL -->
+          <routing-policy xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-policy-repository-cfg">
+            <?if {sr-te/odn}?>
+              <sets>
+                <extended-community-opaque-sets>
+                  <extended-community-opaque-set foreach="{sr-te/odn/color}">
+                    <set-name>COLOR_{id}</set-name>
+                    <rpl-extended-community-opaque-set>extcommunity-set opaque COLOR_{id}
+                    {id}
+                    end-set</rpl-extended-community-opaque-set>
+                  </extended-community-opaque-set>
+                </extended-community-opaque-sets>
+              </sets>
+            <?end ?>
+            <route-policies>
+              <?set RPL_EVPN_MP={concat("route-policy ",  string($RPL_NAME), string($COLOR_EVPN_MP), "end-policy")}?>
+              <route-policy when="{$COLOR_EVPN_MP!=''}">
+                <route-policy-name>{$RPL_NAME}</route-policy-name>
+                <rpl-route-policy>{$RPL_EVPN_MP}</rpl-route-policy>
+              </route-policy>
+            </route-policies>
+          </routing-policy>
+        <?end?>
+        <evpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2vpn-cfg">
+          <interface when="{multi-home}">
+            <?expand um-evpn-interface?>
+          </interface>
+          <evis>
+            <evi>
+              <vpn-id>{$EVI_ID}</vpn-id>
+              <bgp>
+                <route-policy when="{sr-te/odn and $RPL_NAME!='' and not(sr-te/odn/attach-point/parent-rr-route-policy)}">
+                  <export when="{sr-te/odn/route-policy-type = 'both' or sr-te/odn/route-policy-type = 'export'}">{$RPL_NAME}</export>
+                  <import when="{sr-te/odn/route-policy-type = 'both' or sr-te/odn/route-policy-type = 'import'}">{$RPL_NAME}</import>
+                </route-policy>
+              </bgp>
+              <advertise-mac when="{advertise-mac/enable = 'true'}"/>
+              <control-word-disable when="{control-word-disable = 'true'}"/>
+              <etree when="{multi-home and (leaf='multi-homing')}">
+                <rt-leaf/>
+              </etree>
+              <etree when="{not (vpn-target) and (leaf='single-homing')}">
+                <leaf/>
+              </etree>
+            </evi>
+          </evis>
+        </evpn>
+      </config>
+    </device>
+  </devices>
+</config>

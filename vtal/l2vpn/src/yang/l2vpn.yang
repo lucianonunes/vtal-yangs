@@ -1,0 +1,140 @@
+module l2vpn {
+
+    namespace "http://example.com/l2vpn";
+    prefix l2vpn;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+    import tailf-common {
+        prefix tailf;
+    }
+    import tailf-ncs {
+        prefix ncs;
+    }
+
+    organization
+      "VTAL Brasil";
+
+    description
+      "L2VPN YANG Model";
+
+    revision 2023-09-03 {
+        description
+          "Initial development";
+    }
+
+    augment /ncs:services {
+
+        container l2vpn {
+
+            container activation {
+
+                list l2vpn-activation {
+                
+                    description "L2VPN Service VTAL";
+                    key "service-id";
+
+                    leaf service-id {
+                        description "Unique Identify for the Service";
+                        type string;
+                    }
+
+                    leaf evi {
+                        description "Unique Ethernet Virtual Identifier (EVI)";
+                        type int32;
+                    }
+
+                    leaf interface-type {
+                        type interface-types;
+                        mandatory true;
+                    }
+
+                    leaf bandwidth-1g {
+                        type available-bandwidth-1g;
+                        when "../interface-type = '1G'";                        
+                    }
+
+                    leaf bandwidth-10g {
+                        type available-bandwidth-10g;
+                        when "../interface-type = '10G'";                        
+                    }
+
+                    leaf vlan {
+                        type int16 {
+                            range "1..4094";
+                        }
+                    }
+
+                    leaf slicing-type {
+                        type enumeration {
+                            enum Default;
+                            enum URLLC;
+                        }
+                        default Default;
+                    }
+
+                    container endpoint-a {
+                        
+                        leaf region {
+                            type string;
+                        }
+                        leaf interface-type {
+                            type interface-types;
+                        }
+                        leaf interface-id {
+                            type string;
+                        }
+                    }
+
+                    container endpoint-b {
+                        
+                        leaf region {
+                            type string;
+                        }
+                        leaf interface-type {
+                            type interface-types;
+                        }
+                        leaf interface-id {
+                            type string;
+                        }
+                    }
+
+                    uses ncs:service-data;
+                    ncs:servicepoint l2vpn-activation;
+                }
+            }
+        }
+    }
+
+    typedef interface-types {
+        description "Interface Type Speed";
+        type enumeration {
+            enum 1G;
+            enum 10G;
+        }
+    }
+
+    typedef available-bandwidth-1g {
+        description "Available Bandwidth for 1G Interface";
+        type enumeration {
+            enum 100;
+            enum 250;
+            enum 500;
+            enum 750;
+            enum 1000;
+        }
+    }
+
+    typedef available-bandwidth-10g {
+        description "Available Bandwidth for 10G Interface";
+        type enumeration {
+            enum 1;
+            enum 2.5;
+            enum 5;
+            enum 7.5;
+            enum 10;
+        }
+    }
+
+}

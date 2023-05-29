@@ -1,0 +1,24 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <rsvp-te xmlns="http://cisco.com/ns/nso/fp/cisco-tsdn-rsvp-te">
+    <explicit-path>
+      <name>
+        <id>{$NAME}-{$PATH_NAME}</id>
+        <index>
+          <index-id>{$INDEX}</index-id>
+          <keyword>{$KEYWORD}</keyword>
+          <?if {boolean($HOP_TYPE != 'false')}?>
+            <hop-type>{$HOP_TYPE}</hop-type>
+          <?end?>
+          <?if {boolean($HOP_VALUE != 'false')}?>
+            <ipv4>
+              <unicast>{$HOP_VALUE}</unicast>
+            </ipv4>
+          <?end?>
+          <?if {boolean($HOP_LABEL != 'false')}?>
+            <label>{$HOP_LABEL}</label>
+          <?end?>
+        </index>
+      </name>
+    </explicit-path>
+  </rsvp-te>
+</config>

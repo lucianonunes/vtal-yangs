@@ -1,0 +1,32 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>cisco-zr-cfp</name>
+  <package-version>2.0.0</package-version>
+  <description>NSO RON ZR CFP</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <supported-ned-id xmlns:cisco-iosxr-cli-7.40="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.40">cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-zr-cfp</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>custom-template-utils</name>
+  </required-package>
+  <required-package>
+    <name>core-fp-common</name>
+  </required-package>
+  <required-package>
+    <name>cisco-ron-core-fp-common</name>
+  </required-package>
+  <required-package>
+    <name>lsa-utils</name>
+  </required-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>cisco_zr_cfp.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

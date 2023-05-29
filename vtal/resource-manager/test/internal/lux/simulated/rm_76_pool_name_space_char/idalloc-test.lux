@@ -1,0 +1,40 @@
+
+
+[doc Test of id-pool with spaces in name]
+
+[config skip=TAILFSKIP_JAVA]
+[config skip=TAILFSKIP_SUNOS]
+
+[include ../../luxinc/resource-manager.luxinc]
+
+[shell startup]
+    -$fail_pattern
+    [invoke startup]
+
+[shell cli]
+    -$fail_pattern
+    [invoke ncs-cli]
+    [invoke check-pkgs]
+    [invoke sync-from-device]
+    [invoke ncs-enter-config]
+
+    !set java-vm java-logging logger com.tailf.pkg level level-debug
+    ?$NCS_PROMPT_CONF
+
+    [invoke commit]
+
+    !set resource-pools id-pool "order pool" range start 5 end 200
+    ?$NCS_PROMPT_CONF
+    [invoke commit]
+
+    [invoke ncs-exit-config]
+    !exit
+    ?SH-PROMPT:
+
+    !request packages reload
+    ?SH-PROMPT:
+
+    [invoke check-jvmlog]
+
+[cleanup]
+    [invoke ncs-cleanup]

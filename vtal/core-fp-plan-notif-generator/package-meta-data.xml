@@ -1,0 +1,12 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>core-fp-plan-notif-generator</name>
+  <package-version>1.0.6</package-version>
+  <description>Core FP package to generate plan deletion notifications</description>
+  <ncs-min-version>5.3</ncs-min-version>
+  <component>
+    <name>PlanNotifHandler</name>
+    <application>
+      <python-class-name>core_fp_plan_notif_generator.PlanNotif.PlanNotifHandler</python-class-name>
+    </application>
+  </component>
+</ncs-package>

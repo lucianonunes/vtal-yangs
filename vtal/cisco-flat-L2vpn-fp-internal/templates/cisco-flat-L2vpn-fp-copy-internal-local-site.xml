@@ -1,0 +1,134 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <flat-L2vpn-internal-local-site-service xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-internal-local-site">
+    <name>{$SERVICE_NAME}</name>
+    <pe>{$PE}</pe>
+    <?foreach {custom-template}?>
+      <custom-template>
+        <name>{name}</name>
+        <?copy-tree {.}?>
+      </custom-template>
+    <?end?>
+    <?if {service-assurance}?>
+      <service-assurance>
+        <?copy-tree {service-assurance}?>
+      </service-assurance>
+    <?end?>
+    <service-type>{service-type}</service-type>
+    <flat-L2vpn-p2p when="{flat-L2vpn-p2p}">
+      <pw-id>{flat-L2vpn-p2p/pw-id}</pw-id>
+      <?save-context service?>
+      <?set-context-node {flat-L2vpn-p2p/local-site}?>
+      <local-site>
+        <pe>{pe}</pe>
+        <if-type>{if-type}</if-type>
+        <if-id>{if-id}</if-id>
+        <if-description>{if-description}</if-description>
+        <if-encap>{if-encap}</if-encap>
+        <vlan-id>{vlan-id}</vlan-id>
+        <sub-if-id>{sub-if-id}</sub-if-id>
+        <?if {rewrite}?>
+          <rewrite>
+            <?copy-tree {rewrite}?>
+          </rewrite>
+        <?end?>
+        <mtu>{mtu}</mtu>
+        <xconnect-group-name>{xconnect-group-name}</xconnect-group-name>
+        <xconnect-encapsulation>{xconnect-encapsulation}</xconnect-encapsulation>
+        <p2p-name>{p2p-name}</p2p-name>
+        <control-word>{control-word}</control-word>
+        <pw-class>{pw-class}</pw-class>
+        <xconnect-local-ip>{xconnect-local-ip}</xconnect-local-ip>
+        <xconnect-remote-ip>{xconnect-remote-ip}</xconnect-remote-ip>
+        <mpls-local-label>{mpls-local-label}</mpls-local-label>
+        <mpls-remote-label>{mpls-remote-label}</mpls-remote-label>
+        <?if {sr-te}?>
+          <sr-te>
+            <?copy-tree {sr-te}?>
+          </sr-te>
+        <?end?>
+        <?if {rsvp-te}?>
+          <rsvp-te>
+            <?copy-tree {rsvp-te}?>
+            <?if {$TUNNEL_TE_ID != ""}?>
+              <preferred-path>
+                <te-tunnel-id>{$TUNNEL_TE_ID}</te-tunnel-id>
+              </preferred-path>
+            <?end?>
+          </rsvp-te>
+        <?end?>
+        <?foreach {custom-template}?>
+          <custom-template>
+            <name>{name}</name>
+            <?copy-tree {.}?>
+          </custom-template>
+        <?end?>
+      </local-site>
+      <?switch-context service?>
+    </flat-L2vpn-p2p>
+    <flat-L2vpn-evpn-vpws when="{flat-L2vpn-evpn-vpws}">
+      <evi-id>{flat-L2vpn-evpn-vpws/evi-id}</evi-id>
+      <?save-context service?>
+      <?set-context-node {flat-L2vpn-evpn-vpws/local-site}?>
+      <local-site>
+        <pe>{pe}</pe>
+        <if-type>{if-type}</if-type>
+        <if-id>{if-id}</if-id>
+        <if-description>{if-description}</if-description>
+        <if-encap>{if-encap}</if-encap>
+        <evi-source>{evi-source}</evi-source>
+        <evi-target>{evi-target}</evi-target>
+        <?if {multi-home}?>
+          <multi-home>
+            <esi-value>{multi-home/esi-value}</esi-value>
+          </multi-home>
+        <?end?>
+        <vlan-id>{vlan-id}</vlan-id>
+        <sub-if-id>{sub-if-id}</sub-if-id>
+        <?if {rewrite}?>
+          <rewrite>
+            <?copy-tree {rewrite}?>
+          </rewrite>
+        <?end?>
+        <mtu>{mtu}</mtu>
+        <xconnect-group-name>{xconnect-group-name}</xconnect-group-name>
+        <p2p-name>{p2p-name}</p2p-name>
+        <?if {sr-te}?>
+          <sr-te>
+            <?if {sr-te/odn}?>
+              <odn>
+                <?copy-tree {sr-te/odn}?>
+                <?copy-tree {deref(sr-te/odn/route-policy)/..}?>
+                <route-policy-name>{deref(sr-te/odn/route-policy)}</route-policy-name>
+              </odn>
+            <?end?>
+            <?if {sr-te/preferred-path}?>
+              <!-- TODO: Circuit Style, ETA: TSDN 5.0 -->
+              <!-- ?if {sr-te/preferred-path/policy-type='cs-policy'}?>
+                <preferred-path>
+                  <policy>{concat(sr-te/preferred-path/policy, '-head-end-CS-internal')}</policy>
+                  <fallback>{sr-te/preferred-path/fallback}</fallback>
+                </preferred-path>
+              <?else? -->
+              <preferred-path>
+                <?copy-tree {sr-te/preferred-path}?>
+              </preferred-path>
+            <?end?>
+          </sr-te>
+        <?end?>
+        <?if {srv6}?>
+          <srv6>
+            <?copy-tree {srv6}?>
+          </srv6>
+        <?end?>
+        <pw-class>{pw-class}</pw-class>
+        <?foreach {custom-template}?>
+          <custom-template>
+            <name>{name}</name>
+            <?copy-tree {.}?>
+          </custom-template>
+        <?end?>
+      </local-site>
+      <?switch-context service?>
+    </flat-L2vpn-evpn-vpws>
+  </flat-L2vpn-internal-local-site-service>
+</config>

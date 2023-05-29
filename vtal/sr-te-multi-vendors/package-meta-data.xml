@@ -1,0 +1,26 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>sr-te-multi-vendors</name>
+  <package-version>4.1.0</package-version>
+  <description>Multi Vendors Python Package</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.3="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.3">cisco-iosxr-nc-7.3:cisco-iosxr-nc-7.3</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.4="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.4">cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4</supported-ned-id>
+  <supported-ned-id xmlns:cisco-ios-cli-6.77="http://tail-f.com/ns/ned-id/cisco-ios-cli-6.77">cisco-ios-cli-6.77:cisco-ios-cli-6.77</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.315="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.315">cisco-iosxr-nc-7.315:cisco-iosxr-nc-7.315</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.5="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.5">cisco-iosxr-nc-7.5:cisco-iosxr-nc-7.5</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.6="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.6">cisco-iosxr-nc-7.6:cisco-iosxr-nc-7.6</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.7="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.7">cisco-iosxr-nc-7.7:cisco-iosxr-nc-7.7</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-sr-te-cfp</vm-name>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>sr_te_multi_vendors.main.Main</python-class-name>
+    </application>
+  </component>
+
+</ncs-package>

@@ -1,0 +1,10 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <kickers xmlns="http://tail-f.com/ns/kicker">
+    <data-kicker>
+      <id>flat-L2vpn-{name}-y1731-profile-{$PROFILE_NAME}</id>
+      <monitor>/cisco-flat-L2vpn-fp:y-1731-profile[name='{$PROFILE_NAME}']</monitor>
+      <kick-node>/cisco-flat-L2vpn-fp:flat-L2vpn[name='{name}']</kick-node>
+      <action-name>reactive-re-deploy</action-name>
+    </data-kicker>
+  </kickers>
+</config>

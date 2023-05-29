@@ -1,0 +1,192 @@
+module lsa-utils {
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/lsa-utils";
+  prefix lsa-utils;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-ncs-ned {
+    prefix ned;
+  }
+  import tailf-kicker {
+    prefix kicker;
+  }
+  import ietf-yang-types {
+    prefix yang;
+  }
+  import tailf-ncs-alarms {
+    prefix al;
+  }
+
+  description "Utilities to manage Layered Service Architecture (LSA) deployment";
+
+  revision 2022-04-01 {
+    description "Initial revision.";
+  }
+
+  identity lsa-util-alarm {
+    base al:alarm-type;
+    description
+      "Base type for all alarms related to the lsa-utilities
+       This is never reported, sub-identities for the specific
+       lsa-utilities alarms are used in the alarms.";
+  }
+
+  identity duplicate-device-name {
+    base lsa-util-alarm;
+    description
+      "A device with the same name but managed by a different nso node is 
+        identified in the dispatch-map.
+       * Severity:
+         major
+       * Action:
+         Resolve by renaming the clashing device name.
+       * Message:
+         {device} name is a duplicate.
+       * Alarm-text:
+         Newly added {device} device on {new_remote_nso} NSO has the same name 
+         as the device {device} managed by {nso} in the LSA deployment.
+       * Clear condition(s):
+        The alarm is cleared when the duplicate device is deleted/renamed.";
+  }
+
+  identity dispatch-map-persist-failure {
+    base lsa-util-alarm;
+    description
+      "Failed to update dispatch-map.
+       * Severity:
+         major
+       * Action:
+         Investigate if any configuration has leaf-ref to dispatch-map entry or
+         If there are any nacm restrictions.
+       * Clear condition(s):
+         This alarm is not cleared.
+         Operator has to fix the issue and purge the alarm.";
+  }
+
+  augment /ncs:devices {
+    container lsa {
+      tailf:info "Layered Service Architecture (LSA) utilities";
+      description "Layered Service Architecture (LSA) utilities";
+
+      container dispatch-map {
+          when "/lsa-utils:lsa/lsa-utils:role='upper-layer' or /lsa-utils:lsa/lsa-utils:role='non-lsa'";
+
+          tailf:info "Device to NSO node mapping i.e, device locator to dispatch
+                    the request to the correct lowerlayer NSO node.";
+          description "Device to NSO node mapping i.e, device locator to 
+                    dispatch the request to the correct lowerlayer NSO node.";
+
+        list device {
+          tailf:info "Managed device to NSO node mapping.
+                    Devices local to the nso will have local parameter enabled
+                    and devices remote are indicated by the remote-node.";
+          description "Device to NSO node mapping.
+                    Devices local to the nso will have local parameter enabled
+                    and devices remote are indicated by the remote-node.";
+          key name;
+          leaf name {
+            tailf:info "The managed device name.";
+            description "The managed device name.";
+            type string;
+            tailf:cli-allow-range;
+          }
+          leaf ned-id {
+            tailf:info "The NED Identity";
+            description "The NED Identity";
+            type string;
+          }
+          leaf remote-node {
+            tailf:info "Remote nso node managing the device";
+            description "Remote nso node managing the device";
+            type leafref {
+              path "/ncs:devices/ncs:device/ncs:name";
+            }
+          }
+        }
+
+        action internal-dispatch-map-callback {
+          tailf:hidden lsa;
+          tailf:info "Callback action to handle incoming the dispatch-map-update notifications.";
+          description "Callback action to handle incoming the dispatch-map-update notifications.";
+          tailf:actionpoint internal-dispatch-map-callback;
+          input {
+            uses kicker:action-input-params;
+          }
+        }
+
+        action sync {
+          tailf:info "Action to sync managed devices into the dispatch-map";
+          description "Action to sync managed devices into the dispatch-map";
+          tailf:actionpoint lsa-utils-sync-dispatch-map;
+          input {
+            leaf remote-nso {
+              tailf:info "Synchronize devices from remote NSO node.";
+              description "Synchronize devices from remote NSO node.";
+              type leafref {
+                path "/ncs:devices/ncs:device/ncs:name";
+              }
+            }
+          }
+          output {
+            leaf success {
+              type boolean;
+              mandatory true;
+            }
+            leaf detail {
+              type string;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  container lsa {
+
+    tailf:info "Layered Service Architecture (LSA) utilities";
+    description "Layered Service Architecture (LSA) utilities";
+
+    leaf role {
+      tailf:info "LSA-utils mode of deployment";
+      description "LSA-utils mode of deployment";
+      type enumeration {
+          enum upper-layer;
+          enum inter-layer;
+          enum lower-layer;
+          enum non-lsa;
+      }
+      default 'upper-layer';
+    }
+  }
+
+  // Notification Stream to send dispatch map updated to CFS node
+  notification dispatch-map-update {
+    list device {
+      key name;
+      leaf name {
+        type string;
+      }
+      leaf ned-id {
+        type string;
+      }
+      leaf operation {
+        type enumeration {
+          enum created {
+            tailf:code-name "device_created";
+          }
+          enum deleted {
+            tailf:code-name "device_deleted";
+          }
+        }
+      }
+    }
+  }
+}

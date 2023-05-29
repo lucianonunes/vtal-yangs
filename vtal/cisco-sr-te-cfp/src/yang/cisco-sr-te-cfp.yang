@@ -1,0 +1,362 @@
+module cisco-sr-te-cfp {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te";
+  prefix cisco-sr-te-cfp;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import lsa-utils {
+    prefix lsa-utils;
+  }
+
+  description "SR-TE core function pack";
+
+  revision 2022-08-12 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.40";
+  }
+
+  revision 2022-05-04 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.39";
+  }
+
+  revision 2022-01-13 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.38";
+  }
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified: Read dispatch-map using lsa-utils";
+  }
+
+  revision 2021-11-17 {
+    description
+      "Modified: default under cfp-configurations -> iosxr-default-ned-id";
+  }
+
+  revision 2021-02-15 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.33";
+  }
+
+  revision 2020-12-11 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.32";
+  }
+
+  revision 2020-11-09 {
+    description "Added leaf sync-direction as mandatory input to error-recovery action";
+  }
+
+  revision 2020-07-24 {
+    description "Added: Error Recovery actions for transient failures";
+  }
+
+  revision 2020-07-23 {
+    description "Removed: local-user, now part of tsdn-common yang
+                 Removed: auto-cleanup flag, now part of tsdn-common yang";
+  }
+
+  revision 2020-06-23 {
+    description "Added: internal action to copy over cfp-configurations to internal model
+                 Modified: cleanup input device to include non-strict-leafref to dispatch-map
+                 Removed: stacked-service-enable flag";
+  }
+
+  revision 2020-06-16 {
+    description "Modified cleanup input no-networking 'default true' -> 'mandatory true'
+                 Added tailf:confirm-text to cleanup
+                 Modified cleanup input device to include non-strict-leafref";
+  }
+
+  revision 2020-04-16 {
+    description "
+     Removed: cfp-configurations -> iosxr-nc-ned-id.
+     Added: cfp-configurations -> iosxr-default-ned-id.
+     Removed: sr-pce and sr-settings services.";
+  }
+
+  revision 2020-04-15 {
+    description
+      "Removed: sample discover action.
+       Removed: cfp-configurations -> reconcile-max-wait-time.";
+  }
+
+  revision 2020-03-16 {
+    description
+      "Modified: Removed self-test-enabled flag.";
+  }
+
+  revision 2020-03-06 {
+    description
+      "Modified: Removed policy name validation flag.";
+  }
+
+  revision 2020-02-24 {
+    description
+      "Removed: cfp-configurations -> multiple-headends-enabled,
+              controlled by must condition in policy service now.";
+  }
+
+  revision 2020-02-05 {
+    description
+      "Added: cfp-configurations -> policy-name-validation-disabled to enable/disable
+              Sr-policy name validation for non-ODN service.";
+  }
+
+  revision 2020-01-31 {
+    description
+      "Added: cfp-configurations -> multiple-headends-enabled to enable/disable
+              policy multiple head-ends.";
+  }
+
+  revision 2020-01-29 {
+    description " Removed tailf:hidden tsdn from cfp-configurations -> self-test-enabled";
+  }
+
+  revision 2019-12-01 {
+    description "Added: cfp-configurations -> stacked-service-enable presence container
+                        along with servicepoint (used for change restriction check).";
+  }
+
+  revision 2019-10-31 {
+    description "Updated: cfp-configurations -> auto-cleanup is now defaulted to false.";
+  }
+
+  revision 2019-07-25 {
+    description "
+     Modified: sr-te -> discover action is now hidden.";
+  }
+
+  revision 2019-07-25 {
+    description "
+     removed: cfp-configurations -> iosxr-cli-ned-id.";
+  }
+
+  revision 2019-07-02 {
+    description "
+     Updated: sr-te -> discover action reconcile flag is now default to false.";
+  }
+
+  revision 2019-05-24 {
+    description "
+     Added: cfp-configurations -> iosxr-nc-ned-id.
+     Added: cfp-configurations -> iosxr-cli-ned-id.";
+  }
+
+  revision 2019-05-13 {
+    description "
+     Removed: capability removed from under dynamic-device-mapping.";
+  }
+
+  revision 2019-05-10 {
+    description "
+     Modified: New namespace.
+     Modified: sr-te -> dynamic-device-mapping moved under cfp-configurations.
+     Modified: sr-te -> local-user moved under cfp-configurations.
+     Modified: sr-te -> auto-cleanup moved under cfp-configurations.
+     Added: cfp-configurations -> reconcile-max-wait-time.";
+  }
+
+  revision 2019-04-18 {
+    description "Added: sr-te -> auto-cleanup";
+  }
+
+  revision 2019-04-17 {
+    description "Added: sr-te -> local-user";
+  }
+
+  revision 2019-04-09 {
+    description "Added discover action";
+  }
+
+  revision 2019-04-08 {
+    description "Added service cleanup action for sr-te policy service";
+  }
+
+  revision 2019-04-04 {
+    description "Added self-test-enabled flag";
+  }
+
+  revision 2019-02-05 {
+    description "Initial revision.";
+  }
+
+  container sr-te {
+    tailf:info "Segment Routing configurations";
+    description "Segment Routing configurations";
+
+    tailf:action cleanup {
+      tailf:actionpoint cisco-sr-te-cfp-cleanup;
+      tailf:info "Clean up SR-TE service configuration and operational data";
+      description "Clean up SR-TE service configuration and operational data";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf device {
+          tailf:info "Clean up SR-TE service configuration for a given device";
+          description "Clean up SR-TE service configuration for a given device";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+        }
+        leaf service-type {
+          type enumeration {
+            enum sr-policy;
+            enum sr-odn;
+          }
+          mandatory true;
+        }
+        leaf no-networking {
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+      tailf:confirm-text "########################\n" +
+        "#        Warning       #\n" +
+        "########################\n" +
+        "You are about to forcefully cleanup a T-SDN service.\n" +
+        "This will affect the deploying service and leave network device(s) " +
+        " & NSO out-of-sync (for no-networking=true).\n" +
+        "Are you sure you want to proceed?" {
+          tailf:confirm-default false;
+      }
+    }
+
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-sr-te-cfp-error-recovery;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          tailf:info "Service to recover";
+          description "Service to recover";
+          type string;
+          mandatory true;
+        }
+
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+
+        leaf device {
+          tailf:info "Recover this device under given service.";
+          description "Recover this device under given service.";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+        }
+        leaf service-type {
+          type enumeration {
+            enum sr-policy;
+            enum sr-odn;
+          }
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+      tailf:confirm-text "########################\n" +
+        "#        Warning       #\n" +
+        "########################\n" +
+        "You are about to recover a T-SDN service.\n" +
+        "This will issue a sync on the device.\n" +
+        "Are you sure you want to proceed?" {
+          tailf:confirm-default false;
+      }
+    }
+
+    tailf:action update-internal-cfp-configurations {
+      tailf:hidden tsdn;
+      tailf:actionpoint update-sr-te-internal-cfp-configurations;
+      tailf:info "Copy over changes in external cfp-configurations to internal cfp-configurations";
+      description "Copy over changes in external cfp-configurations to internal cfp-configurations";
+      input {
+      }
+      output {
+      }
+    }
+  }
+
+  container cfp-configurations {
+
+    leaf sr-validation-enabled {
+      tailf:info "If set to true, following validations are done for sr-policies service:
+                  1. The length of the explicit paths does not exceed the Maximum
+                      Segment Depth (MSD) of the head-end.
+                  If no MSD is found, validation is skipped.";
+      description "If set to true, following validations are done for sr-policies service:
+                  1. The length of the explicit paths does not exceed the Maximum
+                      Segment Depth (MSD) of the head-end.
+                  If no MSD is found, validation is skipped.";
+      type boolean;
+      default true;
+    }
+
+    leaf iosxr-default-ned-id {
+      tailf:info "NED ID of the default IOSXR Device.";
+      description "NED ID of the default IOSXR Device.";
+      tailf:hidden tsdn;
+      type string;
+      default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+    }
+
+    list dynamic-device-mapping {
+      tailf:info "Dynamic Device Mapping for multi-vendor support";
+      description "Dynamic Device Mapping for multi-vendor support";
+      key "ned-id";
+      leaf ned-id {
+        tailf:info "Device NED ID, eg ned:netconf";
+        description "Device NED ID, eg ned:netconf";
+        type string;
+        tailf:cli-allow-range;
+      }
+      leaf python-impl-class-name {
+        tailf:info "Device Python implementation class, eg module.class";
+        description "Device Python implementation class, eg module.class";
+        type string;
+        mandatory true;
+      }
+    }
+  }
+}

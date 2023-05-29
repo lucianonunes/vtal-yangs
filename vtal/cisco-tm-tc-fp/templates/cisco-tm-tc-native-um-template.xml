@@ -1,0 +1,194 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{/name}</name>
+      <?set DEVICE = {/name} ?>
+      <config>
+          <telemetry xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-telemetry-model-driven-cfg">
+           <model-driven>
+            <?foreach {telemetry-model-driven-subscription/subscription}?>
+            <?set SUB_ID={id}?>
+            <?set SENSOR_TM='false'?>
+            <?set DESTINATON_TM='false'?>
+              <?foreach {sensor-group}?>
+                <?set SENSOR_ID={id}?>
+                <sensor-groups when="{count(../../../telemetry-model-driven/sensor-group[id=$SENSOR_ID]/sensor-path) > 0}">
+                  <?set SENSOR_TM='true'?>
+                  <sensor-group>
+                    <sensor-group-id>{$SENSOR_ID}</sensor-group-id>
+                    <?foreach {../../../telemetry-model-driven/sensor-group[id=$SENSOR_ID]/sensor-path}?>
+                      <sensor-paths>
+                        <sensor-path>
+                          <sensor-path-id>{path}</sensor-path-id>
+                        </sensor-path>
+                      </sensor-paths>
+                    <?end?>
+                  </sensor-group>
+                </sensor-groups>
+              <?end?>
+              <?foreach {destination-group}?>
+                <?set DEST_ID={id}?>
+                <destination-groups when="{(count(../../../telemetry-model-driven/destination-group[id=$DEST_ID]/ipv4-destination) > 0) or (count(../../../telemetry-model-driven/destination-group[id=$DEST_ID]/ipv6-destination) > 0)}">
+                  <?set DESTINATON_TM='true'?>
+                  <destination-group>
+                    <destination-group-id>{$DEST_ID}</destination-group-id>
+                    <address-family>
+                    <?foreach {../../../telemetry-model-driven/destination-group[id=$DEST_ID]/ipv4-destination}?>
+                    <ipv4>
+                      <address>
+                        <address>{address}</address>
+                        <port-number>{port}</port-number>
+                       <encoding when="{encoding}">
+                        <?set encoding_self_gpb='s'?>
+                        <?set encoding_gpb='g'?>
+                        <?set encoding_json='j'?>
+                          <?if {starts-with(string(encoding), $encoding_gpb)}?>
+                           <gpb/>
+                          <?end?>
+                          <?if {starts-with(string(encoding), $encoding_self_gpb)}?>
+                           <self-describing-gpb/>
+                          <?end?>
+                          <?if {starts-with(string(encoding), $encoding_json)}?>
+                           <json/>
+                          <?end?>
+                        </encoding>
+                         <protocol when="{protocol}">
+                          <?if {protocol/tcp}?>
+                          <tcp/>
+                          <?end?>
+                          <?if {protocol/udp}?>
+                          <udp>
+                          <packetsize>{protocol/udp/packetsize}</packetsize>
+                          </udp>
+                          <?end?>
+                          <?if {protocol/grpc/no-tls}?>
+                          <grpc>
+                          <no-tls/>
+                          </grpc>
+                          <?end?>
+                          <?if {protocol/grpc}?>
+                          <grpc>
+                          <tls-hostname>{protocol/grpc/tls-hostname}</tls-hostname>
+                          </grpc>
+                          <?end?>
+                        </protocol>
+                      </address>
+                    </ipv4>
+                    <?end?>
+                    <?foreach {../../../telemetry-model-driven/destination-group[id=$DEST_ID]/ipv6-destination}?>
+                    <ipv6>
+                      <address>
+                        <address>{address}</address>
+                        <port-number>{port}</port-number>
+                        <encoding when="{encoding}">
+                        <?set encoding_self_gpb='s'?>
+                        <?set encoding_gpb='g'?>
+                        <?set encoding_json='j'?>
+                          <?if {starts-with(string(encoding), $encoding_gpb)}?>
+                           <gpb/>
+                          <?end?>
+                          <?if {starts-with(string(encoding), $encoding_self_gpb)}?>
+                           <self-describing-gpb/>
+                          <?end?>
+                          <?if {starts-with(string(encoding), $encoding_json)}?>
+                           <json/>
+                          <?end?>
+                        </encoding>
+                          <protocol when="{protocol}">
+                          <?if {protocol/tcp}?>
+                          <tcp/>
+                          <?end?>
+                          <?if {protocol/udp}?>
+                          <udp>
+                          <packetsize>{protocol/udp/packetsize}</packetsize>
+                          </udp>
+                          <?end?>
+                          <?if {protocol/grpc/no-tls}?>
+                          <grpc>
+                          <no-tls/>
+                          </grpc>
+                          <?end?>
+                          <?if {protocol/grpc}?>
+                          <grpc>
+                          <tls-hostname>{protocol/grpc/tls-hostname}</tls-hostname>
+                          </grpc>
+                          <?end?>
+                        </protocol>
+                      </address>
+                    </ipv6>
+                    <?end?>
+                   </address-family>
+                  <vrf>{deref(id)/../vrf}</vrf>
+                  </destination-group>
+                </destination-groups>
+              <?end?>
+              <subscriptions when="{$SENSOR_TM='true' and $DESTINATON_TM='true'}">
+                <subscription>
+                  <subscription-id>{$SUB_ID}</subscription-id>
+                    <?foreach {sensor-group}?>
+                    <sensor-groups>
+                      <sensor-group>
+                        <sensor-group-id>{id}</sensor-group-id>
+                        <sample-interval>{sample-interval}</sample-interval>
+                      </sensor-group>
+                    </sensor-groups>
+                  <?end?>
+                  <?foreach {destination-group}?>
+                    <destinations>
+                      <destination>
+                        <destination-id>{id}</destination-id>
+                      </destination>
+                    </destinations>
+                  <?end?>
+                  <source-qos-marking>{source-qos-marking}</source-qos-marking>
+                  <source-interface when="{source-interface}">{source-interface/if-type}{source-interface/if-id}</source-interface>
+                </subscription>
+              </subscriptions>
+            <?end?>
+            <strict-timer when="{strict-timer}" />
+            <include when="{include-empty-value}">
+              <empty>
+                <values />
+              </empty>
+            </include>
+          </model-driven>
+          </telemetry>
+          <?set GLOBAL_TC='false'?>
+          <?set LOCAL_TC='false'?>
+          <?if {../traffic-collector}?>
+            <?set GLOBAL_TC='true'?>
+          <?end?>
+          <?if {traffic-collector}?>
+            <?set LOCAL_TC='true'?>
+          <?end?>
+          <traffic-collector xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-traffic-collector-cfg" when="{$GLOBAL_TC='true' or $LOCAL_TC='true'}">
+            <!-- <enable-traffic-collector />
+            <external-interfaces when="{count(traffic-collector/external-interface) > 0">
+              <?foreach {traffic-collector/external-interface}?>
+                <external-interface>
+                  <interface-name>{if-type}{if-id}</interface-name>
+                  <enable />
+                </external-interface>
+              <?end?>
+            </external-interfaces> -->
+            <?if {traffic-collector/statistics}?>
+              <statistics>
+                <!-- <enable-traffic-collector-statistics /> -->
+                <collection-interval>{traffic-collector/statistics/collection-interval}</collection-interval>
+                <history-size>{traffic-collector/statistics/history-size}</history-size>
+                <history-timeout>{traffic-collector/statistics/history-timeout}</history-timeout>
+              </statistics>
+            <?else?>
+              <statistics when="{../traffic-collector/statistics}">
+                <!-- <enable-traffic-collector-statistics /> -->
+                <collection-interval>{../traffic-collector/statistics/collection-interval}</collection-interval>
+                <history-size>{../traffic-collector/statistics/history-size}</history-size>
+                <history-timeout>{../traffic-collector/statistics/history-timeout}</history-timeout>
+              </statistics>
+            <?end?>
+          </traffic-collector>
+      </config>
+    </device>
+  </devices>
+</config>
+

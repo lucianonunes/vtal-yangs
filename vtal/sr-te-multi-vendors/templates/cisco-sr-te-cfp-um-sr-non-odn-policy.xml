@@ -1,0 +1,517 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+        <!-- UMXR is not used by any current iosxr version
+        <segment-routing
+          xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-segment-routing-cfg">
+          <traffic-eng
+            xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-segment-routing-traffic-eng-cfg">
+            <policies>
+              <?set REAL_NAME=srte_c_{string(/color)}_ep_{$ENDPOINT}?>
+              <?set REAL_NAME_PREFIX='-discovered-'?>
+              <?if {contains(string(name), $REAL_NAME_PREFIX)}?>
+                <?set REAL_NAME={substring-after(string(name), $REAL_NAME_PREFIX)}?>
+              <?end?>
+              <policy tags="merge">
+                <policy-name>{$REAL_NAME}</policy-name>
+                <binding-sid when="{/binding-sid}">
+                  <mpls>{binding-sid}</mpls>
+                </binding-sid>
+                <color>{/color}</color>
+                <end-point>
+                  <?if {contains(string($ENDPOINT), '.')}?>
+                    <ipv4>{$ENDPOINT}</ipv4>
+                  <?else?>
+                    <ipv6>{$ENDPOINT}</ipv6>
+                  <?end?>
+                </end-point>
+                <autoroute when="{auto-route}">
+                  <metric when="{auto-route/auto-route-metric}">
+                    <?if {auto-route/auto-route-metric/metric-constant-value}?>
+                      <constant>{auto-route/auto-route-metric/metric-constant-value}</constant>
+                    <?end?>
+                    <?if {auto-route/auto-route-metric/metric-relative-value}?>
+                      <relative>{auto-route/auto-route-metric/metric-relative-value}</relative>
+                    <?end?>
+                  </metric>
+                  <?if {auto-route/include-prefixes}?>
+                    <include when="{count(auto-route/include-prefixes/include-prefix)>0}">
+                      <?foreach {auto-route/include-prefixes/include-prefix}?>
+                        <ipv4s>
+                          <ipv4>
+                            <address>{substring-before(string(prefix-address), '/')}</address>
+                            <length>{substring-after(string(prefix-address), '/')}</length>
+                          </ipv4>
+                        </ipv4s>
+                      <?end?>
+                    </include>
+                  <?else?>
+                    <include>
+                      <all/>
+                    </include>
+                  <?end?>
+                  <force-sr-include when="{auto-route/force-sr-include}"/>
+                  <forward-class>{auto-route/forward-class}</forward-class>
+                </autoroute>
+                <candidate-paths>
+                  <preferences>
+                    <preference foreach="{/path}">
+                      <preference-id>{preference}</preference-id>
+                      <?foreach {explicit/sid-list}?>
+                        <?set REAL_NAME={name}?>
+                        <?set REAL_NAME_PREFIX='-discovered-'?>
+                        <?if {contains(string(name), $REAL_NAME_PREFIX)}?>
+                          <?set REAL_NAME={substring-after(string(name), $REAL_NAME_PREFIX)}?>
+                        <?end?>
+                        <explicit>
+                          <segment-lists>
+                            <segment-list>
+                              <segment-list-name>{$REAL_NAME}</segment-list-name>
+                              <weight when="{weight}">{weight}</weight>
+                            </segment-list>
+                          </segment-lists>
+                        </explicit>
+                      <?end?>
+                      <dynamic when="{dynamic}">
+                        <pcep when="{dynamic/pce}"></pcep>
+                        <metric>
+                          <type when="{dynamic/metric-type}">
+                            <te when="{dynamic/metric-type='te'}"/>
+                            <igp when="{dynamic/metric-type='igp'}"/>
+                            <hopcount when="{dynamic/metric-type='hopcount'}"/>
+                            <latency when="{dynamic/metric-type='latency'}"/>
+                          </type>
+                          <?if {dynamic/metric-margin/absolute}?>
+                            <margin>
+                              <absolute>{dynamic/metric-margin/absolute}</absolute>
+                            </margin>
+                          <?end?>
+                          <?if {dynamic/metric-margin/relative}?>
+                            <margin>
+                              <relative>{dynamic/metric-margin/relative}</relative>
+                            </margin>
+                          <?end?>
+                          <sid-limit>{dynamic/constraints/sid-limit}</sid-limit>
+                        </metric>
+                      </dynamic>
+                      <constraints when="{dynamic/constraints}">
+                        <affinity when="{dynamic/constraints/affinity}" foreach="{dynamic/constraints/affinity/rule}">
+                          <include-all when="{action='include-all'}">
+                            <?expand traffic-eng-contraints-affinity-colors?>
+                          </include-all>
+                          <include-any when="{action='include-any'}">
+                            <?expand traffic-eng-contraints-affinity-colors?>
+                          </include-any>
+                          <exclude-any when="{action='exclude-any'}">
+                            <?expand traffic-eng-contraints-affinity-colors?>
+                          </exclude-any>
+                        </affinity>
+                        <segments>
+                          <sid-algorithm>{dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                        </segments>
+                        <disjoint-path>
+                          <group-id>{dynamic/constraints/disjoint-path/group-id}</group-id>
+                          <type when="{dynamic/constraints/disjoint-path/type}">
+                            <link when="{dynamic/constraints/disjoint-path/type='link'}"/>
+                            <node when="{dynamic/constraints/disjoint-path/type='node'}"/>
+                            <srlg when="{dynamic/constraints/disjoint-path/type='srlg'}"/>
+                            <srlg-node when="{dynamic/constraints/disjoint-path/type='srlg-node'}"/>
+                          </type>
+                        </disjoint-path>
+                      </constraints>
+                      <constraints when="{explicit/constraints}">
+                        <affinity when="{explicit/constraints/affinity}" foreach="{explicit/constraints/affinity/rule}">
+                          <include-all when="{action='include-all'}">
+                            <?expand traffic-eng-contraints-affinity-colors?>
+                          </include-all>
+                          <include-any when="{action='include-any'}">
+                            <?expand traffic-eng-contraints-affinity-colors?>
+                          </include-any>
+                          <exclude-any when="{action='exclude-any'}">
+                            <?expand traffic-eng-contraints-affinity-colors?>
+                          </exclude-any>
+                        </affinity>
+                        <segments>
+                          <sid-algorithm>{explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                        </segments>
+                        <disjoint-path>
+                          <group-id>{explicit/constraints/disjoint-path/group-id}</group-id>
+                          <type when="{explicit/constraints/disjoint-path/type}">
+                            <link when="{explicit/constraints/disjoint-path/type='link'}"/>
+                            <node when="{explicit/constraints/disjoint-path/type='node'}"/>
+                            <srlg when="{explicit/constraints/disjoint-path/type='srlg'}"/>
+                            <srlg-node when="{explicit/constraints/disjoint-path/type='srlg-node'}"/>
+                          </type>
+                        </disjoint-path>
+                      </constraints>
+                    </preference>
+                  </preferences>
+                </candidate-paths>
+                <bandwidth when="{/bandwidth}">{bandwidth}</bandwidth>
+                <?if {source-address}?>
+                  <?if {contains(string(source-address), '.')}?>
+                    <source-address>
+                      <ipv4>{source-address}</ipv4>
+                    </source-address>
+                  <?else?>
+                    <source-address>
+                      <ipv6>{source-address}</ipv6>
+                    </source-address>
+                  <?end?>
+                <?end?>
+                <srv6 when="{/srv6}">
+                  <locator when="{/srv6/locator}">
+                    <locator-name>{/srv6/locator/locator-name}</locator-name>
+                    <binding-sid when="{/srv6/locator/behavior}">
+                      <dynamic>
+                        <behavior when="{/srv6/locator/binding-sid-type}">
+                          <ub6-insert-reduced/>
+                        </behavior>
+                      </dynamic>
+                    </binding-sid>
+                  </locator>
+                </srv6>
+                <?if {circuit-style} ?>
+                  <!-TBD: Not in 7.5 protection->
+                  <candidate-paths>
+                    <preferences>
+                      <preference when="{circuit-style/working-path}">
+                        <preference-id>100</preference-id>
+                        <?if {circuit-style/working-path/explicit} ?>
+                          <?set FNAME={circuit-style/working-path/explicit/forward-sid-list-name}?>
+                          <?set RNAME={circuit-style/working-path/explicit/reverse-sid-list-name}?>
+                          <?set REAL_FNAME={$FNAME}?>
+                          <?set REAL_FNAME_PREFIX='-discovered-'?>
+                          <?if {contains(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                            <?set REAL_FNAME={substring-after(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                          <?end?>
+                          <?set REAL_RNAME={$RNAME}?>
+                          <?set REAL_RNAME_PREFIX='-discovered-'?>
+                          <?if {contains(string($FNAME), $REAL_RNAME_PREFIX)}?>
+                            <?set REAL_RNAME={substring-after(string($RNAME), $REAL_RNAME_PREFIX)}?>
+                          <?end?>
+                          <explicit>
+                            <segment-lists>
+                              <segment-list>
+                                <segment-list-name>{$REAL_FNAME}</segment-list-name>
+                                <!-TBD: Not in 7.5 reverse-path-segment-list-name->
+                              </segment-list>
+                            </segment-lists>
+                          </explicit>
+                        <?end?>
+                        <dynamic when="{circuit-style/working-path/dynamic}">
+                          <pcep when="{circuit-style/working-path/dynamic/pce}"></pcep>
+                          <metric>
+                            <type when="{circuit-style/working-path/dynamic/metric-type}">
+                              <te when="{circuit-style/working-path/dynamic/metric-type='te'}"/>
+                              <igp when="{circuit-style/working-path/dynamic/metric-type='igp'}"/>
+                              <hopcount when="{circuit-style/working-path/dynamic/metric-type='hopcount'}"/>
+                              <latency when="{circuit-style/working-path/dynamic/metric-type='latency'}"/>
+                            </type>
+                            <sid-limit>{circuit-style/working-path/dynamic/constraints/sid-limit}</sid-limit>
+                            <?if {circuit-style/working-path/dynamic/metric-margin/absolute}?>
+                              <margin>
+                                <absolute>{circuit-style/working-path/dynamic/metric-margin/absolute}</absolute>
+                              </margin>
+                            <?end?>
+                            <?if {circuit-style/working-path/dynamic/metric-margin/relative}?>
+                              <margin>
+                                <relative>{circuit-style/working-path/dynamic/metric-margin/relative}</relative>
+                              </margin>
+                            <?end?>
+                          </metric>
+                        </dynamic>
+                        <constraints when="{circuit-style/working-path/explicit/constraints}">
+                          <affinity when="{circuit-style/working-path/explicit/constraints/affinity}" foreach="{circuit-style/working-path/explicit/constraints/affinity/rule}">
+                            <include-all when="{action='include-all'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-all>
+                            <include-any when="{action='include-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-any>
+                            <exclude-any when="{action='exclude-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </exclude-any>
+                          </affinity>
+                          <segments when="{circuit-style/working-path/explicit/constraints/segments}">
+                            <sid-algorithm>{circuit-style/working-path/explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                          </segments>
+                          <disjoint-path when="{circuit-style/working-path/explicit/constraints/disjoint-path}">
+                            <group-id>{circuit-style/working-path/explicit/constraints/disjoint-path/group-id}</group-id>
+                            <type when="{circuit-style/working-path/explicit/constraints/disjoint-path/type}">
+                              <link when="{circuit-style/working-path/explicit/constraints/disjoint-path/type='link'}"/>
+                              <node when="{circuit-style/working-path/explicit/constraints/disjoint-path/type='node'}"/>
+                              <srlg when="{circuit-style/working-path/explicit/constraints/disjoint-path/type='srlg'}"/>
+                              <srlg-node when="{circuit-style/working-path/explicit/constraints/disjoint-path/type='srlg-node'}"/>
+                            </type>
+                          </disjoint-path>
+                        </constraints>
+                        <constraints when="{circuit-style/working-path/dynamic/constraints}">
+                          <affinity when="{circuit-style/working-path/dynamic/constraints/affinity}" foreach="{circuit-style/working-path/dynamic/constraints/affinity/rule}">
+                            <include-all when="{action='include-all'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-all>
+                            <include-any when="{action='include-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-any>
+                            <exclude-any when="{action='exclude-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </exclude-any>
+                          </affinity>
+                          <segments when="{circuit-style/working-path/dynamic/constraints/segments}">
+                            <sid-algorithm>{circuit-style/working-path/dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                          </segments>
+                          <disjoint-path when="{circuit-style/working-path/dynamic/constraints/disjoint-path}">
+                            <group-id>{circuit-style/working-path/dynamic/constraints/disjoint-path/group-id}</group-id>
+                              <type when="{circuit-style/working-path/dynamic/constraints/disjoint-path/type}">
+                                <link when="{circuit-style/working-path/dynamic/constraints/disjoint-path/type='link'}"/>
+                                <node when="{circuit-style/working-path/dynamic/constraints/disjoint-path/type='node'}"/>
+                                <srlg when="{circuit-style/working-path/dynamic/constraints/disjoint-path/type='srlg'}"/>
+                                <srlg-node when="{circuit-style/working-path/dynamic/constraints/disjoint-path/type='srlg-node'}"/>
+                              </type>
+                          </disjoint-path>
+                        </constraints>
+                      </preference>
+                      <preference when="{circuit-style/protect-path}">
+                        <preference-id>50</preference-id>
+                        <!-TBD: Not in 7.5 lock->
+                        <?if {circuit-style/protect-path/explicit} ?>
+                          <?set FNAME={circuit-style/protect-path/explicit/forward-sid-list-name}?>
+                          <?set RNAME={circuit-style/protect-path/explicit/reverse-sid-list-name}?>
+                          <?set REAL_FNAME={$FNAME}?>
+                          <?set REAL_FNAME_PREFIX='-discovered-'?>
+                          <?if {contains(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                            <?set REAL_FNAME={substring-after(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                          <?end?>
+                          <?set REAL_RNAME={$RNAME}?>
+                          <?set REAL_RNAME_PREFIX='-discovered-'?>
+                          <?if {contains(string($FNAME), $REAL_RNAME_PREFIX)}?>
+                            <?set REAL_RNAME={substring-after(string($RNAME), $REAL_RNAME_PREFIX)}?>
+                          <?end?>
+                          <explicit>
+                            <segment-lists>
+                              <segment-list>
+                                <segment-list-name>{$REAL_FNAME}</segment-list-name>
+                                <!-TBD: Not in 7.5 reverse-path-segment-list-name>->
+                              </segment-list>
+                            </segment-lists>
+                          </explicit>
+                        <?end?>
+                        <dynamic when="{circuit-style/protect-path/dynamic}">
+                          <pcep when="{circuit-style/protect-path/dynamic/pce}"></pcep>
+                          <metric>
+                            <type when="{circuit-style/protect-path/dynamic/metric-type}">
+                              <te when="{circuit-style/protect-path/dynamic/metric-type='te'}"/>
+                              <igp when="{circuit-style/protect-path/dynamic/metric-type='igp'}"/>
+                              <hopcount when="{circuit-style/protect-path/dynamic/metric-type='hopcount'}"/>
+                              <latency when="{circuit-style/protect-path/dynamic/metric-type='latency'}"/>
+                            </type>
+                            <sid-limit>{circuit-style/protect-path/dynamic/constraints/sid-limit}</sid-limit>
+                            <?if {circuit-style/protect-path/dynamic/metric-margin/absolute}?>
+                              <margin>
+                                <absolute>{circuit-style/protect-path/dynamic/metric-margin/absolute}</absolute>
+                              </margin>
+                            <?end?>
+                            <?if {circuit-style/protect-path/dynamic/metric-margin/relative}?>
+                              <margin>
+                                <relative>{circuit-style/protect-path/dynamic/metric-margin/relative}</relative>
+                              </margin>
+                            <?end?>
+                          </metric>
+                        </dynamic>
+                        <constraints when="{circuit-style/protect-path/explicit/constraints}">
+                          <affinity when="{circuit-style/protect-path/explicit/constraints/affinity}" foreach="{circuit-style/protect-path/explicit/constraints/affinity/rule}">
+                            <include-all when="{action='include-all'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-all>
+                            <include-any when="{action='include-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-any>
+                            <exclude-any when="{action='exclude-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </exclude-any>
+                          </affinity>
+                          <segments when="{circuit-style/protect-path/explicit/constraints/segments}">
+                            <sid-algorithm>{circuit-style/protect-path/explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                          </segments>
+                          <disjoint-path when="{circuit-style/protect-path/explicit/constraints/disjoint-path}">
+                            <group-id>{circuit-style/protect-path/explicit/constraints/disjoint-path/group-id}</group-id>
+                            <type when="{circuit-style/protect-path/explicit/constraints/disjoint-path/type}">
+                              <link when="{circuit-style/protect-path/explicit/constraints/disjoint-path/type='link'}"/>
+                              <node when="{circuit-style/protect-path/explicit/constraints/disjoint-path/type='node'}"/>
+                              <srlg when="{circuit-style/protect-path/explicit/constraints/disjoint-path/type='srlg'}"/>
+                              <srlg-node when="{circuit-style/protect-path/explicit/constraints/disjoint-path/type='srlg-node'}"/>
+                            </type>
+                          </disjoint-path>
+                        </constraints>
+                        <constraints when="{circuit-style/protect-path/dynamic/constraints}">
+                          <affinity when="{circuit-style/protect-path/dynamic/constraints/affinity}" foreach="{circuit-style/protect-path/dynamic/constraints/affinity/rule}">
+                            <include-all when="{action='include-all'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-all>
+                            <include-any when="{action='include-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-any>
+                            <exclude-any when="{action='exclude-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </exclude-any>
+                          </affinity>
+                          <segments when="{circuit-style/protect-path/dynamic/constraints/segments}">
+                            <sid-algorithm>{circuit-style/protect-path/dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                          </segments>
+                          <disjoint-path when="{circuit-style/protect-path/dynamic/constraints/disjoint-path}">
+                            <group-id>{circuit-style/protect-path/dynamic/constraints/disjoint-path/group-id}</group-id>
+                            <type when="{circuit-style/protect-path/dynamic/constraints/disjoint-path/type}">
+                              <link when="{circuit-style/protect-path/dynamic/constraints/disjoint-path/type='link'}"/>
+                              <node when="{circuit-style/protect-path/dynamic/constraints/disjoint-path/type='node'}"/>
+                              <srlg when="{circuit-style/protect-path/dynamic/constraints/disjoint-path/type='srlg'}"/>
+                              <srlg-node when="{circuit-style/protect-path/dynamic/constraints/disjoint-path/type='srlg-node'}"/>
+                            </type>
+                          </disjoint-path>
+                        </constraints>
+                      </preference>
+                      <preference when="{circuit-style/restore-path}">
+                        <preference-id>10</preference-id>
+                        <?if {circuit-style/restore-path/explicit} ?>
+                          <?set FNAME={circuit-style/restore-path/explicit/forward-sid-list-name}?>
+                          <?set RNAME={circuit-style/restore-path/explicit/reverse-sid-list-name}?>
+                          <?set REAL_FNAME={$FNAME}?>
+                          <?set REAL_FNAME_PREFIX='-discovered-'?>
+                          <?if {contains(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                            <?set REAL_FNAME={substring-after(string($FNAME), $REAL_FNAME_PREFIX)}?>
+                          <?end?>
+                          <?set REAL_RNAME={$RNAME}?>
+                          <?set REAL_RNAME_PREFIX='-discovered-'?>
+                          <?if {contains(string($FNAME), $REAL_RNAME_PREFIX)}?>
+                            <?set REAL_RNAME={substring-after(string($RNAME), $REAL_RNAME_PREFIX)}?>
+                          <?end?>
+                          <explicit>
+                            <segment-lists>
+                              <segment-list>
+                                <segment-list-name>{$REAL_FNAME}</segment-list-name>
+                                <!-TBD: Not in 7.5 reverse-path-segment-list-name>->
+                              </segment-list>
+                            </segment-lists>
+                          </explicit>
+                        <?end?>
+                        <dynamic when="{circuit-style/restore-path/dynamic}">
+                          <pcep when="{circuit-style/restore-path/dynamic/pce}"></pcep>
+                          <metric>
+                            <type when="{circuit-style/restore-path/dynamic/metric-type}">
+                              <te when="{circuit-style/restore-path/dynamic/metric-type='te'}"/>
+                              <igp when="{circuit-style/restore-path/dynamic/metric-type='igp'}"/>
+                              <hopcount when="{circuit-style/restore-path/dynamic/metric-type='hopcount'}"/>
+                              <latency when="{circuit-style/restore-path/dynamic/metric-type='latency'}"/>
+                            </type>
+                            <sid-limit>{circuit-style/restore-path/dynamic/constraints/sid-limit}</sid-limit>
+                            <?if {circuit-style/restore-path/dynamic/metric-margin/absolute}?>
+                              <margin>
+                                <absolute>{circuit-style/restore-path/dynamic/metric-margin/absolute}</absolute>
+                              </margin>
+                            <?end?>
+                            <?if {circuit-style/restore-path/dynamic/metric-margin/relative}?>
+                              <margin>
+                                <relative>{circuit-style/restore-path/dynamic/metric-margin/relative}</relative>
+                              </margin>
+                            <?end?>
+                          </metric>
+                        </dynamic>
+                        <constraints when="{circuit-style/restore-path/explicit/constraints}">
+                          <affinity when="{circuit-style/restore-path/explicit/constraints/affinity}" foreach="{circuit-style/restore-path/explicit/constraints/affinity/rule}">
+                            <include-all when="{action='include-all'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-all>
+                            <include-any when="{action='include-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-any>
+                            <exclude-any when="{action='exclude-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </exclude-any>
+                          </affinity>
+                          <segments when="{circuit-style/restore-path/explicit/constraints/segments}">
+                            <sid-algorithm>{circuit-style/restore-path/explicit/constraints/segments/sid-algorithm}</sid-algorithm>
+                          </segments>
+                          <disjoint-path when="{circuit-style/restore-path/explicit/constraints/disjoint-path}">
+                            <group-id>{circuit-style/restore-path/explicit/constraints/disjoint-path/group-id}</group-id>
+                            <type when="{circuit-style/restore-path/explicit/constraints/disjoint-path/type}">
+                              <link when="{circuit-style/restore-path/explicit/constraints/disjoint-path/type='link'}"/>
+                              <node when="{circuit-style/restore-path/explicit/constraints/disjoint-path/type='node'}"/>
+                              <srlg when="{circuit-style/restore-path/explicit/constraints/disjoint-path/type='srlg'}"/>
+                              <srlg-node when="{circuit-style/restore-path/explicit/constraints/disjoint-path/type='srlg-node'}"/>
+                            </type>
+                          </disjoint-path>
+                        </constraints>
+                        <constraints when="{circuit-style/restore-path/dynamic/constraints}">
+                          <affinity when="{circuit-style/restore-path/dynamic/constraints/affinity}" foreach="{circuit-style/restore-path/dynamic/constraints/affinity/rule}">
+                            <include-all when="{action='include-all'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-all>
+                            <include-any when="{action='include-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </include-any>
+                            <exclude-any when="{action='exclude-any'}">
+                              <?expand traffic-eng-contraints-affinity-colors?>
+                            </exclude-any>
+                          </affinity>
+                          <segments when="{circuit-style/restore-path/dynamic/constraints/segments}">
+                            <sid-algorithm>{circuit-style/restore-path/dynamic/constraints/segments/sid-algorithm}</sid-algorithm>
+                          </segments>
+                          <disjoint-path when="{circuit-style/restore-path/dynamic/constraints/disjoint-path}">
+                            <group-id>{circuit-style/restore-path/dynamic/constraints/disjoint-path/group-id}</group-id>
+                            <type when="{circuit-style/restore-path/dynamic/constraints/disjoint-path/type}">
+                              <link when="{circuit-style/restore-path/dynamic/constraints/disjoint-path/type='link'}"/>
+                              <node when="{circuit-style/restore-path/dynamic/constraints/disjoint-path/type='node'}"/>
+                              <srlg when="{circuit-style/restore-path/dynamic/constraints/disjoint-path/type='srlg'}"/>
+                              <srlg-node when="{circuit-style/restore-path/dynamic/constraints/disjoint-path/type='srlg-node'}"/>
+                            </type>
+                          </disjoint-path>
+                        </constraints>
+                      </preference>
+                    </preferences>
+                  </candidate-paths>
+                  <?if {circuit-style/steering/drop-traffic-on-invalid-path = "true"} ?>
+                    <steering>
+                      <path-invalidation>
+                        <drop/>
+                      </path-invalidation>
+                    </steering>
+                  <?end?>
+                  <performance-measurement when="{circuit-style/protection}">
+                    <delay-measurement when="{circuit-style/protection/delay-measurement}">
+                      <delay-profile>
+                        <name>{circuit-style/protection/delay-measurement/active-profile}</name>
+                      </delay-profile>
+                      <?if {circuit-style/protection/delay-measurement/backup-profile != "default"}?>
+                        <!-TBD: Not in 7.4.2.22I standby>
+                        <pm-profile-name>{circuit-style/protection/delay-measurement/backup-profile}</pm-profile-name>
+                        </standby->
+                      <?end?>
+                    </delay-measurement>
+                    <liveness-detection when="{circuit-style/protection/liveness-detection}">
+                      <liveness-profile>
+                        <?if {circuit-style/protection/liveness-detection/active-profile != "default"}?>
+                          <name>{circuit-style/protection/liveness-detection/active-profile}</name>
+                        <?end?>
+                        <?if {circuit-style/protection/liveness-detection/backup-profile != "default"}?>
+                          <backup>
+                            <name>{circuit-style/protection/liveness-detection/backup-profile}</name>
+                          </backup>
+                        <?end?>
+                      </liveness-profile>
+                      <invalidation-action>
+                        <down/>
+                      </invalidation-action>
+                    </liveness-detection>
+                  </performance-measurement>
+                <?end?>
+              </policy>
+            </policies>
+          </traffic-eng>
+        </segment-routing>
+        -->
+      </config>
+    </device>
+  </devices>
+</config-template>

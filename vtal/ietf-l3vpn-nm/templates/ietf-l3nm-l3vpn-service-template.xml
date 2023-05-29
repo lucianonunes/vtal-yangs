@@ -1,0 +1,16 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <flat-L3vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn">
+    <name>L3NM-{vpn-id}-internal</name>
+    <?foreach {custom-template}?>
+      <custom-template>
+        <name>{name}</name>
+        <?copy-tree {.}?>
+      </custom-template>
+    <?end?>
+    <?if {service-assurance}?>
+      <service-assurance>
+        <?copy-tree {service-assurance}?>
+      </service-assurance>
+    <?end?>
+  </flat-L3vpn>
+</config>

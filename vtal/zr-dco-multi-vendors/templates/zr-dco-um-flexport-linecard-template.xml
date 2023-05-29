@@ -1,0 +1,72 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <?if {$PORT_MODE = 'NCS'}?>
+          <locations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-location-cfg">
+             <location>
+              <location-name>{$R}/{$S}/CPU0</location-name>
+                 <hw-module xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-hw-module-port-range-cfg">
+                  <port-ranges>
+                   <port-range>
+                    <start-port>{$P}</start-port>
+                    <end-port>{$P_SEC}</end-port>
+                    <mode when="{$I='0'}">{$SPEED}</mode>
+                    <instances when="{$I!='0'}">
+                      <instance>
+                        <instance-id>{$I}</instance-id>
+                        <mode>{$SPEED}</mode>
+                      </instance>
+                    </instances>
+                   </port-range>
+                  </port-ranges>
+                 </hw-module>
+             </location>
+         </locations>
+        <?elif {$PORT_MODE = 'A9903-20HG-PEC'}?>
+          <locations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-location-cfg">
+             <location>
+                <location-name>{$R}/{$S}/CPU0</location-name>
+                <breakout xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-asr9k-hw-module-port-cfg">
+                   <bays>
+                      <bay>
+                         <bay-number>1</bay-number>
+                         <port-number>{$P}</port-number>
+                         <?if {$SPEED='1x-four-hundred-gig-e'}?>
+                           <four-hundred-gig-e-x1/>
+                         <?elif {$SPEED='1x-hundred-gig-e'}?>
+                           <hundred-gig-e-x1/>
+                         <?end?>
+                      </bay>
+                   </bays>
+                </breakout>
+             </location>
+          </locations>
+        <?elif {$PORT_MODE = 'A9K'}?>
+          <locations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-location-cfg">
+            <location>
+              <location-name>{$R}/{$S}/CPU0</location-name>
+              <breakout xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-asr9k-hw-module-port-cfg">
+                <ports>
+                  <port>
+                    <port-number>{$P}</port-number>
+                    <?if {$SPEED='1x-four-hundred-gig-e'}?>
+                     <four-hundred-gig-e-x1/>
+                    <?elif {$SPEED='1x-hundred-gig-e'}?>
+                     <hundred-gig-e-x1/>
+                    <?elif {$SPEED='4x-hundred-gig-e'}?>
+                     <hundred-gig-e-x4/>
+                    <?elif {$SPEED='2x-hundred-gig-e'}?>
+                     <hundred-gig-e-x2/>
+                    <?end?>
+                  </port>
+                </ports>
+              </breakout>
+            </location>
+          </locations>
+        <?end?>
+      </config>
+    </device>
+  </devices>
+</config>

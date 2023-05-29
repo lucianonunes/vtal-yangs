@@ -1,0 +1,806 @@
+cisco-flat-L2vpn-fp (v2.0) [April 20, 2022]
+=================================================
+  A. Modified tailf:info for sr-policy and odn
+
+cisco-flat-L2vpn-fp (v2.0) [November 16, 2020]
+=======================================================
+  A. Added validate callpoint to service.
+    tailf:validate "flat-L2vpn-validation" {
+      tailf:dependency ".";
+    }
+
+cisco-flat-L2vpn-fp (v2.0) [November 06, 2020]
+===============================================
+  A. Removed evpn-bgp-grp (all bgp related config)
+  B. Removed bgp when condition from sr-te-grp -> odn
+  C. Removed unconditional-pass from sr-te-grp -> odn
+  D. Added attach-point container to sr-te-grp -> odn (new config for route policies)
+
+  New Payload:
+
+  <config xmlns="http://tail-f.com/ns/config/1.0">
+    <flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+      <name>L2vpn-dynamic-02</name>
+      <service-type>evpn-vpws</service-type>
+      <flat-L2vpn-evpn-vpws>
+        <local-site>
+          <sr-te>
+            <odn>
+              <route-policy>L2-RP-local</route-policy>
+              <attach-point>                                                 --------> ADDITIONS START
+                <parent-rr-route-policy>L2-ATTACH</parent-rr-route-policy>           >
+              </attach-point>                                                --------> ADDITIONS END
+            </odn>
+          </sr-te>
+          <bgp>                                                  --------------------> REMOVALS START
+            <as-no>65001</as-no>                                                     >
+            <remote-as-no>2</remote-as-no>                                           >
+            <neighbor-ipv4>9.9.9.9</neighbor-ipv4>                                   >
+          </bgp>                                                 --------------------> REMOVALS END
+        </local-site>
+        <remote-site>
+          <sr-te>
+            <odn>
+              <route-policy>L2-RP-remote</route-policy>
+              <attach-point>                                                 --------> ADDITIONS START
+                <parent-rr-route-policy>L2-ATTACH</parent-rr-route-policy>           >
+              </attach-point>                                                --------> ADDITIONS END
+            </odn>
+          </sr-te>
+          <bgp>                                                  --------------------> REMOVALS START
+            <as-no>65001</as-no>                                                     >
+            <remote-as-no>2</remote-as-no>                                           >
+            <neighbor-ipv4>9.9.9.9</neighbor-ipv4>                                   >
+          </bgp>                                                 --------------------> REMOVALS END
+        </remote-site>
+      </flat-L2vpn-evpn-vpws>
+    </flat-L2vpn>
+  </config>
+
+cisco-flat-L2vpn-fp (v2.0) [September 02, 2020]
+===============================================
+  A. Added rsvp-te as a L2vpn policy option (p2p). Now sr-te and rsvp-te are cases in a choice.
+
+  New payload:
+
+  <flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+      <name>{NAME}</name>
+      <service-type>p2p</service-type>
+      <flat-L2vpn-p2p>
+        <local-site>
+          <rsvp-te>                                            -------------> ADDITIONS START
+            <preferred-path>                                                >
+              <te-tunnel-id>{TUNNEL_TE_ID}</te-tunnel-id>                   >
+              <fallback>disabled</fallback>                                 >
+            </preferred-path>                                               >
+          </rsvp-te>                                           -------------> ADDITIONS END
+        </local-site>
+        <remote-site>
+          <rsvp-te>                                            -------------> ADDITIONS START
+            <preferred-path>                                                >
+              <ietf-te-service>{IETF_TE_SERVICE}</ietf-te-service>          >
+              <fallback>disabled</fallback>                                 >
+            </preferred-path>                                               >
+          </rsvp-te>                                           -------------> ADDITIONS END
+        </remote-site>
+      </flat-L2vpn-p2p>
+  </flat-L2vpn>
+
+cisco-flat-L2vpn-fp (v2.0) [August 11, 2020]
+===============================================
+  A. Major redesign to support LSA/non-LSA style deployment (no payload changes)
+
+cisco-flat-L2vpn-fp  (v1.1) [June 10, 2020]
+=============================================
+  A. Added reconcile option to custom redeploy action
+
+cisco-flat-L2vpn-fp  (v1.1) [May 18, 2020]
+=============================================
+  A. Removed must condition for sub-if-id when if-encap is dot1q in L2vpn service
+  B. Modified rewrite when condition to allow either sub-if-id or vlan-id in L2vpn service
+
+cisco-flat-L2vpn-fp  (v1.1) [May 05, 2020]
+=============================================
+
+A. Added: sub-if-id under cisco-flat-L2vpn-fp:flat-L2vpn -> service-type
+        -> evpn-vpws -> flat-L2vpn-evpn-vpws -> local-site/remote-site -> bgp -> update-source
+
+    Current payload:
+
+        <config xmlns="...">
+          <flat-L2vpn xmlns="...">
+            <name>{NAME}</name>
+            <service-type>evpn-vpws</service-type>
+            <flat-L2vpn-evpn-vpws>
+              <local-site>
+                <bgp>
+                  <as-no>65001</as-no>
+                  <remote-as-no>2</remote-as-no>
+                  <neighbor-ipv4>10.10.10.10</neighbor-ipv4>
+                  <update-source>
+                    <if-type>GigabitEthernet</if-type>
+                    <if-id>0/0/0/3</if-id>
+                    <sub-if-id>300</sub-if-id> --------------------------------------------> ADDED
+                  </update-source>
+                </bgp>
+              </local-site>
+            </flat-L2vpn-evpn-vpws>
+          </flat-L2vpn>
+        </config>
+
+cisco-flat-L2vpn-fp  (v0.0.11) [April 16, 2020]
+===============================================
+
+  1. Made IOSXR CLI support as default.
+
+cisco-flat-L2vpn-fp (v0.0.11) [April 13, 2020]
+=============================================
+  A. Modified: pw-id type to unit32.
+  B. Added: pw-id range <1-4294967295>.
+
+  Current payload:
+
+      <config xmlns="...">
+        <flat-L2vpn xmlns="...">
+            <name>{NAME}</name>
+            <service-type>p2p</service-type>
+            <flat-L2vpn-p2p>
+              <pw-id>100</pw-id> ---------------------------------> NOW RANGE <1-4294967295>
+            </flat-L2vpn-p2p>
+        </flat-L2vpn>
+      </config>
+
+cisco-flat-L2vpn-fp (v0.0.11) [April 13, 2020]
+=============================================
+   A. Added status-code groupings in cisco-flat-L2vpn-fp
+   module cisco-flat-L2vpn-fp {
+      namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn";
+      prefix cisco-flat-L2vpn-fp;
+
+      ...
+
+      grouping status-code-plan-augmentation { ------------------------> ADDED
+       list status-code-detail {
+         tailf:info "Status Codes";
+         description "Status Codes";
+         key "type name";
+         leaf type {
+           type ncs:plan-component-type-t;
+         }
+         leaf name {
+           type string;
+         }
+         leaf code {
+           type string;
+         }
+         list context {
+           key context-name;
+           leaf context-name {
+             type string;
+           }
+           leaf context-msg {
+             type string;
+           }
+           list states {
+             key state;
+             leaf state {
+               type string;
+             }
+             leaf val {
+               type string;
+             }
+           }
+         }
+         leaf severity {
+           type enumeration {
+             enum INFO;
+             enum WARNING;
+             enum ERROR;
+             enum FATAL;
+             enum NONE;
+           }
+         }
+         leaf recommended-action {
+           tailf:info "Recommended action to recover in case of error";
+           description "Recommended action to recover in case of error";
+           type string;
+         }
+       }
+     }
+     grouping status-code-component-augmentation { ---------------------------> ADDED
+       leaf status-code {
+         type string;
+       }
+     }
+   }
+
+   B. Added plan and component augmentation using status-code-plan-augmentation and
+      status-code-component-augmentation groupings to cisco-flat-L2vpn-fp
+
+      module cisco-flat-L2vpn-fp {
+        namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn";
+        prefix cisco-flat-L2vpn-fp;
+
+        ...
+
+        augment /flat-L2vpn-plan/plan { -------------------------------------------------> ADDED
+          uses status-code-plan-augmentation;
+        }
+
+        augment /flat-L2vpn-plan/plan-history { -----------------------------------------> ADDED
+          uses status-code-plan-augmentation;
+        }
+
+        augment /flat-L2vpn-plan/plan/component { ---------------------------------------> ADDED
+          uses status-code-component-augmentation;
+        }
+
+        augment /flat-L2vpn-plan/plan-history/plan/component { --------------------------> ADDED
+          uses status-code-component-augmentation;
+        }
+      }
+
+   C. Added status code oper data grouping to cisco-flat-L2vpn-fp
+
+      module cisco-flat-L2vpn-fp {
+        namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn";
+        prefix cisco-flat-L2vpn-fp;
+
+        ...
+
+        grouping status-code-oper { -----------------------------------> ADDED
+          leaf status-code-name {
+              type string;
+          }
+          list status-context {
+            key context-name;
+            leaf context-name {
+              type string;
+            }
+            leaf context-msg {
+              type string;
+            }
+            list status-state {
+              key state;
+              leaf state {
+                type string;
+              }
+              leaf value {
+                type string;
+              }
+            }
+          }
+        }
+      }
+
+   D. Added "uses" status code oper data grouping for:
+      1. cisco-flat-L2vpn-fp-internal-local-site.yang
+      2. cisco-flat-L2vpn-fp-internal-remote-site.yang
+
+      Ex. cisco-flat-L2vpn-fp-internal-local-site.yang
+
+      module cisco-flat-L2vpn-fp-internal-local-site {
+        namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-internal-local-site";
+        prefix cisco-flat-L2vpn-fp-internal-local-site;
+
+        import cisco-flat-L2vpn-fp { prefix cisco-flat-L2vpn-fp; } ------------> ADDED
+
+        ...
+
+        container flat-L2vpn-internal-local-site {
+
+          ...
+
+          list flat-L2vpn-oper-data {
+
+            ...
+
+            uses cisco-flat-L2vpn-fp:status-code-oper; -------------------------> ADDED
+          }
+        }
+      }
+
+cisco-flat-L2vpn-fp (v0.0.9) [March 11, 2020]
+=============================================
+A. Modified: sub-if-id to allow for both untagged/dot1q encapsulation
+
+B. Added: dot1q under rewrite -> ingress -> dot1q
+
+    Current payload:
+          <config xmlns="...">
+            <flat-L2vpn xmlns="...">
+              <flat-L2vpn-evpn-vpws>
+                <local-site>
+                  <rewrite>
+                    <ingress>
+                      <dot1q>{VLAN ID}</dot1q> ---------------------------------> ADDED
+                    </ingress>
+                  </rewrite>
+                </local-site>
+              </flat-L2vpn-evpn-vpws>
+            </flat-L2vpn>
+          </config>
+
+cisco-flat-L2vpn-fp (v0.0.8) [Feb 27, 2020]
+=============================================
+
+A. Added: update-source under cisco-flat-L2vpn-fp:flat-L2vpn -> service-type
+              -> evpn-vpws -> flat-L2vpn-evpn-vpws -> local-site/remote-site -> bgp
+
+    Current payload:
+
+            <config xmlns="...">
+              <flat-L2vpn xmlns="...">
+                <name>{NAME}</name>
+                <service-type>evpn-vpws</service-type>
+                <flat-L2vpn-evpn-vpws>
+                  <local-site>
+                    <bgp>
+                      <as-no>65001</as-no>
+                      <remote-as-no>2</remote-as-no>
+                      <neighbor-ipv4>10.10.10.10</neighbor-ipv4>
+                      <update-source> --------------------------------------------> ADDED
+                        <if-type>Loopback</if-type>
+                        <if-id>3</if-id>
+                      </update-source>
+                    </bgp>
+                  </local-site>
+                </flat-L2vpn-evpn-vpws>
+              </flat-L2vpn>
+            </config>
+
+cisco-flat-L2vpn-fp (v0.0.8) [Feb 21, 2020]
+=============================================
+A. Added: new list cisco-flat-L2vpn-fp:l2vpn-route-policy.
+
+        Payload:
+
+                <config xmlns="http://tail-f.com/ns/config/1.0">
+                <l2vpn-route-policy xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+                  <name>{NAME}</name>
+                  <color>
+                      <id>{ID}</id>
+                      <ipv4>
+                        <rd>1.1.1.1:1</rd>
+                        <rd>1.1.1.2:1</rd>
+                      </ipv4>
+                    </color>
+                  </l2vpn-route-policy>
+                </config>
+
+B. Modified: 'color' replaced with new route-policy under cisco-flat-L2vpn-fp:flat-L2vpn -> service-type -> evpn-vpws -> flat-L2vpn-evpn-vpws -> sr-te -> odn
+
+    Previous payload:
+            <flat-L2vpn-evpn-vpws>
+              <local-site>
+                <sr-te>
+                  <odn> ----------------------> REMOVED
+                    <color>
+                      ...
+                    </color>
+                  </odn>
+                </sr-te>
+              </local-site>
+            </flat-L2vpn-evpn-vpws>
+
+    Current payload:
+            <flat-L2vpn-evpn-vpws>
+              <local-site>
+                <sr-te>
+                  <route-policy>{NAME}</route-policy> ----------------------> ADDED
+                </sr-te>
+              </local-site>
+            </flat-L2vpn-evpn-vpws>
+
+C. Removed: 'odn' under cisco-flat-L2vpn-fp:flat-L2vpn -> service-type -> p2p -> flat-L2vpn-p2p -> sr-te";
+
+    Previous payload:
+            <flat-L2vpn-p2p>
+              <local-site>
+                <sr-te>
+                  <odn> ----------------------> REMOVED
+                    <color>
+                      ...
+                    </color>
+                  </odn>
+              </local-site>
+            </flat-L2vpn-p2p>
+
+cisco-flat-L2vpn-fp (v0.0.7) [Feb 07, 2020]
+=============================================
+Added choice of site-type for input in flat-L2vpn-actions
+Which allows either remote-site or local-site to cleanup at a time.
+
+Previous command:
+  request flat-L2vpn-actions cleanup no-networking true remote-site-only PIOSXR-1 local-site-only PIOSXR-0 service L2vpn01
+
+Modified command:
+  request flat-L2vpn-actions cleanup no-networking true remote-site-only PIOSXR-1 service L2vpn01
+  request flat-L2vpn-actions cleanup no-networking true local-site-only PIOSXR-0 service L2vpn01
+
+
+cisco-flat-L2vpn-fp (v0.0.6) [Jan 08, 2020]
+=============================================
+
+  A. Added the following new interfaces to following yang files:-
+    cisco-flat-L2vpn-fp.yang
+      a. FiftyGigE;
+      b. TwoHundredGigE;
+      c. Bundle-Ether;
+      d. FourHundredGigE;
+      e. TwentyFiveGigE;
+
+=======
+cisco-flat-L2vpn-fp [Jan 08, 2020]
+=============================================
+
+1. e-bgp is renamed to bgp for L2VPN.
+
+      Previous payload:
+              <e-bgp> ----------------------> MODIFIED
+                <as-no>65001</as-no>
+                <remote-as-no>2</remote-as-no>
+                <neighbor-ipv4>10.10.10.10</neighbor-ipv4>
+              </e-bgp>
+
+      Modified payload:
+              <bgp>
+                <as-no>65001</as-no>
+                <remote-as-no>2</remote-as-no>
+                <neighbor-ipv4>10.10.10.10</neighbor-ipv4>
+              </bgp>
+
+cisco-flat-L2vpn-fp (v0.0.3) [Aug 16, 2019]
+=============================================
+
+	A. New Feature
+
+	  1. Custom Templates
+		      Custom templates can be used to apply configs directly on devices
+		      custom-template added
+
+		      Name of custom templates must start with either "ct-" or "CT-"
+
+		      If apply-custom-template leaf is set to 'true', then only custom-templates will get applied
+		      By default apply-custom-template is set to 'true':
+		        admin@ncs% show apply-custom-template
+		        apply-custom-template true;
+
+		    a. Sample custom templates
+		      <devices xmlns="http://tail-f.com/ns/ncs">
+		        <template>
+		          <name>CT-CLI-banner</name> ----------------------> CUSTOM TEMPLATE NAME
+		          <ned-id>
+		            <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+		            <config>
+		              <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+		                <history>informational</history>
+		              </logging>
+		              <banner xmlns="http://tail-f.com/ned/cisco-ios-xr">
+		                <login>
+		                  <start-marker>'</start-marker>
+		                  <message>{$BANNER_TEXT}</message>  ------------------> VARIABLE
+		                  <end-marker>'</end-marker>
+		                </login>
+		              </banner>
+		            </config>
+		          </ned-id>
+		        </template>
+		        <template>
+		          <name>CT-CLI-logging</name> ----------------------> CUSTOM TEMPLATE NAME
+		          <ned-id>
+		            <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+		            <config>
+		              <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+		                <history>informational</history>
+		              </logging>
+		            </config>
+		          </ned-id>
+		        </template>
+		      </devices>
+
+		      CT-CLI-banner template will apply banner config on device
+		      CT-CLI-logging template will set logging config on device
+
+	        b. Sample Payloads
+	            Previous Payload sample for P2P Service:
+              <config xmlns="http://tail-f.com/ns/config/1.0">
+                <flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+                  <name>L2vpn01</name>
+                  <service-type>p2p</service-type>
+                  <flat-L2vpn-p2p>
+                    <local-site>
+                      <pe>PIOSXR-0</pe>
+                      <if-description>l2vpn-static-01</if-description>
+                    </local-site>
+                    <pw-id>100</pw-id>
+                    <remote-site>
+                      <if-description>l2vpn-static-01</if-description>
+                      <pe>PIOSXR-1</pe>
+                    </remote-site>
+                  </flat-L2vpn-p2p>
+                </flat-L2vpn>
+              </config>
+
+
+	            Current Payload sample for P2P Service:
+              <config xmlns="http://tail-f.com/ns/config/1.0">
+                <flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+                  <name>L2vpn01</name>
+                  <service-type>p2p</service-type>
+                  <custom-template>
+                    <name>CT-CLI-logging</name>
+                  </custom-template>
+                  <flat-L2vpn-p2p>
+                    <local-site>
+                      <pe>PIOSXR-0</pe>
+                      <if-description>l2vpn-static-01</if-description>
+                      <custom-template>
+                        <name>CT-CLI-banner</name>
+                        <variable>
+                          <name>BANNER_TEXT</name>
+                          <value>Welcome</value>
+                        </variable>
+                      </custom-template>
+                    </local-site>
+                    <pw-id>100</pw-id>
+                    <remote-site>
+                      <if-description>l2vpn-static-01</if-description>
+                      <pe>PIOSXR-1</pe>
+                    </remote-site>
+                  </flat-L2vpn-p2p>
+                </flat-L2vpn>
+              </config>
+
+              Previous payload for EVPN-EVWS service:
+              <config xmlns="http://tail-f.com/ns/config/1.0">
+                <flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+                  <name>L2vpn-dynamic-02</name>
+                  <service-type>evpn-vpws</service-type>
+                  <flat-L2vpn-evpn-vpws>
+                    <local-site>
+                      <if-description>L2VPN-Dynamic-02</if-description>
+                      <pe>PIOSXR-0</pe>
+                      <p2p-name>EVPN-PIOSXR-0</p2p-name>
+                      <xconnect-group-name>evpn_vpws_nso</xconnect-group-name>
+                    </local-site>
+                    <evi-id>1000</evi-id>
+                    <remote-site>
+                      <if-description>L2VPN-Dynamic-02</if-description>
+                      <p2p-name>EVPN-PIOSXR-1</p2p-name>
+                      <pe>PIOSXR-1</pe>
+                      <xconnect-group-name>evpn_vpws_nso</xconnect-group-name>
+                    </remote-site>
+                  </flat-L2vpn-evpn-vpws>
+                </flat-L2vpn>
+              </config>
+
+
+              Current payload for EVPN-EVWS service:
+              <config xmlns="http://tail-f.com/ns/config/1.0">
+                <flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+                  <name>L2vpn-dynamic-02</name>
+                  <service-type>evpn-vpws</service-type>
+                  <custom-template>
+                    <name>CT-CLI-logging</name>
+                  </custom-template>
+                  <flat-L2vpn-evpn-vpws>
+                    <local-site>
+                      <if-description>L2VPN-Dynamic-02</if-description>
+                      <pe>PIOSXR-0</pe>
+                      <p2p-name>EVPN-PIOSXR-0</p2p-name>
+                      <xconnect-group-name>evpn_vpws_nso</xconnect-group-name>
+                      <custom-template>
+                        <name>CT-CLI-banner</name>
+                        <variable>
+                          <name>BANNER_TEXT</name>
+                          <value>Welcome</value>
+                        </variable>
+                      </custom-template>
+                    </local-site>
+                    <evi-id>1000</evi-id>
+                    <remote-site>
+                      <if-description>L2VPN-Dynamic-02</if-description>
+                      <p2p-name>EVPN-PIOSXR-1</p2p-name>
+                      <pe>PIOSXR-1</pe>
+                      <xconnect-group-name>evpn_vpws_nso</xconnect-group-name>
+                    </remote-site>
+                  </flat-L2vpn-evpn-vpws>
+                </flat-L2vpn>
+              </config>
+
+	    c. Check status of applied custom-template
+		        admin@ncs> show custom-template-status
+		        NAME                         DEVICE    STATUS   MESSAGE
+		        ---------------------------------------------------------
+		        CT-CLI-banner                PIOSXR-0  APPLIED  SUCCESS
+		        CT-NETCONF-banner-iteration  P-0       APPLIED  SUCCESS
+		        CT-NETCONF-logging           P-0       APPLIED  SUCCESS
+
+
+
+cisco-sr-te-cfp (v0.0.2) [May 22, 2019]
+=============================================
+
+A. Non-backward compatible enhancements:
+
+  1. Dynamic Device Mapping config doesn't require capability field anymore.
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+          <dynamic-device-mapping>
+            <ned-id>ios-id:cisco-ios</ned-id>
+            <capability>tailf-ned-cisco-ios</capability> ----------------------------------> REMOVED
+            <python-impl-class-name>flat_l2vpn_multi_vendors.Ios</python-impl-class-name>
+          </dynamic-device-mapping>
+        </cfp-configurations>
+      </config>
+
+    Current payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+        <dynamic-device-mapping>
+          <ned-id>ios-id:cisco-ios</ned-id>
+          <python-impl-class-name>flat_l2vpn_multi_vendors.Ios</python-impl-class-name>
+        </dynamic-device-mapping>
+      </cfp-configurations>
+    </config>
+
+
+cisco-flat-L2vpn-fp (v0.0.2) [May 10, 2019]
+=============================================
+
+A. Non-backwards incompatible enhancements
+
+  1. Service Namespace has changed.
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <flat-L2vpn xmlns="http://cisco.com/fp/t-sdn/flat-L2vpn"> -------> OLD NS
+            <name>COLT-L2vpn-dynamic</name>
+            ...
+        </flat-L2vpn>
+      </config>
+
+    Current payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <flat-L2vpn xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn"> ---> NEW NS
+            <name>COLT-L2vpn-dynamic</name>
+            ...
+        </flat-L2vpn>
+      </config>
+
+  2. Dynamic Device Mapping config moved
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <dynamic-device-mapping xmlns="http://cisco.com/fp/t-sdn/flat-L2vpn">
+          <ned-id>ios-id:cisco-ios</ned-id>
+          <capability>tailf-ned-cisco-ios</capability>
+          <python-impl-class-name>flat_l2vpn_multi_vendors.Ios</python-impl-class-name>
+        </dynamic-device-mapping>
+      </config>
+
+    Current payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn">
+        <dynamic-device-mapping>
+          <ned-id>ios-id:cisco-ios</ned-id>
+          <capability>tailf-ned-cisco-ios</capability>
+          <python-impl-class-name>flat_l2vpn_multi_vendors.Ios</python-impl-class-name>
+        </dynamic-device-mapping>
+      </cfp-configurations>
+    </config>
+
+cisco-flat-L2vpn-fp (v0.0.1) [April 22, 2019]
+=============================================
+
+A. New Features
+
+  1. Support for multi-home with 9 octet ESI for evpn-vpws L2vpn service type.
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L2vpn xmlns="http://cisco.com/fp/t-sdn/flat-L2vpn">
+          <name>COLT-L2vpn-dynamic</name>
+          <service-type>evpn-vpws</service-type>
+          <flat-L2vpn-evpn-vpws>
+            <evi-id>1000</evi-id>
+            <local-site>
+              ...
+              <if-description>L2VPN-Dynamic-02</if-description>
+              <if-id>0/0/1/0</if-id>
+              <if-type>HundredGigE</if-type>
+              <multi-home> ----------------------------> When this is set, below identifier will be applied to the EVPN interface.
+                <esi-value>00.01.00.ac.ce.55.00.0a.00</esi-value>
+              </multi-home>
+              ...
+            </local-site>
+            <remote-site>
+              ...
+            </remote-site>
+          </flat-L2vpn-evpn-vpws>
+      </flat-L2vpn>
+    </config>
+
+cisco-flat-L2vpn-fp (v0.0.1) [March 22, 2019]
+=============================================
+
+A. Non-backwards incompatible enhancements
+
+  1. L2-VPN e-bgp container is moved up from under sr-te/odn to the parent of sr-te container.
+
+    a. Previous payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L2vpn xmlns="http://cisco.com/fp/t-sdn/flat-L2vpn">
+        <name>L2vpn-dynamic-02</name>
+        <service-type>evpn-vpws</service-type>
+        <flat-L2vpn-evpn-vpws>
+          <local-site>
+            <pw-class>ero-nso</pw-class>
+            <sr-te>
+              <odn>
+                <color>
+                  <id>100</id>
+                  <ipv4>
+                    <prefix>1.1.1.1/32</prefix>
+                    <prefix>2.1.1.1/32</prefix>
+                  </ipv4>
+                </color>
+                <e-bgp>
+                  <as-no>1</as-no>
+                  <neighbor-ipv4>9.9.9.9</neighbor-ipv4>
+                </e-bgp>
+              </odn>
+            </sr-te>
+          </local-site>
+          ...
+        <flat-L2vpn-evpn-vpws>
+      </flat-L2vpn>
+    </config>
+
+    b. Payload after the change:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <flat-L2vpn xmlns="http://cisco.com/fp/t-sdn/flat-L2vpn">
+        <name>L2vpn-dynamic-02</name>
+        <service-type>evpn-vpws</service-type>
+        <flat-L2vpn-evpn-vpws>
+          <local-site>
+            <pw-class>ero-nso</pw-class>
+            <sr-te>
+              <odn>
+                <color>
+                  <id>100</id>
+                  <ipv4>
+                    <prefix>1.1.1.1/32</prefix>
+                    <prefix>2.1.1.1/32</prefix>
+                  </ipv4>
+                </color>
+              </odn>
+            </sr-te>
+            <e-bgp> -------------------> CHANGED
+              <as-no>1</as-no>
+              <remote-as-no>2</remote-as-no> -------------------> ADDED
+              <neighbor-ipv4>9.9.9.9</neighbor-ipv4>
+            </e-bgp>
+          </local-site>
+          ...
+        <flat-L2vpn-evpn-vpws>
+      </flat-L2vpn>
+    </config>
+
+  2. L2-VPN pw-class is not required when sr-te/odn is chosen
+
+  3. NSO version 4.7.3 is minimum.
+
+B. New Features
+
+  1. NETCONF Support

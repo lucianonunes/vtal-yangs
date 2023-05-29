@@ -1,0 +1,358 @@
+module ietf-l3vpn-ntw-deviations {
+
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-l3vpn-ntw-deviations";
+  prefix l3vpn-ntw-deviations;
+
+  import ietf-l3vpn-ntw { prefix ietf-l3vpn-ntw; }
+  import lsa-utils { prefix lsa-utils; }
+  import tailf-common { prefix tailf; }
+  import cisco-flat-L3vpn-fp { prefix cisco-flat-L3vpn-fp; }
+  import tailf-ncs { prefix ncs; }
+
+  description "IETF L3VPN NTW Cisco NSO Deviations";
+
+  revision 2022-05-26 {
+    description "Modified: cvlan-id 1-4094 range constraint";
+  }
+
+  revision 2022-01-11 {
+    description "Added: missing tailf-ncs import statement for lsa-utils reference";
+  }
+
+  revision 2021-12-03 {
+    description
+      "Removed: core-fp-common reference
+       Modified: Read dispatch-map using lsa-utils";
+    }
+
+  revision 2021-08-31 {
+    description "Added deviation for l3vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes
+                       -> vpn-node -> vpn-network-accesses -> vpn-network-access -> port-id
+                       string pattern";
+  }
+
+  revision 2021-06-11 {
+    description "Modified: added no-leafref-check to l3vpn-ntw -> vpn-profiles ->
+                 valid-provider-identifiers -> routing-profile-identifier ->id";
+  }
+
+  revision 2021-03-24 {
+    description "Added: vpn-node -> local-autonomous-system deviation mandatory true
+                 Added: dot1q-vlan-tagged -> cvlan-id deviation mandatory true";
+  }
+
+  revision 2021-03-19 {
+    description "Removed deviation for bgp -> local-autonomous-system as the field.";
+  }
+
+  revision 2021-02-22 {
+    description "Corrected vpn-id regex pattern (removed extra backslash)";
+  }
+
+  revision 2021-02-01 {
+      description "Removed: 'vpn-network-access -> service' deviations";
+  }
+  revision 2020-11-16 {
+      description "Added: vpn-node -> rd and route-target deviation to match string pattern from Flat L3 model
+                   Added: ie-profile -> rd and route-target deviation to match string pattern from Flat L3 model
+                   Added: vpn-node -> local-autonomous-system deviation to match union type of Flat L3 Model
+                   Added: bgp -> local-autonomous-system deviation to match union type of Flat L3 Model
+                   Added: provider-address and prefix-length mandatory true
+                   Added: must condition where at least one static-address -> primary-address must be defined
+                   Added: dot1q-vlan-tagged -> cvlan-id 1-4000 range constraint";
+  }
+
+  revision 2020-10-21 {
+      description "Modified: removed vpn-network-access deviation max-elements 1";
+  }
+
+  revision 2020-10-08 {
+      description "Added: vpn-network-access deviation min-elements 1, max-elements 1
+                   Added: routing-protocol deviation min-elements 1
+                   Added: routing-profile-identifier id deviation leafref to l3vpn-route-policy
+                   Added: vpn-id deviation to match flat l3vpn name string pattern
+                   Added: ne-id deviation mandatory true
+                   Added: port-id deviation mandatory true";
+  }
+
+  revision 2020-09-04 {
+      description "Initial revision.";
+  }
+
+  // ====================== routing-protocol ======================
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:routing-protocols/ietf-l3vpn-ntw:routing-protocol" {
+    deviate add {
+      max-elements 1;
+    }
+  }
+
+  // ====================== routing-profile-identifier ======================
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-profiles/ietf-l3vpn-ntw:valid-provider-identifiers/ietf-l3vpn-ntw:routing-profile-identifier/ietf-l3vpn-ntw:id" {
+    deviate replace {
+      type leafref {
+        tailf:no-leafref-check;
+        path "/cisco-flat-L3vpn-fp:l3vpn-route-policy/cisco-flat-L3vpn-fp:name";
+      }
+    }
+  }
+
+  // ====================== vpn-service ======================
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-id" {
+    deviate replace {
+      // vpn-id is used as a key for internal service. This means we must match the pattern
+      //    restrictions imposed by internal service.
+      type string {
+        pattern '[a-zA-Z0-9\-_]+';
+      }
+    }
+  }
+
+  // ====================== ip-connection ======================
+  // ipv4 prefix-length mandatory when provider-address is defined
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:ip-connection/ietf-l3vpn-ntw:ipv4/ietf-l3vpn-ntw:static-addresses/ietf-l3vpn-ntw:address/ietf-l3vpn-ntw:provider-address" {
+    deviate add {
+      mandatory true;
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:ip-connection/ietf-l3vpn-ntw:ipv4/ietf-l3vpn-ntw:static-addresses/ietf-l3vpn-ntw:address/ietf-l3vpn-ntw:prefix-length" {
+    deviate add {
+      mandatory true;
+    }
+  }
+  // ipv6 prefix-length mandatory when provider-address is defined
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:ip-connection/ietf-l3vpn-ntw:ipv6/ietf-l3vpn-ntw:static-addresses/ietf-l3vpn-ntw:address/ietf-l3vpn-ntw:provider-address" {
+    deviate add {
+      mandatory true;
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:ip-connection/ietf-l3vpn-ntw:ipv6/ietf-l3vpn-ntw:static-addresses/ietf-l3vpn-ntw:address/ietf-l3vpn-ntw:prefix-length" {
+    deviate add {
+      mandatory true;
+    }
+  }
+  // At least one primary-address must be defined
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:ip-connection" {
+    deviate add {
+      must "ipv4/static-addresses/primary-address or ipv6/static-addresses/primary-address" {
+        error-message "At least one ip-connection primary-address must be defined";
+      }
+    }
+  }
+
+  // ====================== connection ======================
+  // L3VPN vlan-id has range 1-4000, L3NM dot1q cvlan-id is unrestricted uint16
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:connection/ietf-l3vpn-ntw:tagged-interface/ietf-l3vpn-ntw:dot1q-vlan-tagged/ietf-l3vpn-ntw:cvlan-id" {
+    deviate replace {
+      type uint16 {
+        range "1..4094";
+      }
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:connection/ietf-l3vpn-ntw:tagged-interface/ietf-l3vpn-ntw:dot1q-vlan-tagged/ietf-l3vpn-ntw:cvlan-id" {
+    deviate add {
+      mandatory true;
+    }
+  }
+
+  // ====================== ie-profile ======================
+  // L3VPN route-distinguisher supports RD and RT type 0,1,2. So we have to remove other L3NM supported types
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:ie-profiles/ietf-l3vpn-ntw:ie-profile/ietf-l3vpn-ntw:rd" {
+    deviate replace {
+      type string {
+        pattern
+          '(0:(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|'
+        +     '42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|429496[0-6][0-9]{3}|'
+        +     '42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|429[0-3][0-9]{6}|'
+        +     '42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|'
+        + '(1:((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|'
+        +     '25[0-5])\.){3}([0-9]|[1-9][0-9]|'
+        +     '1[0-9]{2}|2[0-4][0-9]|25[0-5])):(6553[0-5]|'
+        +     '655[0-2][0-9]|'
+        +     '65[0-4][0-9]{2}|6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|'
+        + '(2:(429496729[0-5]|42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|'
+        +     '429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|'
+        +     '429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):'
+        +     '(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))';
+        tailf:info "0:2-octet-asn:4-octet-number
+                    1:4-octet-ipv4addr:2-octet-number
+                    2:4-octet-asn:2-octet-number";
+      }
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:ie-profiles/ietf-l3vpn-ntw:ie-profile/ietf-l3vpn-ntw:vpn-targets/ietf-l3vpn-ntw:vpn-target/ietf-l3vpn-ntw:route-targets/ietf-l3vpn-ntw:route-target" {
+    deviate replace {
+      type string {
+        pattern
+          '(0:(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|'
+        +     '42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|429496[0-6][0-9]{3}|'
+        +     '42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|429[0-3][0-9]{6}|'
+        +     '42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|'
+        + '(1:((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|'
+        +     '25[0-5])\.){3}([0-9]|[1-9][0-9]|'
+        +     '1[0-9]{2}|2[0-4][0-9]|25[0-5])):(6553[0-5]|'
+        +     '655[0-2][0-9]|'
+        +     '65[0-4][0-9]{2}|6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|'
+        + '(2:(429496729[0-5]|42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|'
+        +     '429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|'
+        +     '429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):'
+        +     '(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))';
+        tailf:info "0:2-octet-asn:4-octet-number
+                    1:4-octet-ipv4addr:2-octet-number
+                    2:4-octet-asn:2-octet-number";
+      }
+    }
+  }
+
+  // ====================== vpn-node ======================
+  // Make vpn-node ne-id to point to dispatch-map instead of device tree
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:ne-id" {
+    deviate replace {
+      type leafref {
+        path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+      }
+    }
+  }
+  // L3VPN route-distinguisher supports RD and RT type 0,1,2. So we have to remove other L3NM supported types
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:rd" {
+    deviate replace {
+      type string {
+        pattern
+          '(0:(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|'
+        +     '42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|429496[0-6][0-9]{3}|'
+        +     '42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|429[0-3][0-9]{6}|'
+        +     '42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|'
+        + '(1:((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|'
+        +     '25[0-5])\.){3}([0-9]|[1-9][0-9]|'
+        +     '1[0-9]{2}|2[0-4][0-9]|25[0-5])):(6553[0-5]|'
+        +     '655[0-2][0-9]|'
+        +     '65[0-4][0-9]{2}|6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|'
+        + '(2:(429496729[0-5]|42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|'
+        +     '429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|'
+        +     '429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):'
+        +     '(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))';
+        tailf:info "0:2-octet-asn:4-octet-number
+                    1:4-octet-ipv4addr:2-octet-number
+                    2:4-octet-asn:2-octet-number";
+      }
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-targets/ietf-l3vpn-ntw:vpn-target/ietf-l3vpn-ntw:route-targets/ietf-l3vpn-ntw:route-target" {
+    deviate replace {
+      type string {
+        pattern
+          '(0:(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|'
+        +     '42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|429496[0-6][0-9]{3}|'
+        +     '42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|429[0-3][0-9]{6}|'
+        +     '42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|'
+        + '(1:((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|'
+        +     '25[0-5])\.){3}([0-9]|[1-9][0-9]|'
+        +     '1[0-9]{2}|2[0-4][0-9]|25[0-5])):(6553[0-5]|'
+        +     '655[0-2][0-9]|'
+        +     '65[0-4][0-9]{2}|6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|'
+        + '(2:(429496729[0-5]|42949672[0-8][0-9]|'
+        +     '4294967[01][0-9]{2}|'
+        +     '429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|'
+        +     '4294[0-8][0-9]{5}|'
+        +     '429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|'
+        +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):'
+        +     '(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+        +     '6[0-4][0-9]{3}|'
+        +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))';
+        tailf:info "0:2-octet-asn:4-octet-number
+                    1:4-octet-ipv4addr:2-octet-number
+                    2:4-octet-asn:2-octet-number";
+      }
+    }
+  }
+  // L3VPN as-no has type union (as defined below), L3NM local-autonomous-system type uint32
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:local-autonomous-system" {
+    deviate replace {
+      type union {
+        type uint32 {
+          tailf:info "<1-4294967295>;;Autonomous system number";
+          range "1..4294967295";
+        }
+        type string {
+          tailf:info "<1.0-XX.YY>;;Autonomous system number";
+          pattern '[0-9]+\.[0-9]+';
+        }
+      }
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:local-autonomous-system" {
+    deviate add {
+      //  L3NM local-autonomous-system is mandatory
+      mandatory true;
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:ne-id" {
+    deviate add {
+      // ne-id maps to Flat L3VPN flat-L3vpn -> endpoint -> access-pe which
+      //    is mandatory
+      mandatory true;
+    }
+  }
+
+  // ====================== vpn-network-access ======================
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access" {
+    deviate add {
+      // port-id maps to Flat L3VPN flat-L3vpn -> endpoint -> if-type which
+      //    is mandatory which means vpn-network-access list is mandatory
+      min-elements 1;
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:port-id" {
+    deviate add {
+      // port-id maps to Flat L3VPN flat-L3vpn -> endpoint -> if-type which
+      //    is mandatory
+      mandatory true;
+    }
+  }
+  deviation "/ietf-l3vpn-ntw:l3vpn-ntw/ietf-l3vpn-ntw:vpn-services/ietf-l3vpn-ntw:vpn-service/ietf-l3vpn-ntw:vpn-nodes/ietf-l3vpn-ntw:vpn-node/ietf-l3vpn-ntw:vpn-network-accesses/ietf-l3vpn-ntw:vpn-network-access/ietf-l3vpn-ntw:port-id" {
+    deviate replace {
+      type string {
+        pattern "(Bundle-Ether|BVI|FiftyGigE|FortyGigE|FourHundredGigE|HundredGigE|Loopback|TenGigE|TwentyFiveGigE|TwoHundredGigE|GigabitEthernet|Ethernet)[0-9]+(/[0-9]+)*";
+      }
+    }
+  }
+}

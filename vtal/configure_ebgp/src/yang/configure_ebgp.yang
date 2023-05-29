@@ -1,0 +1,62 @@
+module configure_ebgp {
+  namespace "http://com/example/configure_ebgp";
+  prefix configure_ebgp;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+
+  list configure_ebgp {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "configure_ebgp";
+
+    leaf name {
+      tailf:info "Service Name for Configuring eBGP Neighbor";
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select an IOS XR router";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf local_bgp_as {
+      tailf:info "Enter Local BGP ID";
+      type uint32;
+    }
+
+    leaf local_bgp_ipv4_id {
+      tailf:info "Enter Local BGP router ID";
+      type inet:ipv4-address;
+    }
+
+    leaf neighbor_ipv4_address {
+      tailf:info "Enter Neighbor IPv4 Address";
+      type inet:ipv4-address;
+    }
+
+    leaf remote_bgp_as {
+      tailf:info "Enter Remote BGP ID";
+      type uint32;
+    }
+
+    leaf description {
+      tailf:info "Provide eBGP Neighbor Description";
+      type string;
+    }
+
+  }
+}

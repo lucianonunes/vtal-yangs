@@ -1,0 +1,184 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <!--
+          Select the devices from some data structure in the service
+          model. In this skeleton the devices are specified in a leaf-list.
+          Select all devices in that leaf-list:
+      -->
+      <name>{/device}</name>
+
+         <config>
+                   <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     <Loopback>
+                       <id>{/loopback_id}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/loopback_ipv4_address}</ip>
+                           <mask>/32</mask>
+                         </address>
+                       </ipv4>
+                       <shutdown tags="delete"/>
+                     </Loopback>
+                   </interface>
+                   <router xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                  
+          <isis>
+            <tag>
+              <name>{/isis_process_id}</name>
+              <is-type>level-2-only</is-type>
+              <instance-id>{/instance_id}</instance-id>
+              <net>
+                <id>49.0001.{/isis_sys_net}.00</id>
+              </net>
+              <distribute>
+                <link-state>
+                   <instance-id>{/instance_id}</instance-id>
+                </link-state>
+              </distribute>
+              <address-family>
+                <ipv4>
+                  <unicast>
+                    <metric-style>wide</metric-style>
+                    <mpls>
+                      <ldp>
+                        <auto-config/>
+                      </ldp>
+                      <traffic-eng>
+                        <level>level-2-only</level>
+                        <router-id-address>
+                          <router-id>{/loopback_ipv4_address}</router-id>
+                        </router-id-address>
+                      </traffic-eng>
+                    </mpls>
+                    <router-id-address>
+                      <router-id>{/loopback_ipv4_address}</router-id>
+                    </router-id-address>
+                    <segment-routing>
+                      <mpls>
+                        <sr-prefer/>
+                      </mpls>
+                    </segment-routing>
+                  </unicast>
+                </ipv4>
+                <ipv6>
+                  <unicast>
+                    <metric-style>wide</metric-style>
+                  </unicast>
+                </ipv6>
+              </address-family>
+              <interface foreach="{/interface_xr}">
+                <name>{PHYSICAL_INTERFACE_TYPE}{interface_id}</name>
+                <circuit-type>level-2-only</circuit-type>
+                <point-to-point/>
+                <address-family>
+                  <ipv4>
+                    <unicast/>
+                  </ipv4>
+                  <ipv6>
+                    <unicast/>
+                  </ipv6>
+                </address-family>
+              </interface>
+              <interface>
+                <name>Loopback{/loopback_id}</name>
+                <interface-type>passive</interface-type>
+                <circuit-type>level-2-only</circuit-type>
+                <address-family>
+                  <ipv4>
+                    <unicast>
+                      <prefix-sid>
+                        <absolute>{/abs_prefix_sid}</absolute>
+                      </prefix-sid>
+                      <prefix-sid-strict-spf>
+                        <prefix-sid>
+                          <strict-spf>
+                            <absolute>{$STRICT_PREFIX_SID}</absolute>
+                          </strict-spf>
+                        </prefix-sid>
+                      </prefix-sid-strict-spf>
+                    </unicast>
+                  </ipv4>
+                  <ipv6>
+                    <unicast/>
+                  </ipv6>
+                </address-family>
+              </interface>
+            </tag>
+          </isis>
+
+                  </router>
+                   <mpls xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     <traffic-eng>
+                       <auto-tunnel>
+                         <pcc>
+                           <tunnel-id>
+                             <min>1000</min>
+                             <max>1999</max>
+                           </tunnel-id>
+                         </pcc>
+                       </auto-tunnel>
+                       <interface foreach="{/interface_xr}">
+                         <name>{PHYSICAL_INTERFACE_TYPE}{interface_id}</name>
+                       </interface>
+                       <logging>
+                         <events>
+                           <all/>
+                         </events>
+                       </logging>
+                     </traffic-eng>
+                     <ldp>
+                       <log>
+                         <neighbor/>
+                       </log>
+                       <router-id>{/loopback_ipv4_address}</router-id>
+                       <address-family>
+                         <ipv4/>
+                       </address-family>
+                       <interface foreach="{/interface_xr}">
+                         <name>{PHYSICAL_INTERFACE_TYPE}{interface_id}</name>
+                         <address-family>
+                           <ipv4/>
+                         </address-family>
+                       </interface>
+                     </ldp>
+                   </mpls>
+                   <segment-routing xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     <global-block>
+                       <lower-bound>16000</lower-bound>
+                       <upper-bound>80000</upper-bound>
+                     </global-block>
+                     <traffic-eng>
+                       <logging>
+                         <policy>
+                           <status/>
+                         </policy>
+                       </logging>
+                       <on-demand>
+                         <color>
+                           <id>10</id>
+                           <dynamic>
+                             <pcep/>
+                             <metric>
+                               <type>te</type>
+                             </metric>
+                           </dynamic>
+                         </color>
+                         <color>
+                           <id>20</id>
+                           <dynamic>
+                             <pcep/>
+                             <metric>
+                               <type>igp</type>
+                             </metric>
+                           </dynamic>
+                         </color>
+                       </on-demand>
+                       <maximum-sid-depth>8</maximum-sid-depth>
+                     </traffic-eng>
+                   </segment-routing>
+        </config>
+
+    </device>
+  </devices>
+</config-template>

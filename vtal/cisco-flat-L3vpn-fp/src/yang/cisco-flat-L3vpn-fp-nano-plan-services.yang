@@ -1,0 +1,115 @@
+module cisco-flat-L3vpn-fp-nano-plan-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn-nano-plan-services";
+  prefix cisco-flat-L3vpn-fp-nano-plan-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-flat-L3vpn-fp { prefix cisco-flat-L3vpn-fp; }
+
+  description "Models for L3vpn external nano plan.";
+
+  revision 2020-08-05 {
+    description "Removed: self component -> init state -> create
+                 Removed: self component -> ready state -> pre-condition
+                 Removed: endpoint component -> init state -> create
+                 Removed: endpoint component -> init state -> delete -> pre-condition
+                 Removed: endpoint component -> config-apply state -> create -> pre-condition
+                 Removed: endpoint component -> config-apply state -> delete
+                 Added: endpoint component -> init state -> delete -> nano-callback
+                 Added: endpoint component -> ready state -> create -> nano-callback
+                 Added: service-behavior-tree -> multiplier -> variable ACCESS_PE";
+  }
+
+  revision 2020-03-16 {
+    description "
+      Removed: self-test-component and related states.";
+  }
+
+  revision 2019-12-01 {
+    description "Added: flat-L3vpn-nano-plan -> component-type ncs:self
+                          -> state ncs:init -> create callback.";
+  }
+
+  revision 2019-05-10 {
+    description "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity endpoint {
+    base ncs:plan-component-type;
+  }
+
+  ncs:plan-outline flat-L3vpn-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // this checks if there are errors in another components, show it in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-flat-L3vpn-fp-nano-plan-services:endpoint" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          // Apply route policy kicker
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          // Marks failure - Internal ODN plan failures (delete only)
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-flat-L3vpn-fp-nano-plan-services:config-apply" {
+        ncs:create {
+          // Create internal stacked service for this device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // Mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree flat-L3vpn-external {
+    ncs:plan-outline-ref "cisco-flat-L3vpn-fp-nano-plan-services:flat-L3vpn-nano-plan";
+    ncs:plan-location "/cisco-flat-L3vpn-fp:flat-L3vpn-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:multiplier {
+        ncs:foreach "endpoint" {
+          ncs:variable "ENDPOINT" {
+            ncs:value-expr "endpoint-name";
+          }
+          ncs:variable "ACCESS_PE" {
+            ncs:value-expr "access-pe";
+          }
+          ncs:create-component "$ENDPOINT" {
+            ncs:component-type-ref "cisco-flat-L3vpn-fp-nano-plan-services:endpoint";
+          }
+        }
+      }
+    }
+  }
+}

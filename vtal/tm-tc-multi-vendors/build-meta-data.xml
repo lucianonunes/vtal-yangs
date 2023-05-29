@@ -1,0 +1,15 @@
+<ncs-pkg-build xmlns='http://tail-f.com/ns/ncs-pkg-build'>
+    <date>2022-09-01 16:05:57</date>
+    <file>ncs-5.7.6-tm-tc-multi-vendors-4.4.0-116.tar.gz</file>
+    <arch></arch>
+    <java></java>
+    <package>
+        <name>tm-tc-multi-vendors</name>
+        <version>4.4.0-116</version>
+        <ref>4.4.0-116</ref>
+        <sha1>f2bde2f</sha1>
+    </package>
+    <ncs>
+        <version>5.7.6</version>
+    </ncs>
+</ncs-pkg-build>

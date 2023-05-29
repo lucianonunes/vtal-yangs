@@ -1,0 +1,44 @@
+module cisco-ron-core-fp-common {
+
+  namespace "http://cisco.com/ns/nso/cfp/cisco-ron-core-fp-common";
+  prefix cisco-ron-core-fp-common;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-kicker {
+    prefix kicker;
+  }
+  import ietf-yang-types {
+    prefix yang;
+  }
+
+  description "Common Module for RON packages";
+
+  revision 2021-07-29 {
+    description "Dropped commit-queue-recovery-data support";
+  }
+
+  revision 2021-02-09 {
+    description
+      "Initial revision.";
+  }
+
+  list service-cleanup-progress {
+    tailf:info "List of service path for which cleanup is currently in progress";
+    description "List of service path for which cleanup is currently in progress";
+    tailf:hidden ron;
+    key path;
+    leaf path {
+      tailf:info "Service Path";
+      description "Service Path";
+      type string;
+    }
+  }
+}

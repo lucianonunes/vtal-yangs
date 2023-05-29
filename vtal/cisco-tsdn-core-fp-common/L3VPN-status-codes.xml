@@ -1,0 +1,139 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <status-code-cfp xmlns="http://com/cisco/cfp-common-status-codes">
+    <name>L3VPN</name>
+  </status-code-cfp>
+  <status-codes xmlns="http://com/cisco/cfp-common-status-codes">
+    <core-function-pack>
+      <name>L3VPN</name>
+      <status-code-enum-path>cisco-tsdn-core-fp-common/python/cisco_tsdn_core_fp_common/status_codes/flat_L3vpn_status_codes</status-code-enum-path>
+      <status-code>
+        <code>415</code>
+        <reason>BGP routing process is not configured on the device</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Configure BGP routing process on the device</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>503</code>
+        <reason>Cleanup failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>303</code>
+        <reason>Config push failed</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Device configuration rejected, fix the service payload and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>301</code>
+        <reason>Device unreachable</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Check device connectivity from NSO and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>870</code>
+        <reason>Custom Template apply failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>302</code>
+        <reason>Device out of sync</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Check sync between device and NSO, and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>407</code>
+        <reason>Dynamic class for device not found</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Load correct classpath for the ned-id in CFP dynamic device mapping list</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>409</code>
+        <reason>Dynamic class method for device not found</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure dynamic method is implemented in multi-vendor implementation</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>410</code>
+        <reason>Cannot change global-rd-enabled when service that use this flag exist</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Remove existing services before enabling/disabling global RD flag</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>411</code>
+        <reason>RD cannot be changed or removed while a vrf address-family is Active</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Remove existing vrf address-family and neighbors before updating RD</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>412</code>
+        <reason>Device interface not present on device</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify that provided interface exists on device and corresponding dynamic class interface method is implemented</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>414</code>
+        <reason>Interface BVI is not supported for given device</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>BVI is not supported for XE, please use sub-interface and BDI</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>416</code>
+        <reason>Route-distinguisher is mandatory when configuring L3VPN service on a XE device</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Flag global-rd-enabled does not affect XE devices.Please add route-distinguisher to the service before pushing the config on the device</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>408</code>
+        <reason>Router NED not supported</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure dynamic device mapping is set for the ned-id</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>504</code>
+        <reason>Service Recovery failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>501</code>
+        <reason>Self test failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>502</code>
+        <reason>Unsupported status returned for self test</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>400</code>
+        <reason>Status code mapping has not been loaded for function pack during install</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Bootstrap status code mapping</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>404</code>
+        <reason>The value for the input element is not supported</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify that input element's value is supported in the payload</recommended-actions>
+      </status-code>
+    </core-function-pack>
+  </status-codes>
+</config>

@@ -1,0 +1,140 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{controller}</name>
+      <config>
+        <context xmlns="urn:onf:otcc:yang:tapi-common">
+          <connectivity-context xmlns="urn:onf:otcc:yang:tapi-connectivity">
+            <connectivity-service>
+              <uuid>{uuid}</uuid>
+              <?foreach {name}?>
+                <name>
+                  <value-name>{value-name}</value-name>
+                  <value>{value}</value>
+                </name>
+              <?end?>
+              <service-layer>PHOTONIC_MEDIA</service-layer>
+              <service-type>POINT_TO_POINT_CONNECTIVITY</service-type>
+              <connectivity-direction>BIDIRECTIONAL</connectivity-direction>
+              <is-exclusive>false</is-exclusive>
+              <administrative-state>{administrative-state}</administrative-state>
+
+              <?set CS_UUID={string(uuid)}?>
+              <?foreach {end-point}?>
+                <?set ENDPOINT1={concat(string(local-id), "1")}?>
+                <?set ENDPOINT2={concat(string(local-id), "2")} ?>
+                <?set ENDPOINT_STATE={string(administrative-state)}?>
+                <?set SIP_UUID= {string(service-interface-point/service-interface-point-uuid)}?>
+                <end-point>
+                  <local-id>{$ENDPOINT1}</local-id>
+                  <layer-protocol-name>PHOTONIC_MEDIA</layer-protocol-name>
+                  <layer-protocol-qualifier xmlns:tapi-photonic-media="urn:onf:otcc:yang:tapi-photonic-media">tapi-photonic-media:PHOTONIC_LAYER_QUALIFIER_MC</layer-protocol-qualifier>
+                  <service-interface-point>
+                    <service-interface-point-uuid>{$SIP_UUID}</service-interface-point-uuid>
+                  </service-interface-point>
+                  <direction>BIDIRECTIONAL</direction>
+                  <role>SYMMETRIC</role>
+                  <protection-role>NA</protection-role>
+                  <name>
+                    <value-name>CONN_SERVICE_END_POINT_NAME</value-name>
+                    <value>{$ENDPOINT1}_mc</value>
+                  </name>
+                  <administrative-state>{$ENDPOINT_STATE}</administrative-state>
+                  <mca-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media">
+                    <mc-config>
+                      <local-id>{$ENDPOINT1}_mc</local-id>
+                      <name>
+                        <value-name>CSEP_MC_NAME</value-name>
+                        <value>{$ENDPOINT1}_mca_csep</value>
+                      </name>
+                    </mc-config>
+                    <number-of-mc>1</number-of-mc>
+                  </mca-connectivity-service-end-point-spec>
+                </end-point>
+                <end-point>
+                  <local-id>{$ENDPOINT2}</local-id>
+                  <layer-protocol-name>PHOTONIC_MEDIA</layer-protocol-name>
+                  <layer-protocol-qualifier xmlns:tapi-photonic-media="urn:onf:otcc:yang:tapi-photonic-media">tapi-photonic-media:PHOTONIC_LAYER_QUALIFIER_OTSiMC</layer-protocol-qualifier>
+                  <service-interface-point>
+                    <service-interface-point-uuid>{$SIP_UUID}</service-interface-point-uuid>
+                  </service-interface-point>
+                  <direction>BIDIRECTIONAL</direction>
+                  <role>SYMMETRIC</role>
+                  <protection-role>NA</protection-role>
+                  <server-connectivity-service-end-point>
+                    <connectivity-service-uuid>{$CS_UUID}</connectivity-service-uuid>
+                    <connectivity-service-end-point-local-id>{$ENDPOINT1}</connectivity-service-end-point-local-id>
+                  </server-connectivity-service-end-point>
+                  <name>
+                    <value-name>CONN_SERVICE_END_POINT_NAME</value-name>
+                    <value>{$ENDPOINT2}_otsimc</value>
+                  </name>
+                  <administrative-state>{$ENDPOINT_STATE}</administrative-state>
+                  <otsia-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media">
+                    <?foreach {otsia-connectivity-service-end-point-spec/otsi-config}?>
+                      <?set AP_ID_TYPE={string(application-identifier/application-identifier-type)}?>
+                      <?set ZR_TYPE={string(application-identifier/application-code)}?>
+                      <otsi-config>
+                        <local-id>{$ENDPOINT2}_otsi</local-id>
+                        <?if {central-frequency/central-frequency}?>
+                          <central-frequency>
+                            <central-frequency>{number(central-frequency/central-frequency)*100}</central-frequency>
+                          </central-frequency>
+                        <?else?>
+                          <central-frequency when="{$FREQUENCY}">
+                            <central-frequency>{$FREQUENCY}</central-frequency>
+                          </central-frequency>
+                        <?end?>
+                        <application-identifier>
+                          <application-identifier-type>{$AP_ID_TYPE}</application-identifier-type>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZR-S#fec-cfec#400#16qam#59.84#1x1'}?>
+                            <application-code>00B08E#QDD-400G-ZR-S#1#5003</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#400#16qam#60.14#1x1.25'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5005</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#400#16qam#59.84#1x1.25'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5004</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#300#8qam#60.14#1x1.25'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5007</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#200#qpsk#60.14#1x1.25'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5009</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#100#qpsk#30.155#1x1.25'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5013</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#400#16qam#60.14#1x1'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5006</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#300#8qam#60.14#1x1'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5008</application-code>
+                          <?end?>
+                          <?if {$ZR_TYPE = 'QDD-400G-ZRP-S#fec-ofec#200#qpsk#60.14#1x1'}?>
+                            <application-code>00B08E#QDD-400G-ZRP-S#1#5010</application-code>
+                          <?end?>
+                        </application-identifier>
+                      </otsi-config>
+                    <?end?>
+                    <number-of-otsi>{count(otsia-connectivity-service-end-point-spec/otsi-config)}</number-of-otsi>
+                  </otsia-connectivity-service-end-point-spec>
+                  <mca-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media">
+                    <mc-config>
+                      <local-id>{$ENDPOINT2}_mc</local-id>
+                      <name>
+                        <value-name>CSEP_OTSI_MC_NAME</value-name>
+                        <value>{$ENDPOINT2}_otsi_mc</value>
+                      </name>
+                    </mc-config>
+                    <number-of-mc>1</number-of-mc>
+                  </mca-connectivity-service-end-point-spec>
+                </end-point>
+              <?end?>
+            </connectivity-service>
+          </connectivity-context>
+        </context>
+      </config>
+    </device>
+  </devices>
+</config>

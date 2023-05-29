@@ -1,0 +1,178 @@
+submodule cisco-ron-lsa {
+  belongs-to cisco-ron-cfp {
+    prefix "cisco-ron-cfp";
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-kicker {
+    prefix kicker;
+  }
+
+  revision 2021-05-21 {
+    description "Added new grouping 'remote-dco-metadata-grouping' to store
+     ZR-Pluggable child interfaces configured on remote NSO.";
+  }
+
+  revision 2021-04-01 {
+    description "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity installed {
+    base ncs:plan-state;
+  }
+
+  grouping remote-plan-change-handler-grouping {
+    tailf:action remote-plan-change-callback {
+      tailf:info "Custom action that used for remote plan change kicker";
+      tailf:actionpoint cisco-ron-cfp-remote-plan-change-callback;
+      tailf:hidden ron;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      // No-op
+      }
+    }
+  }
+ /*
+  * Local Plan Copy related models for every service
+  */
+  grouping remote-local-plan-grouping {
+    list dco-plan {
+      tailf:info "Remote ZR DCO Plan";
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name router";
+
+      leaf name {
+        type string;
+      }
+
+      leaf router {
+        type string;
+      }
+      uses ncs:nano-plan-data;
+    }
+    list connectivity-service-plan {
+      tailf:info "Remote Connectivity Service Plan";
+      config false;
+      tailf:cdb-oper {
+          tailf:persistent true;
+      }
+      key "uuid";
+
+      leaf uuid {
+          type string;
+      }
+      uses ncs:nano-plan-data;
+    }
+  }
+
+  grouping remote-optics-data-grouping {
+    list connectivity-service-oper-data {
+      config false;
+      tailf:cdb-oper  {
+        tailf:persistent true;
+      }
+
+      key 'uuid';
+      leaf uuid {
+        type string;
+      }
+
+      list end-point {
+        key 'local-id';
+        leaf local-id {
+          type string;
+        }
+
+        container optics-data {
+          leaf transmit-power {
+            type decimal64 {
+                fraction-digits 7;
+            }
+            tailf:info "The total power at any point in a channel specified in dBm.";
+            description "The total power at any point in a channel specified in dBm.";
+          }
+
+          leaf grid-type {
+            tailf:info "DWDM Channel Grid Type";
+            description "DWDM Channel Grid Type";
+            type enumeration {
+              enum "100mhz-grid" {
+                value 1;
+                description
+                  "100MHz Grid";
+              }
+            }
+            default "100mhz-grid";
+          }
+
+          leaf frequency {
+            tailf:info "Frequency in 100MHz, C Band: 1911500-1961000,L band: 1861000-1908500";
+            description "Frequency in 100MHz, C Band: 1911500-1961000,L band: 1861000-1908500";
+            type uint32 {
+              range "1861000..1961000";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping remote-dco-metadata-grouping {
+    list dco {
+      tailf:info "ZR Digital Coherent Optics service operational data";
+      description "ZR Digital Coherent Optics service operational data";
+      key "name router";
+
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+
+      leaf name {
+        tailf:info "Service Name for ZR-DCO";
+        description "Service Name for ZR-DCO";
+        type string;
+      }
+
+      leaf router {
+        tailf:info "ZR-pluggable router name";
+        description "ZR-pluggable router name";
+        type string;
+      }
+
+      list interface {
+        tailf:info "Child interface of the controller";
+        description "Child interface of the controller";
+        key index;
+        leaf index {
+          tailf:info "Index 0-3";
+          description "Index 0-3";
+          type uint8 {
+            range "0..3";
+          }
+        }
+        leaf name {
+          tailf:info "The name of the interface configured on the router";
+          description "The name of the interface configured on the router";
+          type string {
+            pattern "[a-zA-Z0-9.:_/-]+";
+          }
+        }
+      }
+    }
+  }
+}

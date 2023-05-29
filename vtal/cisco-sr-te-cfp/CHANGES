@@ -1,0 +1,2319 @@
+cisco-sr-te-cfp (v2.0) [April 28, 2021]
+=================================================
+  A. Modified tailf:info for leaf source
+  B. Added when condition on ODN -> disjoint-path -> source to check for XE devices
+
+cisco-sr-te-cfp (v2.0) [March 4, 2021]
+=================================================
+  A. Modified tailf:info for head-end
+
+cisco-sr-te-cfp (v2.0) [November 16, 2020]
+===================================================
+A. Added validate callpoint to ODN service.
+    tailf:validate "sr-odn-validation" {
+      tailf:dependency ".";
+    }
+B. Added validate callpoint to Policy service.
+    tailf:validate "sr-policies-validation" {
+      tailf:dependency ".";
+    }
+
+cisco-sr-te-cfp (v2.0) [June 23, 2020]
+=============================================
+1. Added metric margin feature.
+    module cisco-sr-te-cfp-sr-common {
+      namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-common";
+      prefix cisco-sr-te-cfp-sr-common;
+      ....
+     container dynamic {
+      ......
+        container metric-margin {
+         presence "true";
+         tailf:info "Metric-margin";
+         description "Metric-margin";
+         choice metric-margin {
+           leaf absolute {
+             tailf:info "<0-2147483647>;;Absolute metric margin value";
+             description "<0-2147483647>;;Absolute metric margin value";
+             type uint32 {
+               range "0..2147483647";
+             }
+           }
+           leaf relative {
+             tailf:info "<0-2147483647>;;Relative metric margin value";
+             description "<0-2147483647>;;Relative metric margin value";
+             type uint32 {
+               range "1..2147483647";
+             }
+           }
+         }
+       }
+
+1(a).Payload Changes for Policy
+-------------------------------
+  <config xmlns="http://tail-f.com/ns/config/1.0">
+    <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+    <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+    ...
+    <policy>
+        ...
+       <dynamic>
+            <metric-type>te</metric-type>
+            <metric-margin>
+             <absolute>30</absolute>
+            </metric-margin>
+
+1(b).Payload changes for ODN
+----------------------------
+   <config xmlns="http://tail-f.com/ns/config/1.0">
+   <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+    <odn xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn">
+      <odn-template>
+        ....
+        <dynamic>
+          <metric-type>igp</metric-type>
+          <metric-margin>
+           <absolute>30</absolute>
+          </metric-margin>
+
+cisco-sr-te-cfp (v0.0.11) [June 10, 2020]
+=============================================
+  A. Added reconcile option to custom redeploy action
+
+cisco-sr-te-cfp (v0.0.11) [April 16, 2020]
+=============================================
+
+  1. Moved SR-Settings and SR-PCE out of this package into separate samples.
+  2. Made IOSXR CLI support as default.
+
+cisco-sr-te-cfp (v0.0.11) [April 13, 2020]
+=============================================
+   A. Added status-code groupings in cisco-sr-te-cfp-sr-common
+   module cisco-sr-te-cfp-sr-common {
+      namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-common";
+      prefix cisco-sr-te-cfp-sr-common;
+
+      ...
+
+     grouping status-code-plan-augmentation { ------------------------> ADDED
+       list status-code-detail {
+         tailf:info "Status Codes";
+         description "Status Codes";
+         key "type name";
+         leaf type {
+           type ncs:plan-component-type-t;
+         }
+         leaf name {
+           type string;
+         }
+         leaf code {
+           type string;
+         }
+         list context {
+           key context-name;
+           leaf context-name {
+             type string;
+           }
+           leaf context-msg {
+             type string;
+           }
+           list states {
+             key state;
+             leaf state {
+               type string;
+             }
+             leaf val {
+               type string;
+             }
+           }
+         }
+         leaf severity {
+           type enumeration {
+             enum INFO;
+             enum WARNING;
+             enum ERROR;
+             enum FATAL;
+             enum NONE;
+           }
+         }
+         leaf recommended-action {
+           tailf:info "Recommended action to recover in case of error";
+           description "Recommended action to recover in case of error";
+           type string;
+         }
+       }
+     }
+     grouping status-code-component-augmentation { ---------------------------> ADDED
+       leaf status-code {
+         type string;
+       }
+     }
+   }
+
+   B. Added plan and component augmentation using status-code-plan-augmentation and status-code-component-augmentation groupings to:
+      1. cisco-sr-te-cfp-sr-odn.yang
+      2. cisco-sr-te-cfp-sr-pce.yang
+      3. cisco-sr-te-cfp-sr-policies.yang
+      4. cisco-sr-te-cfp-sr-settings.yang
+
+      Ex. cisco-sr-te-cfp-sr-odn.yang
+
+      module cisco-sr-te-cfp-sr-odn {
+        namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn";
+        prefix cisco-sr-te-cfp-sr-odn;
+
+        ...
+
+        augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan { -----------------------------> ADDED
+          uses cisco-sr-te-cfp-sr-common:status-code-plan-augmentation;
+        }
+
+        augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan-history/plan { ----------------> ADDED
+          uses cisco-sr-te-cfp-sr-common:status-code-plan-augmentation;
+        }
+
+        augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan/component { -------------------> ADDED
+          uses cisco-sr-te-cfp-sr-common:status-code-component-augmentation;
+        }
+
+        augment /cisco-sr-te-cfp:sr-te/odn/odn-template-plan/plan-history/plan/component { ------> ADDED
+          uses cisco-sr-te-cfp-sr-common:status-code-component-augmentation;
+        }
+      }
+
+   C. Added status code oper data grouping in cisco-sr-te-cfp-sr-common
+
+      module cisco-sr-te-cfp-sr-common {
+        namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-common";
+        prefix cisco-sr-te-cfp-sr-common;
+
+        ...
+
+        leaf status-code-name { ---------------------> ADDED
+          type string;
+        }
+
+        list status-context { -----------------------> ADDED
+          key context-name;
+          leaf context-name {
+            type string;
+          }
+          leaf context-msg {
+            type string;
+          }
+          list status-state {
+            key state;
+            leaf state {
+              type string;
+            }
+            leaf value {
+              type string;
+            }
+          }
+        }
+      }
+
+   D. Added "uses" status code oper data grouping for:
+      1. cisco-sr-te-cfp-sr-odn-internal.yang
+      2. cisco-sr-te-cfp-sr-pce-internal.yang
+      3. cisco-sr-te-cfp-sr-policies-internal.yang
+      4. cisco-sr-te-cfp-sr-settings-internal.yang
+
+      Ex. cisco-sr-te-cfp-sr-odn-internal.yang
+
+      module cisco-sr-te-cfp-sr-odn-internal {
+        namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn-internal";
+        prefix cisco-sr-te-cfp-sr-odn-internal;
+
+        ...
+
+        augment /cisco-sr-te-cfp:sr-te {
+          container odn {
+
+            ...
+
+            list odn-template-oper-data {
+
+              ...
+
+              uses cisco-sr-te-cfp-sr-common:status-code-oper; -----------------------> ADDED
+            }
+          }
+        }
+      }
+
+cisco-sr-te-cfp (v0.0.11) [April 06, 2020]
+=============================================
+  A. Modified forward-class range for SR-Policy to <0-7>.
+
+       Sample Payload:
+
+       <sr-te xmlns="...">
+         <policies xmlns="...">
+           <policy>
+            <auto-route>
+             <forward-class>0</forward-class> -----------> RANGE IS NOW 0 to 7.
+            </auto-route>
+           </policy>
+         </policies>
+       </sr-te>
+
+  B. Added support for ipv6 under PCE for CLI NED.
+
+cisco-sr-te-cfp (v0.0.10) [Mar 17, 2020]
+=============================================
+   A. Added support for sub-id under PCE for CLI NED.
+
+cisco-sr-te-cfp (v0.0.10) [Mar 17, 2020]
+=============================================
+
+   A. Removed head-end actions for SR-Policy and other odn-template restrictions
+
+    ```
+    augment /cisco-sr-te-cfp:sr-te {
+        container policies {
+          tailf:info "SR-TE Policy container";
+          description "SR-TE Policy container";
+          list policy {
+            tailf:info "SR-Policy";
+            description "SR-Policy";
+            key "name";
+            uses ncs:service-data;
+            ncs:servicepoint sr-policies-external-servicepoint;
+            uses ct-hook:template-hook;
+            leaf name {
+              tailf:info "Unique identifier for a SR-Policy";
+              description "Unique identifier for a SR-Policy";
+              type cisco-sr-te-cfp-sr-types:Cisco-ios-xr-string;
+            }
+            list head-end {
+              tailf:info "List of headend routers";
+              description "List of headend routers";
+              key name;
+              leaf name {
+                type leafref {
+                  path "/ncs:devices/ncs:device/ncs:name";
+                }
+              }
+              min-elements 1;
+              uses ct-hook:template-hook; ------------------------------------------------------------> REMOVED
+              leaf head-end-redeploy-flag { ------------------------------------------------------------> REMOVED FLAG
+                tailf:hidden tsdn;
+                tailf:info "Custom redeploy flag that redeploys lower level services if changed.";
+                description "Custom redeploy flag that redeploys lower level services if changed.";
+                type string;
+              }
+              container action {  -------------------------------------------------------------------------> REMOVED ALL ACTIONS PER HEAD-END
+                tailf:action self-test {
+                  tailf:actionpoint sr-policy-external-self-test-actionpoint;
+                  input {
+                  }
+                  output {
+                    leaf status {
+                      type string;
+                    }
+                    leaf message {
+                      type string;
+                    }
+                  }
+                }
+                tailf:action redeploy {
+                  tailf:actionpoint sr-policy-head-end-redeploy-actionpoint;
+                  input {
+                  }
+                  output {
+                    leaf status {
+                      type string;
+                    }
+                    leaf message {
+                      type string;
+                    }
+                  }
+                }
+              }
+            }
+
+            must "(not(odn-template) and count(head-end)=1) or (odn-template)" { ------------------> REMOVED MUST CHECK - MAX 1 HEAD-END ALLOWED
+              error-message "Only one head-end is allowed for non-ODN SR Policy.";
+            }
+
+            container odn-template {  -------------------------------------------------------------> REMOVED ENTIRE CONTAINER
+              tailf:info "Designates this policy as a ODN Template";
+              description "Designates this policy as a ODN Template";
+              presence "true";
+              leaf maximum-sid-depth {
+                  tailf:info "Maximum SID Depth";
+                  description "Maximum SID Depth";
+                  type uint8 {
+                      tailf:info "Maximum SID Depth <1-255>";
+                      range "1..255";
+                  }
+              }
+            }
+            leaf tail-end {
+              tailf:info "Router-Id of the tail-end device of the SR policy";
+              description "Router-Id of the tail-end device of the SR policy";
+              type union {
+                type string;
+                type inet:ipv4-address;
+                type inet:ipv6-address;
+              }
+              mandatory true;
+              when "not(boolean(../odn-template))"; ------------------------------------------------> REMOVED MUST CHECK
+            }
+            ...
+            leaf binding-sid {
+              tailf:info "Binding SID of the SR-Policy applied at the headend";
+              description "Binding SID of the SR-Policy applied at the headend";
+              type uint32;
+              when "not(boolean(../odn-template))"; -------------------------------------------------> REMOVED MUST CHECK
+            }
+          ...
+             list path {
+              tailf:info "SR-Policy candidate paths";
+              description "SR-Policy candidate paths";
+              key preference;
+              ...
+              min-elements 1;
+              choice sr-te-path-choice {
+                container explicit {
+                  presence "true";
+                  ...
+                  when "not(boolean(../../odn-template))";  --------------------------------------------> REMOVED MUST CHECK
+                }
+                container dynamic {
+                  presence "true";
+                  tailf:info "Use dynamic path computation";
+                  description "Use dynamic path computation";
+                  ...
+                  leaf flex-alg { ----------------------------------------------------------------------> REMOVED LEAF
+                    type uint32 {
+                      range "128..255";
+                    }
+                    tailf:info "Prefix-SID algorithm";
+                    description "Prefix-SID algorithm";
+                    when "boolean(../../../odn-template)";
+                  }
+                  ...
+                  container constraints {
+                    leaf sid-limit {
+                      tailf:info "Absolute limit on the number of SIDs in the SID-list";
+                      description "Absolute limit on the number of SIDs in the SID-list";
+                      type uint32 {
+                        range "0..255";
+                      }
+                      when "not(boolean(../../../../odn-template))"; -------------------------------------> REMOVED MUST CHECK
+                    }
+                    uses constraints-grp;
+                  }
+                }
+              }
+            }
+            must "(boolean(odn-template) and count(path) = 1) or (not(boolean(odn-template)))" {----------------> REMOVED MUST CHECK
+              error-message "With ODN, only one path definition allowed";
+            }
+    ...
+            container auto-route {
+              tailf:info "Enable Autoroute on this SR-policy";
+              description "Enable Autoroute on this SR-policy";
+              presence true;
+              ...
+              when "not(boolean(../odn-template))"; --------------------------------------------------------------> REMOVED MUST CHECK
+            }
+
+
+    ...
+          container action {
+              ...
+              tailf:action get-modifications {
+                tailf:actionpoint sr-policy-get-modifications-actionpoint;
+                input {
+                  leaf device { ----------------------------------------------------------------------------------> REMOVED DEVICE INPUT due to 1 HEAD-END
+                    type leafref {
+                      path "../../../head-end/name";
+                    }
+                  }
+                  leaf outformat {
+                    type outformat2;
+                  }
+                }
+                output {
+                  leaf message {
+                    type string;
+                  }
+                }
+              }
+            }
+      ...
+      ```
+
+B. Sample Payload for new ODN service.
+
+      ```
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <odn xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-odn">
+            <odn-template>
+              <name>SR-CLI-ODN-300</name>
+              <head-end>
+                <name>my-iosxr-cli</name>
+              </head-end>
+              <head-end>
+                <name>my-iosxr-nc</name>
+              </head-end>
+              <color>300</color>
+              <bandwidth>200</bandwidth>
+              <maximum-sid-depth>6</maximum-sid-depth>
+              <dynamic>
+                <metric-type>igp</metric-type>
+                <flex-alg>200</flex-alg>
+                <pce/>
+                <disjoint-path>
+                  <type>node</type>
+                  <group-id>10</group-id>
+                  <sub-id>5</sub-id>
+                </disjoint-path>
+                <affinity>
+                  <rule>
+                    <action>exclude-any</action>
+                    <color>BLUE</color>
+                  </rule>
+                </affinity>
+              </dynamic>
+            </odn-template>
+          </odn>
+        </sr-te>
+      </config>
+
+      ```
+
+C. Removed path name from sr-policy
+
+      ```
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+            <policy>
+              <name>SR-CLI-ERO-VPWS-my-iosxr-cli-1</name>
+              <head-end>
+                <name>my-iosxr-cli-1</name>
+              </head-end>
+              <tail-end>18.18.18.18</tail-end>
+              <color>601</color>
+              <binding-sid>601</binding-sid>
+              <path>
+                <preference>100</preference>
+                <name>PREF-PATH-NAME</name> ----------------> REMOVED
+                ...
+              </path>
+            </policy>
+          </policies>
+        </sr-te>
+      </config>
+      ```
+
+D. Modified Path Preference range for SR-Policy to 1-65535.
+
+    Sample Payload:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+            <policy>
+              <name>SR-CLI-ERO</name>
+              <head-end>
+                <name>PIOSXR-0</name>
+              </head-end>
+              <tail-end>7.7.7.7</tail-end>
+              <color>100</color>
+              <binding-sid>100</binding-sid>
+              <path>
+                <preference>200</preference> -----------> RANGE IS NOW 1 to 65535.
+                ...
+              </path>
+            </policy>
+          </policies>
+        </sr-te>
+      </config>
+
+cisco-sr-te-cfp (v0.0.9) [Mar 16, 2020]
+=============================================
+  A. Removed policy-name-validation-disabled flag. Removed must condition to check "Non ODN Policy name must match srte_c_<color>_ep_<tail-end>".
+
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <cfp-configurations xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+        <policy-name-validation-disabled /> ----------------------- REMOVED
+      </cfp-configurations>
+    </config>
+
+  B. Remove self-test from service lifecycle.
+
+    SR-TE Configurations:
+
+    ```
+    container cfp-configurations {
+        leaf self-test-enabled { ----------------------------------------------------- LEAF REMOVED
+          tailf:info "If set to true, following services will run self-test after
+                      successful config apply:
+                      1. sr-policies";
+          description "If set to true, following services will run self-test after
+                      successful config apply:
+                      1. sr-policies";
+          type boolean;
+          default true;
+        }
+    ```
+
+    SR-POLICY SERVICE:
+
+    ```
+      augment /cisco-sr-te-cfp:sr-te {
+        container policies {
+          tailf:info "SR-TE Policy container";
+          description "SR-TE Policy container";
+          list policy {
+            tailf:info "SR-Policy";
+            description "SR-Policy";
+
+            key "name";
+            uses ncs:service-data;
+            ncs:servicepoint sr-policies-external-servicepoint;
+    ...
+
+            leaf self-test-delay { --------------------------------------------> REMOVED LEAF
+              tailf:info "Delay in seconds before self-test is kick started";
+              description "Delay in seconds before self-test is kick started";
+              type uint16;
+              default 30;
+            }
+    ...
+    ```
+
+    SR-POLICY PLAN:
+
+    ```
+    admin@ncs% run show sr-te cisco-sr-te-cfp-sr-policies:policies policy-plan SR-CLI-DYNAMIC plan component head-end
+                                                                                                                                     POST
+                        BACK                                                                                                         ACTION
+    TYPE      NAME      TRACK  GOAL  STATE                                                        STATUS   WHEN                 ref  STATUS
+    -----------------------------------------------------------------------------------------------------------------------------------------
+    head-end  PIOSXR-0  false  -     init                                                         reached  2020-02-03T22:58:40  -    -
+                                     cisco-sr-te-cfp-sr-policies-nano-plan-services:config-apply  reached  2020-02-03T22:58:44  -    -
+                                     cisco-sr-te-cfp-sr-policies-nano-plan-services:self-test     reached  2020-02-03T22:59:12  -    --------------- REMOVED STATE
+                                     ready                                                        reached  2020-02-03T22:59:12  -    -
+    ```
+
+cisco-sr-te-cfp (v0.0.8) [Mar 6, 2020]
+=============================================
+
+  A. Modified YANG model
+    1. cisco-sr-te-cfp-sr-policies.yang
+       description: Added maximum-sid-depth support for ODN policies.
+       Sample Payload:
+
+       <sr-te xmlns="...">
+         <policies xmlns="...">
+           <policy>
+            <odn-template>
+             <maximum-sid-depth>100</maximum-sid-depth> ---------------------------ADDED
+            </odn-template>
+           </policy>
+         </policies>
+       </sr-te>
+
+  B. Added hopcount under sr-te -> policies -> policy -> path -> dynamic -> metric-type" for
+     IOSXR netconf
+
+      <path>
+        <preference>222</preference>
+        <dynamic>
+          <metric-type>hopcount</metric-type> --------------------------------------ADDED
+        </dynamic>
+      </path>
+
+  C. Renamed sr-te -> policies -> policy -> odn -> odn-template for policy service
+      Sample Payload:
+
+        <sr-te xmlns="...">
+          <policies xmlns="...">
+            <policy>
+              <name>SR-CLI-DYNAMIC</name>
+              <head-end><name>PIOSXR-0</name></head-end>
+              <odn-template/> --------------------------------------MODIFIED
+              <color>111</color>
+            </policy>
+          </policies>
+        </sr-te>
+
+  D. Removed sid-limit option for ODN services
+
+      <path>
+        <preference>222</preference>
+        <dynamic>
+          <constraints>
+            <sid-limit>2</sid-limit> --------------------------------------REMOVED
+          </constraints>
+        </dynamic>
+      </path>
+
+   E. Added autoroute under sr-te -> policies -> policy
+
+       <auto-route>
+         <auto-route-metric>
+           <metric-relative-value>5</metric-relative-value>    --- Relative metric (choice)
+           <metric-constant-value>1000</metric-constant-value> --- Constant metric (choice)
+         </auto-route-metric>
+         <include-prefixes>
+           <include-prefix>
+             <prefix-address>192.168.1.1/16</prefix-address>      --- Supports ipv4
+           </include-prefix>
+         </include-prefixes>
+         <force-sr-include/>
+         <forward-class>5</forward-class>
+       </auto-route>
+
+
+cisco-sr-te-cfp (v0.0.7) [Feb 12, 2020]
+=============================================
+
+  A. Added sub-id under sr-te -> policies -> policy -> path -> dynamic/explict -> constraints
+     for IOSXR netconf
+      <disjoint-path>
+        <group-id>10</group-id>
+        <type>link</type>
+        <sub-id>5</sub-id> --------------------------------------ADDED
+      </disjoint-path>
+
+cisco-sr-te-cfp (v0.0.6) [Jan 31, 2020]
+=============================================
+
+  A. Modified YANG model
+    1. cisco-sr-te-cfp-sr-policies.yang
+      description: sr policy color is now mandatory for both ODN and non-ODN services.
+      Removed sr-te.policies.policy.color must statement
+      Added sr-te.policies.policy.color mandatory statement
+
+cisco-sr-te-cfp (v0.0.6) [Jan 23, 2020]
+=============================================
+
+  A. Removed all Telemetry and Traffic Collector code, models, payloads, and tests to separate
+     cisco-tm-tc-fp package.
+
+cisco-sr-te-cfp (v0.0.6) [Jan 08, 2020]
+=============================================
+
+  A. Added the following new interfaces to following yang files:-
+    cisco-sr-te-cfp-sr-pce.yang
+    cisco-sr-te-cfp-sr-settings.yang
+      a. FiftyGigE;
+      b. TwoHundredGigE;
+      c. Bundle-Ether;
+      d. FourHundredGigE;
+      e. TwentyFiveGigE;
+
+  B. Added source-address tag under pcc as follows
+      <pcc>
+        <source-address>
+          <ipv4>
+            192.168.2.1
+          </ipv4>
+        </source-address>
+      </pcc>
+
+      To disable a pcc for a specific node, add the disable tag in node as follows
+        <node>
+          <pcc>
+            <disable/>
+          </pcc>
+        </node>
+
+     Updated the condition for pcc in the template as follows
+      <pcc when="{(../pcc and not (../node/pcc/disable))}">
+
+  C. Enhancements
+
+     1. sr-setting service config update for distribute link-state for ISIS instance
+        description: When distribute is false, its not possible to configure
+                     distrubute link-state for ISIS intsance on the device.
+        Payload:
+          a. Under node
+              <config xmlns="http://tail-f.com/ns/config/1.0">
+                <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+                <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+                <setting>
+                  <name>SP</name>
+                  <node>
+                    <name>P-0</name>
+                    <isis>
+                      <instance-name>core</instance-name>
+                      <distribute>true</distribute>
+                    </isis>
+                  </node>
+                </setting>
+                </settings>
+                </sr-te>
+              </config>
+
+          b. Under slice
+              <config xmlns="http://tail-f.com/ns/config/1.0">
+                <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+                <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+                <setting>
+                  <name>SP2</name>
+                  <slice>
+                    <isis>
+                      <instance-name>core</instance-name>
+                      <distribute>true</distribute>
+                      <node>
+                        <name>P-1</name>
+                      </node>
+                    </isis>
+                  </slice>
+                  <node>
+                    <name>P-1</name>
+                  </node>
+                </setting>
+                </settings>
+                </sr-te>
+              </config>
+
+  D. tail-end choice between tail-end-device or tail-end is now removed. Only tail-end IP is supported.
+
+    a. Sample Payload for tail-end-choice:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+            <policy>
+              <name>SR-CLI-ERO</name>
+              <head-end>
+                <name>PIOSXR-0</name>
+              </head-end>
+              <tail-end-device>         ---------------------------------->  REMOVED
+                ...
+              </tail-end-device>
+              <tail-end>
+                ...         ----------------------------------> DEVICE IP ONLY
+              </tail-end>
+              ...
+            </policy>
+          </policies>
+        </sr-te>
+      </config>
+
+cisco-sr-te-cfp (v0.0.3) [Aug 27, 2019]
+=============================================
+
+A. New Feature
+
+  1. Custom Templates
+    Custom templates can be used to apply configs directly on devices
+    custom-template added
+
+    Name of custom templates must start with either "ct-" or "CT-"
+
+    If apply-custom-template leaf is set to 'true', then only custom-templates will get applied
+    By default apply-custom-template is set to 'true':
+      admin@ncs% show apply-custom-template
+      apply-custom-template true;
+
+  a. Sample custom templates
+    <devices xmlns="http://tail-f.com/ns/ncs">
+      <template>
+        <name>CT-CLI-banner</name> ----------------------> CUSTOM TEMPLATE NAME
+        <ned-id>
+          <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+          <config>
+            <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+              <history>informational</history>
+            </logging>
+            <banner xmlns="http://tail-f.com/ned/cisco-ios-xr">
+              <login>
+                <start-marker>'</start-marker>
+                <message>{$BANNER_TEXT}</message>  ------------------> VARIABLE
+                <end-marker>'</end-marker>
+              </login>
+            </banner>
+          </config>
+        </ned-id>
+      </template>
+      <template>
+        <name>CT-CLI-logging</name> ----------------------> CUSTOM TEMPLATE NAME
+        <ned-id>
+          <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+          <config>
+            <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+              <history>informational</history>
+            </logging>
+          </config>
+        </ned-id>
+      </template>
+    </devices>
+
+    CT-CLI-banner template will apply banner config on device
+    CT-CLI-logging template will set logging config on device
+
+    b. Sample Payloads
+        Previous Payload sample for Policy service:
+        <config xmlns="http://tail-f.com/ns/config/1.0">
+          <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+            <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+              <policy>
+                <name>SR-CLI-DYNAMIC</name>
+                <head-end>
+                  <name>PIOSXR-0</name>
+                </head-end>
+              </policy>
+            </policies>
+          </sr-te>
+        </config>
+
+
+      Current Payload sample for Policy service:
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+            <policy>
+              <name>SR-CLI-DYNAMIC</name>
+              <custom-template>
+                <name>CT-CLI-logging</name>
+              </custom-template>
+              <head-end>
+                <name>PIOSXR-0</name>
+                <custom-template>
+                  <name>CT-CLI-banner</name>
+                  <variable>
+                    <name>BANNER_TEXT</name>
+                    <value>Welcome</value>
+                  </variable>
+                </custom-template>
+              </head-end>
+            </policy>
+          </policies>
+        </sr-te>
+      </config>
+
+      Previous payload for PCE service:
+          <config xmlns="http://tail-f.com/ns/config/1.0">
+            <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+              <pces xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-pce">
+                <sr-pce>
+            <name>PCE-0</name>
+                  <node>
+                    <name>PIOSXR-0</name>
+                  </node>
+                </sr-pce>
+              </pces>
+            </sr-te>
+          </config>
+
+
+      Current payload for PCE service:
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <pces xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-pce">
+            <sr-pce>
+              <name>PCE-0</name>
+              <custom-template>
+                <name>CT-CLI-logging</name>
+              </custom-template>
+              <node>
+                <name>PIOSXR-0</name>
+                <custom-template>
+                  <name>CT-CLI-banner</name>
+                  <variable>
+                    <name>BANNER_TEXT</name>
+                    <value>Welcome</value>
+                  </variable>
+                </custom-template>
+              </node>
+            </sr-pce>
+          </pces>
+        </sr-te>
+      </config>
+
+    c. Check status of applied custom-template
+      admin@ncs> show custom-template-status
+      NAME                         DEVICE    STATUS   MESSAGE
+      ---------------------------------------------------------
+      CT-CLI-banner                PIOSXR-0  APPLIED  SUCCESS
+      CT-NETCONF-banner-iteration  P-0       APPLIED  SUCCESS
+      CT-NETCONF-logging           P-0       APPLIED  SUCCESS
+
+
+cisco-sr-te-cfp (v0.0.3) [Jul 3, 2019]
+=============================================
+
+A. New Feature:
+
+  1. Custom Templates
+      Custom templates can be used to apply configs directly on devices
+      custom-template list node added
+        at global level: sr-te -> settings -> setting
+        at node level: and sr-te -> settings -> setting -> node
+
+      Name of custom templates must start with either "ct-" or "CT-"
+
+      If apply-custom-template leaf is set to 'true', then only custom-templates will get applied
+      By default apply-custom-template is set to 'true':
+        admin@ncs% show apply-custom-template
+        apply-custom-template true;
+
+    a. Sample custom templates
+      <devices xmlns="http://tail-f.com/ns/ncs">
+        <template>
+          <name>CT-CLI-banner</name> ----------------------> CUSTOM TEMPLATE NAME
+          <ned-id>
+            <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+            <config>
+              <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                <history>informational</history>
+              </logging>
+              <banner xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                <login>
+                  <start-marker>'</start-marker>
+                  <message>{$BANNER_TEXT}</message>  ------------------> VARIABLE
+                  <end-marker>'</end-marker>
+                </login>
+              </banner>
+            </config>
+          </ned-id>
+        </template>
+        <template>
+          <name>CT-CLI-logging</name> ----------------------> CUSTOM TEMPLATE NAME
+          <ned-id>
+            <id xmlns:cisco-iosxr-cli-7.22="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.22">cisco-iosxr-cli-7.22:cisco-iosxr-cli-7.22</id>
+            <config>
+              <logging xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                <history>informational</history>
+              </logging>
+            </config>
+          </ned-id>
+        </template>
+      </devices>
+
+      CT-CLI-banner template will apply banner config on device
+      CT-CLI-logging template will set logging config on device
+
+    b. Sample Payload for global level:
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+            <setting>
+              <name>SETTING-1</name> --------------------> SERVICE NAME
+              <custom-template>
+                <name>CT-CLI-banner</name> --------------> CUSTOM TEMPLATE NAME
+                <variable>
+                  <name>BANNER_TEXT</name> --------------> VARIABLE USED IN CUSTOM TEMPLATE
+                  <value>Welcome</value> ----------------> VARIABLE VALUE
+                </variable>
+              </custom-template>
+            </setting>
+          </settings>
+        </sr-te>
+      </config>
+
+    c. Sample Payload for node level:
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+            <setting>
+              <name>SETTING-1</name> ---------------------> SERVICE NAME
+              <node>
+                <name>PIOSXR-0</name> --------------------> NODE NAME
+                <custom-template>
+                  <name>CT-CLI-logging</name> ------------> CUSTOM TEMPLATE NAME
+                </custom-template>
+              </node>
+            </setting>
+          </settings>
+        </sr-te>
+      </config>
+
+    d. Check status of applied custom-template
+        admin@ncs> show custom-template-status
+        NAME                         DEVICE    STATUS   MESSAGE
+        ---------------------------------------------------------
+        CT-CLI-banner                PIOSXR-0  APPLIED  SUCCESS
+        CT-NETCONF-banner-iteration  P-0       APPLIED  SUCCESS
+        CT-NETCONF-logging           P-0       APPLIED  SUCCESS
+
+
+cisco-sr-te-cfp (v0.0.3) [Jun 18, 2019]
+=============================================
+
+A. Enhancements:
+
+  1. tail-end is now a choice between tail-end-device or tail-end.
+
+    a. Sample Payload for tail-end-choice:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+            <policy>
+              <name>SR-CLI-ERO</name>
+              <head-end>
+                <name>PIOSXR-0</name>
+              </head-end>
+              <tail-end-device>
+                ...         ----------------------------------> DEVICE NAME
+              </tail-end-device>
+              -----OR----
+              <tail-end>
+                ...         ----------------------------------> DEVICE IP
+              </tail-end>
+              ...
+            </policy>
+          </policies>
+        </sr-te>
+      </config>
+
+cisco-sr-te-cfp (v0.0.3) [Jun 14, 2019]
+=============================================
+
+A. Enhancements
+
+  1. Added SRGB auto-assign algorithm-prefix-sid option under:
+      sr-te -> settings -> setting -> slice -> isis -> node -> flex-algo -> algorithm-prefix-sid ->
+                                                            auto-assign-absolute/auto-assign-index.
+
+    a. Sample Payload for auto-assign option under slice:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+        <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <sr-global-block>
+            <sr-pool>
+              <sr-pool-name>SRGB_POOL</sr-pool-name> -------------> ID RESOURCE POOL IS MANDATORY FOR AUTO-ASSIGN OPTION
+            </sr-pool>
+          </sr-global-block>
+          <slice>
+            <isis>
+              <instance-name>CORE</instance-name>
+              <node>
+                <name>PIOSXR-0</name>
+                <flex-algo>
+                  <name>128</name>
+                  <algorithm-prefix-sid>
+                    <auto-assign-index/>  -------------> AUTO-ASSIGN INDEX
+                    ----OR----
+                    <auto-assign-absolute/>  -------------> AUTO-ASSIGN ABSOLUTE
+                    <n-flag-clear/>
+                  </algorithm-prefix-sid>
+                </flex-algo>
+              </node>
+            </isis>
+          </slice>
+        </setting>
+        </settings>
+        </sr-te>
+      </config>
+
+  2. Added SRGB auto-assign algorithm-prefix-sid option under:
+      sr-te -> settings -> setting -> node -> isis -> flex-algo -> algorithm-prefix-sid ->
+                                                  auto-assign-absolute/auto-assign-index.
+
+    a. Sample Payload for auto-assign option under node:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+        <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <sr-global-block>
+            <sr-pool>
+              <sr-pool-name>SRGB_POOL</sr-pool-name> -------------> ID RESOURCE POOL IS MANDATORY FOR AUTO-ASSIGN OPTION
+            </sr-pool>
+          </sr-global-block>
+          <node>
+            <name>PIOSXR-0</name>
+            <isis>
+              <instance-name>CORE-2</instance-name>
+                <flex-algo>
+                  <name>128</name>
+                  <algorithm-prefix-sid>
+                    <auto-assign-index/>  -------------> AUTO-ASSIGN INDEX
+                    ----OR----
+                    <auto-assign-absolute/>  -------------> AUTO-ASSIGN ABSOLUTE
+                    <n-flag-clear/>
+                  </algorithm-prefix-sid>
+                </flex-algo>
+              ...
+            </isis>
+            ...
+          </node>
+        </setting>
+        </settings>
+        </sr-te>
+      </config>
+
+cisco-sr-te-cfp (v0.0.3) [Jun 06, 2019]
+=============================================
+
+A. Enhancements
+
+  1. Slice
+     sr-te -> settings -> setting -> slice -> flex-algo : algorithm-prefix-sid is deleted
+     sr-te -> settings -> setting -> slice -> isis -> node:  flex-algo -> algorithm-prefix-sid is added
+     sr-te -> settings -> setting -> slice -> isis -> node -> loopback: prefix-sid is deleted
+
+
+cisco-sr-te-cfp (v0.0.2) [May 20, 2019]
+=============================================
+
+A. Enhancements
+
+  1. SRGB support for auto-assigning prefix-sid (absolute & index) from global SRGB pool.
+      Resource ID Pool is mandatory for prefix-sid auto-assign option to be used.
+
+    a. Sample Payload for auto-assign option under slice:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+        <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <sr-global-block>
+            <sr-pool>
+              <sr-pool-name>SRGB_POOL</sr-pool-name> -------------> ID RESOURCE POOL IS MANDATORY FOR AUTO-ASSIGN OPTION
+            </sr-pool>
+          </sr-global-block>
+          <slice>
+            <isis>
+              <instance-name>CORE</instance-name>
+              <node>
+                <name>PIOSXR-0</name>
+                <loopback>
+                  <id>1</id>
+                  <prefix-sid>
+                    <auto-assign-index/>  -------------> AUTO-ASSIGN INDEX
+                    ----OR----
+                    <auto-assign-absolute/>  -------------> AUTO-ASSIGN ABSOLUTE
+                    <n-flag-clear/>
+                  </prefix-sid>
+                  <flex-algo-enabled-flag>select</flex-algo-enabled-flag>
+                  <flex-algo>
+                    <name>128</name>
+                  </flex-algo>
+                </loopback>
+                <loopback>
+                  <id>2</id>
+                  <prefix-sid>
+                    <index>16002</index>
+                  </prefix-sid>
+                </loopback>
+              </node>
+              <address-family>both</address-family>
+              <mpls-preference>sr-prefer</mpls-preference>
+              <igp-metric>
+                <metric>1004</metric>
+                <metric-level>
+                  <metric>
+                    <level>1</level>
+                    <value>1005</value>
+                  </metric>
+                </metric-level>
+              </igp-metric>
+            </isis>
+          </slice>
+        </setting>
+        </settings>
+        </sr-te>
+      </config>
+
+
+    b. Sample Payload for auto-assign option under node:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+        <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <sr-global-block>
+            <sr-pool>
+              <sr-pool-name>SRGB_POOL</sr-pool-name> -------------> ID RESOURCE POOL IS MANDATORY FOR AUTO-ASSIGN OPTION
+            </sr-pool>
+          </sr-global-block>
+          <node>
+            <name>PIOSXR-0</name>
+            <isis>
+              <instance-name>CORE-2</instance-name>
+              <loopback>
+                <id>3</id>
+                  <prefix-sid>
+                    <auto-assign-index/>  ----------------> AUTO-ASSIGN INDEX
+                    ----OR----
+                    <auto-assign-absolute/>  -------------> AUTO-ASSIGN ABSOLUTE
+                    <n-flag-clear/>
+                  </prefix-sid>
+              </loopback>
+              ...
+            </isis>
+            ...
+          </node>
+        </setting>
+        </settings>
+        </sr-te>
+      </config>
+
+
+
+cisco-sr-te-cfp (v0.0.2) [May 15, 2019]
+=============================================
+
+A. Enhancements
+
+  1. SR-TE Policy - Added constraints support for explicit path
+
+    Sample Payload:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies">
+            <policy>
+              <name>SR-CLI-ERO</name>
+              <head-end>
+                <name>PIOSXR-0</name>
+              </head-end>
+              <tail-end>7.7.7.7</tail-end>
+              <color>100</color>
+              <binding-sid>100</binding-sid>
+              <path>
+                <preference>200</preference>
+                <explicit>
+                  <sid-list>
+                    <name>mysidlist</name>
+                    <weight>10</weight>
+                  </sid-list>
+                  <constraints> --------------------------------> NOW SUPPORTED
+                    <affinity>
+                      <rule>
+                        <action>include-all</action>
+                        <color>GREEN</color>
+                        <color>RED</color>
+                      </rule>
+                    </affinity>
+                  </constraints>
+                </explicit>
+              </path>
+            </policy>
+          </policies>
+        </sr-te>
+      </config>
+
+cisco-sr-te-cfp (v0.0.2) [May 10, 2019]
+=============================================
+
+A. Non-backwards incompatible enhancements
+
+  1. SR Policy Service Namespace has changed.
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te"> -----------------> OLD NS
+          <policies xmlns="http://cisco.com/cfp/t-sdn/sr/sr-policies"> ---> OLD NS
+            ...
+          </policies>
+        </sr-te>
+      </config>
+
+    Current payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te"> -----------------> NEW NS
+          <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies"> ---> NEW NS
+            ...
+          </policies>
+        </sr-te>
+      </config>
+
+  2. SR PCE Service Namespace has changed.
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te"> -----------------> OLD NS
+          <pces xmlns="http://cisco.com/cfp/t-sdn/sr/sr-pce"> ---> OLD NS
+            ...
+          </pces>
+        </sr-te>
+      </config>
+
+    Current payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te"> -----------------> NEW NS
+          <pces xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-pce"> ---> NEW NS
+            ...
+          </pces>
+        </sr-te>
+      </config>
+
+  3. SR Setting Service Namespace has changed.
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te"> -----------------> OLD NS
+          <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings"> ---> OLD NS
+            ...
+          </settings>
+        </sr-te>
+      </config>
+
+    Current payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te"> -----------------> NEW NS
+          <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings"> ---> NEW NS
+            ...
+          </settings>
+        </sr-te>
+      </config>
+
+  4. Dynamic Device Mapping config moved from sr-te to cfp-configurations
+
+    Previous payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <dynamic-device-mapping xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+          <ned-id>ios-id:cisco-ios</ned-id>
+          <capability>tailf-ned-cisco-ios</capability>
+          <python-impl-class-name>sr_te_multi_vendors.Ios</python-impl-class-name>
+        </dynamic-device-mapping>
+      </config>
+
+    Current payload sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <cfp-configurations xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <dynamic-device-mapping>
+            <ned-id>ios-id:cisco-ios</ned-id>
+            <capability>tailf-ned-cisco-ios</capability>
+            <python-impl-class-name>sr_te_multi_vendors.Ios</python-impl-class-name>
+          </dynamic-device-mapping>
+        </cfp-configurations>
+      </config>
+
+  5. SR PCE now supports list of devices
+
+    Previous Payload Sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <pces xmlns="http://cisco.com/cfp/t-sdn/sr/sr-pce">
+          <sr-pce>
+            <name>PCE-0</name>
+            <device>P-0</device> -------------------> This is a leaf
+            <pce>
+              <address>100.1.1.1</address>
+              <disjoint-path>
+                <group-id>
+                  <id>60000</id>
+                  <type>srlg</type>
+                  <strict/>
+                  <lsp>
+                    <id>1</id>
+                    <pcc-address>2.2.2.2</pcc-address>
+                    <lsp-name>LSP-NAME</lsp-name>
+                    <shortest-path/>
+                  </lsp>
+                </group-id>
+              </disjoint-path>
+              <timers>
+                <reoptimization>600</reoptimization>
+                <keepalive>20</keepalive>
+                <minimum-peer-keepalive>21</minimum-peer-keepalive>
+              </timers>
+              <state-sync>
+                <ipv4>
+                  <address>3.3.3.3</address>
+                </ipv4>
+              </state-sync>
+              <password>
+                <type>clear</type>
+                <secret>password123</secret>
+              </password>
+              <backoff>
+                <ratio>11</ratio>
+                <difference>10</difference>
+                <threshold>12</threshold>
+              </backoff>
+              <segment-routing>
+                <strict-sid-only/>
+                <te-latency/>
+              </segment-routing>
+            </pce>
+          </sr-pce>
+        </pces>
+        </sr-te>
+      </config>
+
+    Current Payload Sample:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+          <pces xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-pce">
+            <sr-pce>
+              <name>PCE-0</name>
+              <node> ---------------------------> NOW A LIST OF NODES
+                <name>P-0</name>
+                <pce>
+                  <address>100.1.1.1</address>
+                  <disjoint-path>
+                    <group-id>
+                      <id>60000</id>
+                      <type>srlg</type>
+                      <strict/>
+                      <lsp>
+                        <id>1</id>
+                        <pcc-address>2.2.2.2</pcc-address>
+                        <lsp-name>LSP-NAME</lsp-name>
+                        <shortest-path/>
+                      </lsp>
+                    </group-id>
+                  </disjoint-path>
+                  <timers>
+                    <reoptimization>600</reoptimization>
+                    <keepalive>20</keepalive>
+                    <minimum-peer-keepalive>21</minimum-peer-keepalive>
+                  </timers>
+                  <state-sync>
+                    <ipv4>
+                      <address>3.3.3.3</address>
+                    </ipv4>
+                  </state-sync>
+                  <password>
+                    <type>clear</type>
+                    <secret>password123</secret>
+                  </password>
+                  <backoff>
+                    <ratio>11</ratio>
+                    <difference>10</difference>
+                    <threshold>12</threshold>
+                  </backoff>
+                  <segment-routing>
+                    <strict-sid-only/>
+                    <te-latency/>
+                  </segment-routing>
+                </pce>
+              </node>
+            </sr-pce>
+          </pces>
+        </sr-te>
+      </config>
+
+B. SR Setting slicing support
+
+  sr-te -> settings -> setting -> slice
+
+    Slicing support is added for:
+      ```slice -> flex-algo &
+        slice -> isis -> node -> loopback```
+
+B. SR Global Block support
+
+  sr-te -> settings -> setting -> sr-global-block
+
+  Sample Payload:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+        <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <sr-global-block>
+              <start>16000</start>
+              <end>23999</end>
+            </sr-global-block>
+            ...
+          </setting>
+        </settings>
+      </sr-te>
+    </config>
+
+
+  Device Config:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te">
+        <settings xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <sr-global-block>
+              <start>16000</start>
+              <end>23999</end>
+            </sr-global-block>
+            ...
+          </setting>
+        </settings>
+      </sr-te>
+    </config>
+
+cisco-sr-te-cfp (v0.0.1) [April 23, 2019]
+=========================================
+
+A. Backward incompatible modifications
+
+  1. SR-Settings -> node -> isis is now a list.
+
+    Previous Payload:
+
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <node>
+              <name>P-0</name>
+              <isis> --------------------------------------> This was a container
+                <instance-name>CORE</instance-name>
+                ...
+          </setting>
+        </settings>
+      </sr-te>
+
+    Current Payload:
+
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <node>
+              <name>P-0</name>
+              <isis> --------------------------------------> ISIS LIST ITEM 1
+                <instance-name>CORE</instance-name>
+                ...
+              </isis>
+              <isis> --------------------------------------> ISIS LIST ITEM 2
+                <instance-name>CORE-2</instance-name>
+                ...
+              </isis>
+            </node>
+          </setting>
+        </settings>
+      </sr-te>
+
+  2. SR-Settings -> node -> isis -> loopback is now a list. Multiple loopback interfaces can be configured.
+
+    Previous Payload:
+
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <node>
+              <name>P-0</name>
+              <isis>
+                <instance-name>CORE</instance-name>
+                <loopback>1</loopback> --------------------------------> JUST ONE LOOPBACK I/F
+                <prefix-sid>
+                  <index>17001</index>
+                </prefix-sid>
+                <address-family>ipv4</address-family>
+                <mpls-preference>sr-prefer</mpls-preference>
+                <flex-algo>
+                  <name>131</name>
+                  <affinity-exclude-any>RED</affinity-exclude-any>
+                  <affinity-exclude-any>BLUE</affinity-exclude-any>
+                  <metric-type>delay</metric-type>
+                  <priority>100</priority>
+                  <algorithm-prefix-sid>
+                    <absolute>160028</absolute>
+                  </algorithm-prefix-sid>
+                </flex-algo>
+                <flex-algo>
+                  <name>130</name>
+                  <affinity-exclude-any>GREEN</affinity-exclude-any>
+                  <algorithm-prefix-sid>
+                    <index>160029</index>
+                  </algorithm-prefix-sid>
+                </flex-algo>
+              </isis>
+            </node>
+          </setting>
+        </settings>
+      </sr-te>
+
+    Current Payload:
+
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <node>
+              <name>P-0</name>
+              <isis>
+                <instance-name>CORE</instance-name>
+                <loopback>  ---------------------------------> LOOPBACK 1
+                  <id>1</id>
+                  <prefix-sid> ---------------------------------> PREFIX-SID IS MOVED UNDER ITS OWN LOOPBACK
+                    <index>17001</index>
+                  </prefix-sid>
+                  <flex-algo>  ---------------------------------> FLEX-ALGO IS A REFERENCE FROM THE LIST OUTSIDE
+                    <name>130</name>
+                  </flex-algo>
+                </loopback>
+                <loopback>  ---------------------------------> LOOPBACK 2
+                  <id>2</id>
+                  <prefix-sid> ---------------------------------> PREFIX-SID IS MOVED UNDER ITS OWN LOOPBACK
+                    <index>17001</index>
+                  </prefix-sid>
+                  <flex-algo>  ---------------------------------> FLEX-ALGO IS A REFERENCE FROM THE LIST OUTSIDE
+                    <name>131</name>
+                  </flex-algo>
+                </loopback>
+                <address-family>ipv4</address-family>   ---------------------------------> TYPE IS SHARED BY ALL ISIS ADDRESS FAMILY AND I/F
+                <mpls-preference>sr-prefer</mpls-preference>
+                <flex-algo>  ---------------------------------> COMMON FLEX-ALGO 1
+                  <name>131</name>
+                  <affinity-exclude-any>RED</affinity-exclude-any>
+                  <affinity-exclude-any>BLUE</affinity-exclude-any>
+                  <metric-type>delay</metric-type>
+                  <priority>100</priority>
+                  <algorithm-prefix-sid>
+                    <absolute>160028</absolute>
+                  </algorithm-prefix-sid>
+                </flex-algo>
+                <flex-algo>  ---------------------------------> COMMON FLEX-ALGO 2
+                  <name>130</name>
+                  <affinity-exclude-any>GREEN</affinity-exclude-any>
+                  <algorithm-prefix-sid>
+                    <index>160029</index>
+                  </algorithm-prefix-sid>
+                </flex-algo>
+              </isis>
+            </node>
+          </setting>
+        </settings>
+      </sr-te>
+
+  3. SR-PCE: Multiple isis can now be configured for SR-PCE service.
+
+    Previous Payload:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <pces xmlns="http://cisco.com/cfp/t-sdn/sr/sr-pce">
+          <sr-pce>
+            <name>PCE-0</name>
+            <device>PIOSXR-0</device>
+            <isis> ---------------------------------------> THIS WAS A CONTAINER
+              <instance-name>0</instance-name>
+              <is-type>level-2-only</is-type>
+              <netid>
+                <id>49.0000.0000.0001.00</id>
+              </netid>
+              <ipv4>
+                <metric-style>wide</metric-style>
+              </ipv4>
+              <interface>
+                <if-type>Loopback</if-type>
+                <if-id>0</if-id>
+                <ipv4> ---------------------------------> THIS IS REMOVED
+                </ipv4>
+              </interface>
+            </isis>
+            ...
+          </sr-pce>
+        </pces>
+        </sr-te>
+      </config>
+
+    Current Payload:
+
+      <config xmlns="http://tail-f.com/ns/config/1.0">
+        <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <pces xmlns="http://cisco.com/cfp/t-sdn/sr/sr-pce">
+          <sr-pce>
+            <name>PCE-0</name>
+            <device>PIOSXR-0</device>
+            <isis> ---------------------------------------> THIS IS A LIST NOW
+              <instance-name>0</instance-name>
+              <is-type>level-2-only</is-type>
+              <netid>
+                <id>49.0000.0000.0001.00</id>
+              </netid>
+              <ipv4>
+                <metric-style>wide</metric-style>
+              </ipv4>
+              <interface>
+                <if-type>Loopback</if-type>
+                <if-id>0</if-id>
+              </interface>
+            </isis>
+            ...
+          </sr-pce>
+        </pces>
+        </sr-te>
+      </config>
+
+
+B. Backward compatible changes
+
+  1. SR-SETTINGS: isis mpls-preference default is changed from sr-prefer to ldp.
+
+    <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+      <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <node>
+            <name>P-0</name>
+            <isis>
+              <instance-name>CORE</instance-name>
+              <mpls-preference>sr-prefer</mpls-preference> ---------> This is 'ldp' by default.
+              ...
+        </setting>
+      </settings>
+    </sr-te>
+
+C. Removals
+
+  1. SR-POLICY: Removed 'weight' from dynamic path under policy path preference.
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <policies xmlns="http://cisco.com/cfp/t-sdn/sr/sr-policies">
+          <policy>
+            <name>SR-CLI-ERO</name>
+            <head-end>
+              <name>PIOSXR-0</name>
+            </head-end>
+            <tail-end>7.7.7.7</tail-end>
+            <color>100</color>
+            <binding-sid>100</binding-sid>
+            <path>
+              <preference>100</preference>
+              <dynamic>
+                <weight>10</weight> ------------------------> Removed
+                <metric-type>te</metric-type>
+                <constraints>
+                  <sid-limit>10</sid-limit>
+                </constraints>
+              </dynamic>
+            </path>
+          </policy>
+        </policies>
+      </sr-te>
+    </config>
+
+cisco-sr-te-cfp (v0.0.1) [April 22, 2019]
+=========================================
+
+A. New Features
+
+  1. Support for IGP metric
+
+    <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+      <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <igp-metric> --------------------------> GLOBAL IGP Metric for isis -> address-family
+            <metric>1001</metric>
+            <metric-level>
+              <metric>
+                <level>1</level>
+                <value>1002</value>
+              </metric>
+            </metric-level>
+          </igp-metric>
+          <interface-igp-metric> ----------> GLOBAL IGP Interface Metric for isis -> interface
+            <metric>1007</metric>
+            <metric-level>
+              <metric>
+                <level>1</level>
+                <value>1008</value>
+              </metric>
+            </metric-level>
+          </interface-igp-metric>
+          <node>
+            <name>PIOSXR-0</name>
+            <isis>
+              <instance-name>CORE</instance-name>
+              <loopback>1</loopback>
+              <address-family>both</address-family>
+              <igp-metric> ----------------> Overwrites GLOBAL IGP Metric for isis -> address-family
+                <metric>1004</metric>
+                <metric-level>
+                  <metric>
+                    <level>1</level>
+                    <value>1005</value>
+                  </metric>
+                </metric-level>
+              </igp-metric>
+              ...
+            </isis>
+            <interface>
+              <if-type>GigabitEthernet</if-type>
+              <if-id>5</if-id>
+              <isis>
+                <address-family>both</address-family>
+                <interface-igp-metric> ----------> Overwrites GLOBAL IGP Interface Metric for isis -> interface
+                  <metric>1009</metric>
+                </interface-igp-metric>
+              </isis>
+            </interface>
+            <interface>
+              <if-type>GigabitEthernet</if-type>
+              <if-id>7</if-id>
+              <isis>
+                <affinity>
+                  ...
+                </affinity>
+                <address-family>both</address-family>
+                <interface-igp-metric> ----------> Overwrites GLOBAL IGP Interface Metric for isis -> interface
+                  <metric-level>
+                    <metric>
+                      <level>2</level>
+                      <value>1006</value>
+                    </metric>
+                  </metric-level>
+                </interface-igp-metric>
+              </isis>
+            </interface>
+          </node>
+          ...
+        </setting>
+      </settings>
+    </sr-te>
+
+B. Fixes
+
+  1. Support for configuring constraints -> disjoint-path for non-odn policy.
+
+  Service Payload:
+
+    <policy>
+      <name>SR-CLI-DYNAMIC</name>
+      <head-end>
+        <name>my-iosxr-cli-0</name>
+      </head-end>
+      <head-end>
+        <name>my-iosxr-cli-1</name>
+      </head-end>
+      <tail-end>1.1.1.1</tail-end>
+      <color>111</color>
+      <binding-sid>111</binding-sid>
+      <path>
+        <preference>111</preference>
+        <dynamic>
+          <metric-type>te</metric-type>
+          <constraints>
+            <affinity>
+              <rule>
+                <action>include-all</action>
+                <color>GREEN</color>
+                <color>RED</color>
+              </rule>
+            </affinity>
+            <segments>
+              <sid-algorithm>128</sid-algorithm>
+            </segments>
+            <disjoint-path> -------------------------> Supported now for non-ODN policies.
+              <type>node</type>
+              <group-id>10</group-id>
+            </disjoint-path>
+            <sid-limit>10</sid-limit>
+          </constraints>
+        </dynamic>
+      </path>
+      <traffic-steering>
+        <autoroute/>
+      </traffic-steering>
+    </policy>
+
+  Device Config:
+
+    policy SR-CLI-DYNAMIC
+     binding-sid mpls 111
+     color 111 end-point ipv4 1.1.1.1
+     autoroute
+     !
+     candidate-paths
+      preference 111
+       dynamic
+        metric
+         sid-limit 10
+         type te
+        !
+       !
+       constraints
+        segments
+         sid-algorithm 128
+        !
+        affinity
+         include-all
+          name RED
+          name GREEN
+         !
+        !
+        disjoint-path group-id 10 type node -------------> This is configured now for non-ODN service.
+       !
+      !
+     !
+    !
+
+cisco-sr-te-cfp (v0.0.1) [April 18, 2019]
+=========================================
+
+A. New Features
+
+  1. Support for optional "n-flag-clear" to support anycast-sid.
+
+    <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+      <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <node>
+            <name>P-0</name>
+            <isis>
+              <instance-name>CORE</instance-name>
+              ...
+              <prefix-sid>
+                <absolute>16001</absolute>
+                <n-flag-clear /> ----------------> THIS
+              </prefix-sid>
+              ...
+        </setting>
+      </settings>
+    </sr-te>
+
+  2. SRTE path definition is now a choice between dynamic or explicit
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <policies xmlns="http://cisco.com/cfp/t-sdn/sr/sr-policies">
+          <policy>
+            <name>SR-CLI-DYNAMIC</name>
+            ...
+            <path>
+              <preference>111</preference>
+              <dynamic>
+                ...
+              </dynamic>
+              -----OR----
+              <explicit>
+                ...
+              </explicit>
+            </path>
+            ...
+          </policy>
+        </policies>
+      </sr-te>
+    </config>
+
+cisco-sr-te-cfp (v0.0.1) [April 11, 2019]
+=========================================
+
+A. New Features
+
+  1. isis prefix-sid index support.
+
+    <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+      <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <node>
+            <name>P-0</name>
+            <isis>
+              <instance-name>CORE</instance-name>
+              ...
+              <prefix-sid>
+                <absolute>16001</absolute> ----------------> THIS
+                <index>16001</index>       ----------------> OR THIS
+              </prefix-sid>
+              <flex-algo>
+                <name>128</name>
+                ...
+                <algorithm-prefix-sid>
+                  <absolute>16001</absolute> ----------------> THIS
+                  <index>16001</index>       ----------------> OR THIS
+                </algorithm-prefix-sid>
+              </flex-algo>
+              ...
+        </setting>
+      </settings>
+    </sr-te>
+
+  2. isis mpls-preference now has options for ldp vs sr-prefer. Default is sr-prefer.
+
+    <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+      <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+        <setting>
+          <name>SETTING-1</name>
+          <node>
+            <name>P-0</name>
+            <isis>
+              <instance-name>CORE</instance-name>
+              <mpls-preference>sr-prefer</mpls-preference> ---------> This can be 'ldp' or 'sr-prefer'
+              ...
+        </setting>
+      </settings>
+    </sr-te>
+
+cisco-sr-te-cfp (v0.0.1) [March 28, 2019]
+=========================================
+
+A. Non-backwards incompatible enhancements
+
+  1. SR-TE Policies' head-end is now a list.
+
+    a. Previous payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <policies xmlns="http://cisco.com/cfp/t-sdn/sr/sr-policies">
+          <policy>
+            <name>SR-CLI-ODN-3000</name>
+            <head-end>PIOSXR-0</head-end>
+            ...
+          </policy>
+        </policies>
+      </sr-te>
+    </config>
+
+    b. Payload after the change:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <policies xmlns="http://cisco.com/cfp/t-sdn/sr/sr-policies">
+          <policy>
+            <name>SR-CLI-ODN-3000</name>
+            <head-end>
+              <name>PIOSXR-0</name> -------------------> CHANGED
+            </head-end>
+          ...
+          </policy>
+        </policies>
+      </sr-te>
+    </config>
+
+  2. SR-Setting
+
+    . affinity-map container is renamed to affinity-map-te
+
+    . interface->affinity moved under interface->te->affinity
+
+    . sr-te -> settings -> setting -> node -> isis -> name renamed to instance-name
+
+    a. Previous payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <node>
+              <name>P-0</name>
+              <isis>
+                <name>CORE</name>
+                <loopback>1</loopback>
+                <address-family>both</address-family>
+                <prefix-sid>
+                  <absolute>16001</absolute>
+                </prefix-sid>
+                <flex-algo>
+                  <name>128</name>
+                  <affinity-exclude-any>RED</affinity-exclude-any>
+                  <affinity-exclude-any>BLUE</affinity-exclude-any>
+                  <metric-type>delay</metric-type>
+                  <priority>100</priority>
+                  <algorithm-prefix-sid>
+                    <absolute>160028</absolute>
+                  </algorithm-prefix-sid>
+                  <advertise-definition/>
+                </flex-algo>
+              </isis>
+              <interface>
+                <if-type>GigabitEthernet</if-type>
+                <if-id>5</if-id>
+                <affinity>
+                  <color>
+                    <name>BLUE</name>
+                  </color>
+                  <color>
+                    <name>RED</name>
+                  </color>
+                </affinity>
+              </interface>
+            </node>
+            <affinity-map>
+              <color>
+                <name>BLUE</name>
+                <bit-position>1</bit-position>
+              </color>
+              <color>
+                <name>GREEN</name>
+                <bit-position>2</bit-position>
+              </color>
+              <color>
+                <name>RED</name>
+                <bit-position>0</bit-position>
+              </color>
+            </affinity-map>
+          </setting>
+        </settings>
+      </sr-te>
+    </config>
+
+    b. Payload after the change:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+        <settings xmlns="http://cisco.com/cfp/t-sdn/sr/sr-settings">
+          <setting>
+            <name>SETTING-1</name>
+            <node>
+              <name>P-0</name>
+              <isis>
+                <instance-name>CORE</instance-name> -------------------> CHANGED
+                <loopback>1</loopback>
+                <address-family>both</address-family>
+                <prefix-sid>
+                  <absolute>16001</absolute>
+                </prefix-sid>
+                <flex-algo>
+                  <name>128</name>
+                  <affinity-exclude-any>RED</affinity-exclude-any>
+                  <affinity-exclude-any>BLUE</affinity-exclude-any>
+                  <metric-type>delay</metric-type>
+                  <priority>100</priority>
+                  <algorithm-prefix-sid>
+                    <absolute>160028</absolute>
+                  </algorithm-prefix-sid>
+                  <advertise-definition/>
+                </flex-algo>
+              </isis>
+              <interface>
+                <if-type>GigabitEthernet</if-type>
+                <if-id>5</if-id>
+                <te> -------------------> CHANGED
+                  <affinity>
+                    <color>
+                      <name>BLUE</name>
+                    </color>
+                    <color>
+                      <name>RED</name>
+                    </color>
+                  </affinity>
+                </te>
+              </interface>
+            </node>
+            <affinity-map-te> -------------------> CHANGED
+              <color>
+                <name>BLUE</name>
+                <bit-position>1</bit-position>
+              </color>
+              <color>
+                <name>GREEN</name>
+                <bit-position>2</bit-position>
+              </color>
+              <color>
+                <name>RED</name>
+                <bit-position>0</bit-position>
+              </color>
+            </affinity-map-te>
+          </setting>
+        </settings>
+      </sr-te>
+    </config>
+
+    3. SR-PCE
+
+    . sr-te -> pces -> sr-pce -> isis -> name renamed to instance-name
+
+    a. Previous payload sample:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+      <pces xmlns="http://cisco.com/cfp/t-sdn/sr/sr-pce">
+        <sr-pce>
+          <name>PCE-0</name>
+          <device>PIOSXR-0</device>
+          ...
+          <isis>
+            <name>0</name>
+            <is-type>level-2-only</is-type>
+            <netid>
+              <id>49.0000.0000.0001.00</id>
+            </netid>
+            <ipv4>
+              <metric-style>wide</metric-style>
+            </ipv4>
+            <interface>
+              <if-type>Loopback</if-type>
+              <if-id>0</if-id>
+              <ipv4>
+              </ipv4>
+            </interface>
+            <interface>
+              <if-type>GigabitEthernet</if-type>
+              <if-id>0</if-id>
+              <point-to-point/>
+              <ipv4>
+              </ipv4>
+            </interface>
+          </isis>
+          ...
+        </sr-pce>
+      </pces>
+      </sr-te>
+    </config>
+
+    b. Payload after the change:
+
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <sr-te xmlns="http://cisco.com/cfp/t-sdn/sr-te">
+      <pces xmlns="http://cisco.com/cfp/t-sdn/sr/sr-pce">
+        <sr-pce>
+          <name>PCE-0</name>
+          <device>PIOSXR-0</device>
+          ...
+          <isis>
+            <instance-name>0</instance-name> -------------------> CHANGED
+            <is-type>level-2-only</is-type>
+            <netid>
+              <id>49.0000.0000.0001.00</id>
+            </netid>
+            <ipv4>
+              <metric-style>wide</metric-style>
+            </ipv4>
+            <interface>
+              <if-type>Loopback</if-type>
+              <if-id>0</if-id>
+              <ipv4>
+              </ipv4>
+            </interface>
+            <interface>
+              <if-type>GigabitEthernet</if-type>
+              <if-id>0</if-id>
+              <point-to-point/>
+              <ipv4>
+              </ipv4>
+            </interface>
+          </isis>
+          ...
+        </sr-pce>
+      </pces>
+      </sr-te>
+    </config>
+
+  4. NSO version 4.7.3 is minimum.
+
+C. New Features
+
+  1. Bulk devices support for SR-TE Policies
+
+  2. Self-test support for SR-TE Policies (Non-ODN policy)
+
+  3. ISIS - algo/affinity
+
+  4. Performance measurement
+
+  5. Srlg
+
+  6. Cleanup action for sr-te policy service

@@ -1,0 +1,93 @@
+module create_ip_link {
+  namespace "http://com/example/create_ip_link";
+  prefix create_ip_link;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  description
+    "IPv4 Link Service";
+
+  typedef physical-interface-type {
+    type enumeration {
+      enum FiftyGigE;
+      enum FortyGigE;
+      enum FourHundredGigE;
+      enum GigabitEthernet;
+      enum HundredGigE;
+      enum TenGigE;
+      enum TwentyFiveGigE;
+      enum TwoHundredGigE;
+    }
+    description
+      "Physical Interface Type";
+  }
+
+  list create_ip_link {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "create_ip_link";
+
+    leaf name {
+      tailf:info "Name of the IP LINK Service";
+      tailf:cli-allow-range;
+      type string;
+    }
+
+    leaf PHYSICAL_INTERFACE_TYPE {
+      tailf:info "Select physical interface type";
+      type physical-interface-type;
+      default GigabitEthernet;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device_A {
+      tailf:info "Select Device A";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf interface_A {
+      tailf:info "Enter Interface A port number";
+      type string;
+    }
+
+    leaf ipv4_A {
+      tailf:info "Enter IPv4 Address for Device A";
+      type inet:ipv4-address;
+    }
+
+    leaf device_Z {
+      tailf:info "Select Device Z";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf interface_Z {
+      tailf:info "Enter Interface Z port number";
+      type string;
+    }            
+
+    leaf ipv4_Z {
+      tailf:info "Enter IPv4 Address for Device Z";
+      type inet:ipv4-address;
+    }
+
+    leaf mask {
+      tailf:info "Enter IPv4 mask address";
+      type inet:ipv4-address;
+    }
+
+ }
+}

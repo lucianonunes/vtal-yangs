@@ -1,0 +1,91 @@
+module sr-mpls-with-ospf {
+  namespace "http://com/example/srmplswithospf";
+  prefix sr-mpls-with-ospf;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  list sr-mpls-with-ospf {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "sr-mpls-with-ospf";
+
+    leaf name {
+      tailf:info "Service Name to Configure SR-MPLS with OSPF";
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select IOS XR device";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf loopback_id {
+      tailf:info "Enter Loopback ID";
+      type uint32;
+    }
+
+    leaf loopback_ipv4_address {
+      tailf:info "Enter Loopback IPv4 Address";
+      type inet:ipv4-address;
+    }
+
+    leaf opspf_process_id {
+      tailf:info "Enter OSPF Process ID";
+      type uint32;
+    }
+
+    leaf opspf_area_id {
+      tailf:info "Enter OSPF Area ID";
+      type uint32;
+    }
+    list interface_xr {
+      description "Interfaces for SR-MPLS-with-OSPF config";
+      key interface_id;
+      typedef physical_interface_type {
+       type enumeration {
+        enum FiftyGigE;
+        enum FortyGigE;
+        enum FourHundredGigE;
+        enum GigabitEthernet;
+        enum HundredGigE;
+        enum TenGigE;
+        enum TwentyFiveGigE;
+        enum TwoHundredGigE;
+       }
+       description
+          "Physical Interface Type";
+      }
+
+      leaf PHYSICAL_INTERFACE_TYPE {
+        tailf:info "Select physical interface type";
+        type physical_interface_type;
+      }      
+
+      leaf interface_id {
+        description "Select Interfaces";
+        type string;
+        //type leafref {
+             // path  "/ncs:devices/ncs:device[ncs:name=current()/../../device]/ncs:config/cisco-ios-xr:interface/cisco-ios-xr:PHYSICAL_INTERFACE_TYPE/cisco-ios-xr:id";
+        //     path "/ncs:devices/ncs:device[ncs:name=current()/../../device]/ncs:config/ifmgr-cfg:interface-configurations/ifmgr-cfg:interface-configuration/ifmgr-cfg:interface-name";
+        //}
+      }
+    }
+    leaf abs_prefix_sid {
+      tailf:info "Enter Absolute Prefix SID for SR";
+      type uint32;
+    }
+  }
+}

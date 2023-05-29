@@ -1,0 +1,70 @@
+module cisco-flat-L3vpn-fp-nano-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn-nano-services";
+  prefix cisco-flat-L3vpn-fp-nano-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-flat-L3vpn-fp-internal { prefix cisco-flat-L3vpn-fp-internal; }
+
+  description "Models for L3vpn nano services.";
+
+  revision 2020-08-05 {
+    description "Removed: self component -> config-apply state -> delete
+                 Removed: self component -> ready state -> delete
+                 Added: service-behavior-tree -> selector -> variable ACCESS_PE";
+  }
+
+  revision 2019-05-10 {
+    description "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline flat-L3vpn-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "cisco-flat-L3vpn-fp-nano-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state as failed in case device transaction is invalidated
+          // this is needed due to CQ, where in device's last-transaction-id is set to INVALIDATED
+          // in case of CQ failures. During redeploy's we do not want the service to go to 'reached'
+          // state unless the device transaction is fixed.
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree flat-L3vpn {
+    ncs:plan-outline-ref "cisco-flat-L3vpn-fp-nano-services:flat-L3vpn-nano-plan";
+    ncs:plan-location "/cisco-flat-L3vpn-fp-internal:flat-L3vpn-internal/"
+                        + "cisco-flat-L3vpn-fp-internal:flat-L3vpn-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+      ncs:variable "ENDPOINT" {
+        ncs:value-expr "endpoint-name";
+      }
+      ncs:variable "ACCESS_PE" {
+        ncs:value-expr "$SERVICE/endpoint[endpoint-name=current()/endpoint-name]/access-pe";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+    }
+  }
+}

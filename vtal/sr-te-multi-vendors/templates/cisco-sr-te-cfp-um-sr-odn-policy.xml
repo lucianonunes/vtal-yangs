@@ -1,0 +1,143 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+        <!-- UMXR is not used by any current iosxr version
+        <segment-routing xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-segment-routing-cfg">
+          <traffic-eng xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-segment-routing-traffic-eng-cfg">
+            <on-demand>
+              <colors>
+                <color tags="merge">
+                  <color-value>{/color}</color-value>
+                  <maximum-sid-depth>{/maximum-sid-depth}</maximum-sid-depth>
+                  <bandwidth when="{bandwidth}">{bandwidth}</bandwidth>
+                  <dynamic when="{dynamic}">
+                    <pcep when="{dynamic/pce}" />
+                    <metric>
+                      <type when="{dynamic/metric-type}">
+                        <?if {dynamic/metric-type='igp'}?>
+                          <igp />
+                        <?end?>
+                        <?if {dynamic/metric-type='te'}?>
+                          <te />
+                        <?end?>
+                        <?if {dynamic/metric-type='latency'}?>
+                          <latency />
+                        <?end?>
+                        <?if {dynamic/metric-type='hopcount'}?>
+                          <hopcount />
+                        <?end?>
+                      </type>
+                      <?if {dynamic/metric-margin/absolute}?>
+                        <margin>
+                          <absolute>{dynamic/metric-margin/absolute}</absolute>
+                        </margin>
+                      <?end?>
+                      <?if {dynamic/metric-margin/relative}?>
+                        <margin>
+                          <relative>{dynamic/metric-margin/relative}</relative>
+                        </margin>
+                      <?end?>
+                    </metric>
+                    <disjoint-path when="{dynamic/disjoint-path}">
+                      <group-id>{dynamic/disjoint-path/group-id}</group-id>
+                      <type>
+                        <?if {dynamic/disjoint-path/type='link'}?>
+                          <link>
+                            <sub-id>{dynamic/disjoint-path/sub-id}</sub-id>
+                          </link>
+                        <?end?>
+                        <?if {dynamic/disjoint-path/type='node'}?>
+                          <node>
+                            <sub-id>{dynamic/disjoint-path/sub-id}</sub-id>
+                          </node>
+                        <?end?>
+                        <?if {dynamic/disjoint-path/type='srlg'}?>
+                          <srlg>
+                            <sub-id>{dynamic/disjoint-path/sub-id}</sub-id>
+                          </srlg>
+                        <?end?>
+                        <?if {dynamic/disjoint-path/type='srlg-node'}?>
+                          <srlg-node>
+                            <sub-id>{dynamic/disjoint-path/sub-id}</sub-id>
+                          </srlg-node>
+                        <?end?>
+                      </type>
+                    </disjoint-path>
+                    <sid-algorithm when="{dynamic/flex-alg}">{dynamic/flex-alg}</sid-algorithm>
+                    <affinity when="{dynamic/affinity}" foreach="{dynamic/affinity/rule}">
+                      <?if {action='include-any'}?>
+                        <include-any>
+                          <?foreach {color}?>
+                            <name>
+                              <affinity-colors>
+                                <affinity-color>
+                                  <affinity-color-name>{current()}</affinity-color-name>
+                                </affinity-color>
+                              </affinity-colors>
+                            </name>
+                          <?end?>
+                        </include-any>
+                      <?end?>
+                      <?if {action='include-all'}?>
+                        <include-all>
+                          <?foreach {color}?>
+                            <name>
+                              <affinity-colors>
+                                <affinity-color>
+                                  <affinity-color-name>{current()}</affinity-color-name>
+                                </affinity-color>
+                              </affinity-colors>
+                            </name>
+                          <?end?>
+                        </include-all>
+                      <?end?>
+                      <?if {action='exclude-any'}?>
+                        <exclude-any>
+                          <?foreach {color}?>
+                            <name>
+                              <affinity-colors>
+                                <affinity-color>
+                                  <affinity-color-name>{current()}</affinity-color-name>
+                                </affinity-color>
+                              </affinity-colors>
+                            </name>
+                          <?end?>
+                        </exclude-any>
+                      <?end?>
+                    </affinity>
+                  </dynamic>
+                  <srv6 when="{srv6}">
+                    <locator when="{srv6/locator}">
+                      <locator-name>{srv6/locator/locator-name}</locator-name>
+                      <binding-sid when="{srv6/locator/binding-sid-type='srv6-dynamic' and srv6/locator/behavior='ub6-insert-reduced'}">
+                        <dynamic>
+                          <behavior>
+                            <ub6-insert-reduced/>
+                          </behavior>
+                        </dynamic>
+                      </binding-sid>
+                    </locator>
+                  </srv6>
+                  <?if {source-address}?>
+                    <?if {contains(string(source-address), '.')}?>
+                      <source-address>
+                        <ipv4>{source-address}</ipv4>
+                      </source-address>
+                    <?else?>
+                      <source-address>
+                        <ipv6>{source-address}</ipv6>
+                      </source-address>
+                    <?end?>
+                  <?end?>
+                </color>
+              </colors>
+            </on-demand>
+          </traffic-eng>
+        </segment-routing>
+        -->
+      </config>
+    </device>
+  </devices>
+</config>

@@ -1,0 +1,179 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+      <?set DEVICE_NAME={string(pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set SERVICE_NAME={string(../../name)}?>
+      <?if {string-length($SERVICE_NAME)>14 and starts-with($SERVICE_NAME,'L2NM-') and (substring($SERVICE_NAME, (string-length($SERVICE_NAME) - 8))='-internal')}?>
+        <?set SERVICE_NAME={substring($SERVICE_NAME,6,string-length($SERVICE_NAME)-14)}?>
+      <?end?>
+      <config>
+        <!-- Configure CE-facing interface for L2Transport -->
+        <?set INTERFACE_NAME={if-type}{if-id}?>
+        <?if {sub-if-id or vlan-id}?>
+          <?if {sub-if-id}?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{sub-if-id}?>
+          <?else?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+          <?end?>
+        <?end?>
+        <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+          <?expand um-intf-config?>
+        </interfaces>
+        <l2vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2vpn-cfg">
+          <pw-classes>
+            <pw-class when="{pw-class}">
+              <pw-class-name>{pw-class}</pw-class-name>
+              <encapsulation>
+                <mpls>
+                  <control-word when="{control-word='yes'}"/>
+                  <?expand um-mpls-sr-te-path?>
+                </mpls>
+              </encapsulation>
+            </pw-class>
+          </pw-classes>
+          <xconnect>
+            <groups>
+              <group>
+                <group-name>{xconnect-group-name}</group-name>
+                <p2ps>
+                  <p2p>
+                    <p2p-xconnect-name>{p2p-name}</p2p-xconnect-name>
+                    <interfaces>
+                      <interface>
+                        <interface-name>{$INTERFACE_NAME}</interface-name>
+                      </interface>
+                    </interfaces>
+                    <?set EVI_SOURCE=?>
+                    <?set EVI_TARGET=?>
+                    <?set EVI_SERVICE=?>
+                    <?if {$LOCAL_NODE='true'}?>
+                    <?set EVI_SOURCE={evi-target}?>
+                    <?set EVI_TARGET={evi-source}?>
+                    <?set EVI_SERVICE={evi-source}?>
+                    <?else ?>
+                    <?set EVI_SOURCE={../local-site/evi-source}?>
+                    <?set EVI_TARGET={../local-site/evi-target}?>
+                    <?set EVI_SERVICE={../local-site/evi-source}?>
+                    <?end ?>
+                    <?set EVI_ID={../evi-id}?>
+                    <neighbor>
+                      <evpn>
+                        <evi>
+                          <?if {srv6}?>
+                            <segment-routing-services>
+                              <service>
+                                <vpn-id>{$EVI_ID}</vpn-id>
+                                <service-id>{$EVI_SERVICE}</service-id>
+                                <segment-routing>
+                                  <srv6>
+                                    <locator>{srv6/locator}</locator>
+                                  </srv6>
+                                </segment-routing>
+                              </service>
+                            </segment-routing-services>
+                          <?else?>
+                            <targets>
+                              <target>
+                                <vpn-id>{$EVI_ID}</vpn-id>
+                                <remote-ac-id>{$EVI_SOURCE}</remote-ac-id>
+                                <source>{$EVI_TARGET}</source>
+                                <pw-class when="{pw-class}">{pw-class}</pw-class>
+                              </target>
+                            </targets>
+                          <?end?>
+                        </evi>
+                      </evpn>
+                    </neighbor>
+                  </p2p>
+                </p2ps>
+              </group>
+            </groups>
+          </xconnect>
+        </l2vpn>
+        <?set POLICY_NAME=EVPN_VPWS_{../evi-id}?>
+        <?if {sr-te/odn/route-policy-name}?>
+          <?set POLICY_NAME={sr-te/odn/route-policy-name}?>
+        <?end?>
+        <?set UNCONDITIONAL_PASS='false'?>
+        <?if {sr-te/odn/unconditional-pass}?>
+          <?set UNCONDITIONAL_PASS='true'?>
+        <?end?>
+        <!-- Set variables for BGP and RPL config-->
+        <?set RPL_NAME_IPV4={concat("SET_COLORv4_service_", string($POLICY_NAME))} ?>
+        <?set RPL_IPV4={concat("route-policy ",  string($RPL_NAME_IPV4), string($COLOR_IPV4), "end-policy")}?>
+        <?if {$UNCONDITIONAL_PASS='true'}?>
+          <?set RPL_IPV4={concat("route-policy ",  string($RPL_NAME_IPV4), string($COLOR_IPV4),  "pass
+          end-policy")}?>
+        <?end?>
+        <?set RPL_NAME_IPV6={concat("SET_COLORv6_service_", string($POLICY_NAME))}?>
+        <?set RPL_IPV6={concat("route-policy ",  string($RPL_NAME_IPV6), string($COLOR_IPV6), "end-policy")}?>
+        <?if {$UNCONDITIONAL_PASS='true'}?>
+          <?set RPL_IPV6={concat("route-policy ",  string($RPL_NAME_IPV6), string($COLOR_IPV4),  "pass
+          end-policy")}?>
+        <?end?>
+        <?if-ned-id cisco-iosxr-nc-7.6:cisco-iosxr-nc-7.6
+                    cisco-iosxr-nc-7.7:cisco-iosxr-nc-7.7?>
+        <!-- Configure RPL -->
+          <routing-policy xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-route-policy-cfg">
+            <?if {sr-te/odn}?>
+            <sets>
+              <extended-community-opaque-sets>
+                <extended-community-opaque-set foreach="{sr-te/odn/color}">
+                  <set-name>COLOR_{id}</set-name>
+                  <rpl-extended-community-opaque-set>extcommunity-set opaque COLOR_{id}
+                                {id}
+                                end-set</rpl-extended-community-opaque-set>
+                </extended-community-opaque-set>
+              </extended-community-opaque-sets>
+            </sets>
+            <?end ?>
+            <route-policies>
+              <route-policy when="{$COLOR_IPV4!=''}">
+                <route-policy-name>{$RPL_NAME_IPV4}</route-policy-name>
+                <rpl-route-policy>{$RPL_IPV4}</rpl-route-policy>
+              </route-policy>
+              <route-policy when="{$COLOR_IPV6!=''}">
+                <route-policy-name>{$RPL_NAME_IPV6}</route-policy-name>
+                <rpl-route-policy>{$RPL_IPV6}</rpl-route-policy>
+              </route-policy>
+            </route-policies>
+          </routing-policy>
+        <?elif-ned-id cisco-iosxr-nc-7.5:cisco-iosxr-nc-7.5?>
+          <!-- Configure RPL -->
+          <routing-policy xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-policy-repository-cfg">
+            <?if {sr-te/odn}?>
+            <sets>
+              <extended-community-opaque-sets>
+                <extended-community-opaque-set foreach="{sr-te/odn/color}">
+                  <set-name>COLOR_{id}</set-name>
+                  <rpl-extended-community-opaque-set>extcommunity-set opaque COLOR_{id}
+                                {id}
+                                end-set</rpl-extended-community-opaque-set>
+                </extended-community-opaque-set>
+              </extended-community-opaque-sets>
+            </sets>
+            <?end ?>
+            <route-policies>
+              <route-policy when="{$COLOR_IPV4!=''}">
+                <route-policy-name>{$RPL_NAME_IPV4}</route-policy-name>
+                <rpl-route-policy>{$RPL_IPV4}</rpl-route-policy>
+              </route-policy>
+              <route-policy when="{$COLOR_IPV6!=''}">
+                <route-policy-name>{$RPL_NAME_IPV6}</route-policy-name>
+                <rpl-route-policy>{$RPL_IPV6}</rpl-route-policy>
+              </route-policy>
+            </route-policies>
+          </routing-policy>
+        <?end?>
+        <evpn when="{multi-home}" xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2vpn-cfg">
+          <interface>
+            <?expand um-evpn-interface?>
+          </interface>
+        </evpn>
+        <?expand um-ethernet-service-oam?>
+      </config>
+    </device>
+  </devices>
+</config-template>

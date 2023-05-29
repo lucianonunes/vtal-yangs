@@ -1,0 +1,137 @@
+/*
+ ***************************************************
+ * Copyright (c) 2020 Cisco Systems, Inc.
+ * All rights reserved.
+ ***************************************************
+ */
+module custom-template {
+  namespace "http://cisco.com/yang/nso/common/custom-template";
+  prefix ct;
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+  import custom-template-info {
+    prefix ct-info;
+  }
+
+  organization "Cisco Systems";
+  description "Custom Template model";
+
+  revision 2020-08-26 {
+    description "Added: sync-custom-templates action under custom-template-actions to
+                 Sync custom-templates between RFS and CFS";
+  }
+
+  revision 2018-05-02 {
+    description "Initial revision.";
+  }
+
+  
+  list custom-template {
+    tailf:hidden "debug";
+    description "Custom Template service";
+    tailf:info "Custom Template service";
+    uses ncs:service-data;
+    ncs:servicepoint "ct-servicepoint";
+    ordered-by user;
+    key "name device owner";
+
+    leaf name {
+      tailf:info "Template name";
+      description "Template name";
+      type leafref {
+        path "/ct-info:custom-template-info/ct-info:template-name";
+      }
+    }
+    leaf device {
+      tailf:info "Device name";
+      description "Device name";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+    leaf owner {
+      tailf:info "Owner of this stack service";
+      description "Owner of this stack service";
+      type string {
+        pattern "[\\S]+" {
+          error-message "Invalid owner. Blank space not allowed.";
+        }
+      }
+    }
+
+    choice apply-times {
+      case single {
+        uses ct-hook:variable-map;
+      }
+      case multiple {
+        uses ct-hook:itr-grouping;
+      }
+    }
+    
+    leaf ctx-path {
+      tailf:info "Original serviceNode path";
+      description "Original serviceNode path";
+      type string {
+        pattern "[\\S]+" {
+          error-message "Invalid context path. Blank space not allowed.";
+        }
+      }
+    }
+    
+    list extra-var {
+      tailf:cli-suppress-mode;
+      tailf:info "Extra CFP generated variables";
+      description "Extra CFP generated variables";
+      key "name";
+      leaf name {
+        tailf:info "Name of variable";
+        description "Name of variable";
+        type string {
+          pattern "[\\S]+" {
+            error-message "Invalid core extra variable name. Blank space not allowed.";
+          }
+        }
+      }
+      leaf value {
+        tailf:info "Value of extra variable";
+        description "Value of extra variable";
+        type string;
+        mandatory true;
+      }
+    }
+    must "not(/ct-info:custom-template-info[ct-info:template-name=current()/name])"
+      + " or (deref(name)/../ct-info:type='DEVICE' and ((deref(name)/../ct-info:rfs-node)"
+      + " or (not(deref(name)/../ct-info:rfs-node) and /ncs:devices/ncs:template[ncs:name=current()/name])))"
+      + " or deref(name)/../ct-info:type='FEATURE'"{
+      error-message "Device template is being used in service, cannot be deleted";
+      tailf:dependency "/ncs:devices/ncs:template/ncs:name";
+    }
+  }
+
+  container custom-template-actions {
+    tailf:action sync-custom-templates {
+      tailf:info "Sync custom-templates between RFS and CFS";
+      description "Sync custom-templates between RFS and CFS";
+      tailf:actionpoint sync-custom-templates;
+      input {
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+  }
+}

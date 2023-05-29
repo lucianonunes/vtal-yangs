@@ -1,0 +1,37 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0"
+                 servicepoint="create_bgp_ls_neighbor">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <!--
+          Select the devices from some data structure in the service
+          model. In this skeleton the devices are specified in a leaf-list.
+          Select all devices in that leaf-list:
+      -->
+      <name>{/device}</name>
+
+      <config>
+        <router xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <bgp>
+            <bgp-no-instance>
+              <id>{/local_as_number}</id>
+              <neighbor>
+                <id>{/neighbor_ipv4_address}</id>
+                <remote-as>{/remote_as_number}</remote-as>
+                <description>{/description}</description>
+                <update-source>
+                  <Loopback>{/loopback_id_number}</Loopback>
+                </update-source>
+                <address-family>
+                  <link-state>
+                    <link-state/>
+                  </link-state>
+                </address-family>
+              </neighbor>
+            </bgp-no-instance>
+          </bgp>
+        </router>
+      </config>
+
+    </device>
+  </devices>
+</config-template>

@@ -1,0 +1,64 @@
+module enable-interfaces {
+  namespace "http://com/example/enableinterfaces";
+  prefix enable-interfaces;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  typedef physical-interface-type {
+    type enumeration {
+      enum FiftyGigE;
+      enum FortyGigE;
+      enum FourHundredGigE;
+      enum GigabitEthernet;
+      enum HundredGigE;
+      enum TenGigE;
+      enum TwentyFiveGigE;
+      enum TwoHundredGigE;
+    }
+    description
+      "Physical Interface Type";
+  }
+
+  list enable-interfaces {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "enable-interfaces";
+
+    leaf name {
+      tailf:info "Name of the Interface Enabling Service";
+      type string;
+    }
+
+    leaf PHYSICAL_INTERFACE_TYPE {
+      tailf:info "Select physical interface type";
+      type physical-interface-type;
+      default TenGigE;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select Device";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+
+    leaf-list interface_port_number {
+      tailf:info "Enter Interface port number";
+      type string;
+    }
+    
+
+  }
+}

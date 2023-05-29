@@ -1,0 +1,78 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <rsvp-te xmlns="http://cisco.com/ns/nso/fp/cisco-tsdn-rsvp-te">
+    <tunnel-te>
+      <name>{$SERVICE_NAME}</name>
+      <id>{$ID}</id>
+      <head-end>{$DEVICE}</head-end>
+      <?foreach {custom-template}?>
+        <custom-template>
+          <name>{name}</name>
+          <?copy-tree {.}?>
+        </custom-template>
+      <?end?>
+      <description when="{boolean($DESCRIPTION != 'false')}">{$DESCRIPTION}</description>
+      <destination>{$DESTINATION}</destination>
+      <signalled-name>{$SIGNALLED_NAME}</signalled-name>
+      <signalled-bandwidth when="{boolean($BANDWIDTH != 'false')}">
+        <bandwidth>{$BANDWIDTH}</bandwidth>
+      </signalled-bandwidth>
+      <setup-priority>{setup-priority}</setup-priority>
+      <hold-priority>{hold-priority}</hold-priority>
+      <?if {traffic-steering}?>
+        <traffic-steering>
+          <autoroute when="{traffic-steering/autoroute}">
+            <announce when="{boolean(traffic-steering/autoroute/announce/enable != 'false')}">
+              <metric when="{traffic-steering/autoroute/announce/metric}">
+                <constant>{traffic-steering/autoroute/announce/metric/constant}</constant>
+                <absolute>{traffic-steering/autoroute/announce/metric/absolute}</absolute>
+                <relative>{traffic-steering/autoroute/announce/metric/relative}</relative>
+              </metric>
+            </announce>
+            <destination when="{traffic-steering/autoroute/destination}">
+              <address>{traffic-steering/autoroute/destination/address}</address>
+            </destination>
+          </autoroute>
+          <forwarding-adjacency when="{traffic-steering/forwarding-adjacency}">
+            <holdtime>{traffic-steering/forwarding-adjacency/holdtime}</holdtime>
+            <include-ipv6 when="{traffic-steering/forwarding-adjacency/include-ipv6}"/>
+          </forwarding-adjacency>
+        </traffic-steering>
+      <?end?>
+      <?if {boolean($METRIC != 'false')}?>
+        <path-selection>
+          <metric>
+            <metric-type>{$METRIC}</metric-type>
+          </metric>
+          <?if {boolean($HOPLIMIT != 'false')}?>
+            <hop-limit>{$HOPLIMIT}</hop-limit>
+          <?end?>
+          <?if {boolean($COSTLIMIT != 'false')}?>
+            <cost-limit>{$COSTLIMIT}</cost-limit>
+          <?end?>
+          <?if {boolean($DELAYLIMIT != 'false')}?>
+            <delay-limit>{$DELAYLIMIT}</delay-limit>
+          <?end?>
+        </path-selection>
+      <?end?>
+      <path-option when="{boolean($PATH_PREFERENCE != 'false')}">
+        <preference-priority>{$PATH_PREFERENCE}</preference-priority>
+        <?if {boolean($PATH_NAME != 'false')}?>
+        <explicit>
+          <name>{$NAME}-{$PATH_NAME}</name>
+        </explicit>
+        <?end?>
+        <?if {boolean($DYNAMIC != 'false')}?>
+          <dynamic/>
+        <?end?>
+        <?if {boolean($PCE != 'false')}?>
+          <dynamic>
+            <pce/>
+          </dynamic>
+        <?end?>
+      </path-option>
+      <pce when="{boolean($PCE_DELEGATION != 'false')}">
+        <delegation/>
+      </pce>
+    </tunnel-te>
+  </rsvp-te>
+</config>

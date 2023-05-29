@@ -1,0 +1,11 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+    <custom-template-info xmlns="http://cisco.com/yang/nso/common/custom-template-info">
+        <template-name>{/template-name}</template-name>
+        <type>{/type}</type>
+        <device-variable>{/device-variable}</device-variable>
+        <?foreach {/variable}?>
+            <variables>{name}</variables>
+        <?end?>
+        <rfs-node>{$RFS_NODE}</rfs-node>
+    </custom-template-info>
+</config>

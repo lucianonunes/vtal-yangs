@@ -1,0 +1,34 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <!-- L3 IP Configuration -->
+        <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+          <interface>
+            <interface-name>{$NAME}</interface-name>
+            <ipv4 when="{$IPV4_ADDR!=''}">
+              <addresses xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-ip-address-cfg">
+                <address>
+                  <address>{$IPV4_ADDR}</address>
+                  <netmask>{$IPV4_MASK}</netmask>
+                </address>
+              </addresses>
+            </ipv4>
+            <ipv6 when="{$IPV6_ADDR!=''}">
+              <addresses xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-ip-address-cfg">
+                <ipv6-address>
+                  <address>{$IPV6_ADDR}</address>
+                  <prefix-length>{$IPV6_PREFIX_LENGTH}</prefix-length>
+                  <zone>0</zone>
+                </ipv6-address>
+              </addresses>
+            </ipv6>
+            <description when="{$DESCRIPTION!=''}">{$DESCRIPTION}</description>
+            <shutdown tags="delete"/>
+          </interface>
+        </interfaces>
+      </config>
+    </device>
+  </devices>
+</config>

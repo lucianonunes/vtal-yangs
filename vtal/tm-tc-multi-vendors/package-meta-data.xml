@@ -1,0 +1,18 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>tm-tc-multi-vendors</name>
+  <package-version>4.4.0-116</package-version>
+  <description>TM-TC Multi Vendors Python Package</description>
+  <ncs-min-version>5.7</ncs-min-version>
+
+  <python-package>
+    <vm-name>cisco-tm-tc-fp</vm-name>
+  </python-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>tm_tc_multi_vendors.main.Main</python-class-name>
+    </application>
+  </component>
+
+</ncs-package>

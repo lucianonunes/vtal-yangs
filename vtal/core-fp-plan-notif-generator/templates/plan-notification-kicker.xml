@@ -1,0 +1,17 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <kickers xmlns="http://tail-f.com/ns/kicker">
+    <data-kicker>
+      <id>plan-notification-kicker-{$PLAN_PATH}</id>
+      <monitor>{$PLAN_PATH}</monitor>
+      <kick-node>/core-fp-plan-notif-generator:action</kick-node>
+      <action-name>generate-plan-notifications</action-name>
+    </data-kicker>
+    <data-kicker>
+      <id>plan-notification-kicker-zombie-failure</id>
+      <monitor>/ncs:zombies/service</monitor>
+      <trigger-expr>plan/failed</trigger-expr>
+      <kick-node>/core-fp-plan-notif-generator:action</kick-node>
+      <action-name>generate-zombie-notifications</action-name>
+    </data-kicker>
+  </kickers>
+</config>

@@ -1,0 +1,19 @@
+module ietf_l2vpn_ui_validation {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf_l2vpn_ui_validation";
+  prefix ietf_l2vpn_ui_validation;
+
+  import tailf-common { prefix tailf; }
+  import ietf-l2vpn-ntw { prefix ietf-l2vpn-ntw; }
+
+  revision 2022-03-14 {
+    description "Initial revision.";
+  }
+
+  // annotate a single path
+  tailf:annotate "/ietf-l2vpn-ntw:l2vpn-ntw/ietf-l2vpn-ntw:vpn-services/ietf-l2vpn-ntw:vpn-service/ietf-l2vpn-ntw:vpn-nodes/ietf-l2vpn-ntw:vpn-node/ietf-l2vpn-ntw:te-service-mapping/ietf-l2vpn-ntw:te-mapping/ietf-l2vpn-ntw:te/ietf-l2vpn-ntw:sr-policy/ietf-l2vpn-ntw:sr-policy/ietf-l2vpn-ntw:policy" {
+    tailf:meta-data "ui-data-validation" {
+    tailf:meta-value "leaf-validation";
+    }
+  }
+}

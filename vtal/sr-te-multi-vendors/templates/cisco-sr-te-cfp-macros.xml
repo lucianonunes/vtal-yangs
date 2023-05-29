@@ -1,0 +1,35 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <?macro segment-routing-dynamic-constraints-affinity-attr-list id?>
+    <attribute-list>
+      <id>$id</id>
+      <name>
+        <name>{color}</name>
+      </name>
+    </attribute-list>
+  <?endmacro?>
+  <?macro traffic-eng-dynamic-contraints-affinity-rule?>
+    <affinity-rule>
+      <rule>{$ACTION}</rule>
+      <affinity-name>
+        <affinity-name>{current()}</affinity-name>
+      </affinity-name>
+    </affinity-rule>
+  <?endmacro?>
+  <?macro traffic-eng-source-addr ipType address?>
+    <source-address>
+      <ip-address-type>$ipType</ip-address-type>
+      <source-address>$address</source-address>
+    </source-address>
+  <?endmacro?>
+  <?macro traffic-eng-contraints-affinity-colors?>
+    <name>
+      <affinity-colors>
+        <?foreach {color}?>
+          <affinity-color>
+            <affinity-color-name>{current()}</affinity-color-name>
+          </affinity-color>
+        <?end?>
+      </affinity-colors>
+    </name>
+  <?endmacro?>
+</config-template>

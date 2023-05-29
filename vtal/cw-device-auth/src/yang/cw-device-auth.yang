@@ -1,0 +1,135 @@
+module cw-device-auth {
+
+    namespace "http://crosswork/nca/v1/fp/cw-device-auth";
+    prefix cw-device-auth;
+
+    import tailf-common {
+        prefix tailf;
+    }
+    import tailf-ncs {
+        prefix ncs;
+    }
+
+    description
+      "Crosswork Change Automation device authorization module provides action endpoints
+       to manage user provided device credentials while executing a playbook job in Change Automation.
+       The intent is to use these user provided credentials at runtime instead of the device credentials
+       defined in any device authgroup. This will be achieved by configuring a special user in NSO
+       with a umap that can invoke the credential retrieval action below to get these user provided
+       device credentials.";
+
+    revision 2020-11-11 {
+        description
+          "Initial revision.";
+    }
+
+    container cw-creds-store {
+        tailf:hidden cwca;
+        list credentials {
+            config false;
+            key device;
+            leaf device {
+                tailf:info "Device for which override credentials will be stored";
+                type leafref {
+                    path "/ncs:devices/ncs:device/ncs:name";
+                }
+                mandatory true;
+            }
+            leaf uname {
+                tailf:info "Override username";
+                type string;
+            }
+            leaf passwd {
+                tailf:info "Override password";
+                type tailf:aes-cfb-128-encrypted-string;
+            }
+        }
+    }
+
+    container cw-creds-get {
+        tailf:hidden cwca;
+        tailf:info
+          "Crosswork device authorization callback node that defines
+           action to retrieve device authentication credentials
+           for a special Change Automation user accessing NSO to configure
+           a specific device";
+
+        tailf:action get {
+            tailf:actionpoint cw-creds-get-actionpoint;
+            input {
+                uses ncs:authgroup-callback-input-params;
+            }
+            output {
+                uses ncs:authgroup-callback-output-params;
+            }
+        }
+    }
+
+    container cw-creds-set {
+        tailf:info
+          "Crosswork device authorization node that defines action
+           to save device override authentication credentials
+           for a Change Automation user accessing NSO to configure
+           a specified device(s)";
+
+        tailf:action set {
+            tailf:actionpoint cw-creds-set-actionpoint;
+            input {
+                leaf uname {
+                    tailf:info "Override username";
+                    type string;
+                    mandatory true;
+                }
+                leaf passwd {
+                    tailf:info "Override password";
+                    type string;
+                    mandatory true;
+                }
+                leaf-list devices {
+                    min-elements 1;
+                    tailf:info "Device(s) on which upgrade will be performed";
+                    type leafref {
+                        path "/ncs:devices/ncs:device/ncs:name";
+                    }
+                }
+            }
+            output {
+                leaf message {
+                    type string;
+                }
+                leaf status {
+                    type uint32;
+                }
+            }
+        }
+    }
+
+    container cw-creds-del {
+        tailf:info
+          "Crosswork device authorization node that defines action
+           to delete stored device override authentication credentials
+           for a Change Automation user accessing NSO to configure
+           specified device(s)";
+
+        tailf:action del {
+            tailf:actionpoint cw-creds-del-actionpoint;
+            input {
+                leaf-list devices {
+                    min-elements 1;
+                    tailf:info "Device(s) for which the stored credentials will be deleted";
+                    type leafref {
+                        path "/ncs:devices/ncs:device/ncs:name";
+                    }
+                }
+            }
+            output {
+                leaf message {
+                    type string;
+                }
+                leaf status {
+                    type uint32;
+                }
+            }
+        }
+    }
+}

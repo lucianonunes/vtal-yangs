@@ -1,0 +1,1222 @@
+module cisco-ron-cfp {
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/cfp/cisco-ron";
+  prefix cisco-ron-cfp;
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import tailf-kicker {
+    prefix kicker;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  import lsa-utils {
+    prefix lsa-utils;
+  }
+
+  include cisco-ron-lsa {
+    revision-date "2021-05-21";
+  }
+
+  description "RON module";
+
+  revision 2022-08-15 {
+    description "Added srlg container to ron-ml service.
+                 Added new action list-all-sips to ron.
+                 Added new action validate-inter-layer-links to ron.
+                 Updated iosxr-default-ned-id from cisco-iosxr-cli-7.38 to cisco-iosxr-cli-7.40 in cfp-configurations.
+                 Updated modulation and baud-rate in transceiver-capability to leaf-list.";
+  }
+
+  revision 2022-02-11 {
+    description "iosxr-default-ned-id updated from cisco-iosxr-nc-7.3 to cisco-iosxr-cli-7.38 in cfp-configurations";
+  }
+
+  revision 2021-12-09 {
+    description "Removed: core-fp-common reference
+                 Modified : Read from LSA Utils dispatch-map";
+  }
+
+  revision 2021-09-13 {
+    description "Added internal kicker callback handler for processing
+    create failure upon redeploy.
+    action : plan-failure-report-kicker-callback.
+    Added: input validation for ron->circuit-id to restrict to alphanumeric and underscores
+        and max 64 characters
+    Added leaf platform-pid as part of ron-data to store specific PID.
+    Added: ron->uuid-lookup to track uuid's generated for each service";
+  }
+
+  revision 2021-07-21 {
+    description "Updated status-code-detail to include impacted-device.";
+  }
+
+  revision 2021-06-24 {
+    description "iosxr-default-ned-id updated from 7.3 to 7.32 in cfp-configurations -> router
+    Updated ron-ml metadata (ron-data) to store ZR-Pluggable child interfaces configured. Also
+    extended ron-lsa data structures to support the same.
+    Added frequency and transmit-power as part of ron-data.
+    Added must condition for end-point-device to check again devices in dispatch-map.
+    Added ordered-by user to end-point list.";
+  }
+
+  revision 2020-12-06 {
+    description "Initial revision.";
+  }
+
+  typedef administrative-state-type {
+    type enumeration {
+      enum LOCKED {
+        description "Users are administratively prohibited from making use of the resource.";
+      }
+      enum UNLOCKED {
+        description "Users are allowed to use the resource";
+      }
+    }
+    description "The possible values of the administrativeState.";
+  }
+
+  grouping ip-address-group {
+    container ip-address {
+      presence "true";
+      tailf:info "IP Address";
+      description "IP Address";
+      leaf v4 {
+        tailf:info "<A.B.C.D/prefix> - IPv4 Address";
+        description "<A.B.C.D/prefix> - IPv4 Address";
+        type tailf:ipv4-address-and-prefix-length;
+      }
+
+      leaf v6 {
+        tailf:info "<X:X::X/length> - IPv6 Address";
+        description "<X:X::X/length> - IPv6 Address";
+        type tailf:ipv6-address-and-prefix-length;
+      }
+    }
+  }
+
+  container ron {
+    tailf:info "RON data model";
+    description "RON data model";
+
+    list ron-ml {
+      tailf:info "RON ML Service";
+      description "RON ML Service";
+      key "name";
+
+      uses ncs:service-data;
+      ncs:servicepoint cisco-ron-ml-servicepoint;
+
+      tailf:validate "cisco-ron-ml-validation" {
+        tailf:dependency ".";
+      }
+
+      leaf name {
+        tailf:info "Service Name";
+        description "Service Name";
+        type string {
+          pattern "[A-Za-z0-9_]+" {
+            error-message "Service name can only contain alpha numeric
+               (A-Za-z0-9) and underscore (_)";
+          }
+          length "1..64" {
+            error-message "name can not exceed 64 characters!";
+          }
+        }
+        tailf:cli-allow-range;
+      }
+
+      leaf mode {
+        tailf:info "Mode - transponder or muxponder";
+        description "Mode - transponder or muxponder";
+        type enumeration {
+          enum "transponder";
+          enum "muxponder";
+        }
+        mandatory true;
+      }
+
+      leaf bandwidth {
+        tailf:info "Bandwidth - 100, 200, 300, 400 in GB";
+        description "Bandwidth - 100, 200, 300, 400 in GB";
+        type string {
+          pattern "(100)|(200)|(300)|(400)";
+        }
+        mandatory true;
+      }
+
+      leaf circuit-id {
+        tailf:info "String to uniquely identify this Circuit (max 64 characters)";
+        description "String to uniquely identify this Circuit (max 64 characters)";
+        type string {
+          pattern "[A-Za-z0-9_]+" {
+            error-message "Circuit ID can only contain alpha numeric
+               (A-Za-z0-9) and underscore (_) characters";
+          }
+          length "1..64" {
+            error-message "Circuit ID can not exceed 64 characters!";
+          }
+        }
+      }
+
+      // This can be learned from optical controller
+      leaf grid-type {
+        tailf:info "DWDM Channel Grid Type";
+        description "DWDM Channel Grid Type";
+        type enumeration {
+          enum "100mhz-grid" {
+            value 1;
+            description
+              "100MHz Grid";
+          }
+        }
+        default "100mhz-grid";
+      }
+
+      // This can be learned from optical controller
+      leaf frequency {
+        tailf:info "100MHz C Band: 1913000-1961000, L band: 1861000-1908500";
+        description "100MHz C Band: 1913000-1961000, L band: 1861000-1908500";
+        type uint32;
+
+        must "(../grid-type='100mhz-grid' and .>=1913000 and .<=1961000)" {
+            error-message "Provided Frequency is out of range for the grid-type";
+          }
+      }
+
+      // This can be from pluggable capability table when pluggable supports more than one dac
+      leaf dac-rate {
+        tailf:info "Digital-to-analog converter (DAC) rate - 1x1/1x1.25";
+        description "Digital-to-analog converter (DAC) rate - 1x1/1x1.25";
+        type string {
+          pattern "(1x1)|(1x1.25)";
+        }
+      }
+
+      must "(((mode='muxponder') and (bandwidth!='100')) or " +
+           " ((mode='transponder') and ((bandwidth='100') or (bandwidth='400'))))" {
+        error-message "The bandwidth and/or mode are invalid. "+
+                      "Valid bandwidth and mode combinations are "+
+                      "bandwidth 100/400 with transponder mode or "+
+                      "bandwidth 200/300/400 with muxponder mode";
+      }
+
+      // This container presence is for optical configuration
+      container ols-domain {
+        presence "true";
+        tailf:info "OLS domain global configuration";
+        description "OLS domain global configuration";
+
+        leaf service-state {
+          tailf:info "OLS service administrative state";
+          description "OLS service administrative state";
+          type administrative-state-type;
+          default "UNLOCKED";
+        }
+
+        uses ct-hook:template-hook;
+      }
+
+      list end-point {
+        tailf:info "RON P2P end point";
+        description "RON P2P end point";
+        key "end-point-device";
+        ordered-by user;
+        leaf end-point-device {
+          tailf:info "ZR-pluggable router name";
+          description "ZR-pluggable router name";
+          tailf:non-strict-leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          type string;
+
+          must "(not(../terminal-device-packet) or (/ncs:devices/lsa-utils:lsa/" +
+                "lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()]))" {
+            error-message "Enter a valid device name present in the lsa-utils:dispatch-map ";
+          }
+        }
+
+        min-elements 2;
+        max-elements 2;
+
+        container terminal-device-optical {
+          tailf:info "Terminal device's optical configuration";
+          description "Terminal device's optical configuration";
+          leaf line-port {
+            tailf:info "Optics controller port in proper format like Rack/Slot/Instance/Port";
+            description "Optics controller port in proper format like Rack/Slot/Instance/Port";
+            type string {
+              pattern "[0-9]+(/[0-9]+)*";
+            }
+            mandatory true;
+          }
+
+          // This can be learned from pluggable capability table
+          leaf transmit-power {
+            tailf:info "Power level (in units of 0.1dBm) used to configure optics on an end-point;
+                        If not configured, a default value is used;
+                        For deployments with OLS Domain, transmit-power is obtained from the optical-controller;
+                        For end-point only deployments, a default value is read from the transceiver-capability list.";
+            description 
+                "Power level (in units of 0.1dBm) used to configure optics on an end-point.
+                 If not configured, a default value is used.
+                 For deployments with OLS Domain, transmit-power is obtained from the optical-controller.
+                 For end-point only deployments, a default value is read from the transceiver-capability list.";
+            type int32 {
+              range "-150..0";
+            }
+          }
+        }
+
+        // This container presence is for optical configuration
+        container ols-domain {
+          when "../../ols-domain";
+          tailf:info "OLS domain configuration";
+          description "OLS domain configuration";
+
+          leaf end-point-state {
+            tailf:info "End point administrative state";
+            description "End point administrative state";
+            type administrative-state-type;
+            default "UNLOCKED";
+          }
+
+          // This can be learned from pluggable capability of the device
+          leaf transceiver-capability {
+            when "not(../../terminal-device-packet)";
+            tailf:info "Transceiver capability ";
+            description "Transceiver capability";
+            type leafref {
+              path "../../../../transceiver-capability[mode=current()/../../../mode]" +
+                   "[bandwidth=current()/../../../bandwidth]/pid";
+            }
+            mandatory true;
+          }
+        }
+        // This container presence is for ip configuration
+        container terminal-device-packet {
+          presence "true";
+          tailf:info "Terminal device's packet parameters - Optics,L2 and L3";
+          description "Terminal device's packet parameters - Optics,L2 and L3";
+
+          list bundle {
+            tailf:info "Bundle interface configuration";
+            description "Bundle interface configuration";
+            key id;
+            leaf id {
+              tailf:info "Bundle Id 1-65535";
+              description "Bundle Id 1-65535";
+                type uint16 {
+                range "1..65535";
+              }
+            }
+
+            leaf description {
+              tailf:info "Description of the bundle interface";
+              description "Description of the bundle interface";
+              type string;
+            }
+
+            uses ip-address-group;
+          }
+
+          list interface {
+            tailf:info "Child Interface of optics controller";
+            description "Child Interface of optics controller";
+            key index;
+            leaf index {
+              tailf:info "Index 0-3";
+              description "Index 0-3";
+              type uint8 {
+                range "0..3";
+              }
+            }
+            max-elements 4;
+
+            container membership {
+              presence "true";
+              tailf:info "Bundle membership configuration";
+              description "Bundle memebership configuration";
+
+              leaf bundle-id {
+                tailf:info "Bundle interface id";
+                description "Bundle interface id";
+                type leafref {
+                  path "../../../bundle/id";
+                }
+                mandatory true;
+              }
+
+              leaf mode {
+                tailf:info "Bundle port activity Mode";
+                description "Bundle port activity Mode";
+                type enumeration {
+                  enum "active";
+                  enum "passive";
+                  enum "on";
+                  enum "inherit";
+                }
+                default "active";
+              }
+            }
+
+            uses ip-address-group {
+              when "not (./membership)";
+            }
+          }
+          uses ct-hook:template-hook;
+        }
+      }
+
+      must "(ols-domain or (not(ols-domain) and frequency))" {
+        error-message "Frequency must be set for router only deployments";
+      }
+
+      container srlg {
+        tailf:info "SRLG configuration for all RON interfaces";
+        description "SRLG configuration for all RON interfaces";
+        when "../end-point/terminal-device-packet";
+        list value-list {
+          key id;
+          leaf id {
+            tailf:info "Index number for this value 1-65535";
+            description "Index number for this value 1-65535";
+            type uint16 {
+              range "1..65535";
+            }
+          }
+          unique value;
+          leaf value {
+            tailf:info "Configure SRLG network value 0-4294967295";
+            description "Configure SRLG network value 0-4294967295";
+            type uint32 {
+              range "0..4294967295";
+            }
+            mandatory true;
+          }
+          leaf priority {
+            tailf:info "Set prority for the value";
+            description "Set prority for the value";
+            type enumeration {
+              enum verylow;
+              enum low;
+              enum high;
+              enum critical;
+            }
+          }
+        }
+
+        list name-list {
+          key name;
+          leaf name {
+            tailf:info "Bind this predefined SRLG name to the interfaces";
+            description "Bind this predefined SRLG name to the interfaces";
+            type string {
+              pattern '[A-Za-z0-9\-\.:@$_#;]+';
+              length "1..64" {
+                error-message "name can not exceed 64 characters!";
+              }
+            }
+
+          }
+        }
+
+        leaf group {
+          tailf:info "Bind this predefined SRLG Group to the interfaces";
+          description "Bind this predefined SRLG Group to the interfaces";
+          type string {
+            pattern '[A-Za-z0-9\-:@$_#;]+';
+            length "1..32" {
+              error-message "group name can not exceed 32 characters!";
+            }
+          }
+        }
+      }
+
+      leaf clear-rollback {
+        description "During create phase of end-to-end service, failure on ZR"
+                  + " will trigger a full rollback. After triaging the error,"
+                  + " this flag must be set to a random value to deploy the service";
+        tailf:info "During create phase of end-to-end service, failure on ZR"
+                  + " will trigger a full rollback. After triaging the error,"
+                  + " this flag must be set to a random value to deploy the service";
+        type int32;
+      }
+
+      action validate-service-input {
+        tailf:hidden debug;
+        tailf:actionpoint "cisco-ron-cfp-validate-service-input";
+        input {
+          uses ncs:post-action-input-params;
+        }
+      }
+
+      container ron-data {
+        tailf:info "RON ML Service Operational data";
+        description "RON ML Service Operational data";
+        config false;
+        tailf:cdb-oper {
+          tailf:persistent true;
+        }
+
+        leaf frequency {
+          tailf:info "Frequency configured on the end-points for this circuit";
+          description "Frequency configured on the end-points for this circuit";
+          type uint32;
+        }
+
+        list end-point {
+          tailf:info "RON P2P end point";
+          description "RON P2P end point";
+          key "end-point-device";
+
+          leaf end-point-device {
+            tailf:info "ZR-puggable router name";
+            description "ZR-puggable router name";
+            tailf:non-strict-leafref {
+              path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+            }
+            type string;
+          }
+
+          leaf transceiver-pid {
+            tailf:info "Pluggable optics line-port PID";
+            description "Pluggable optics line-port PID";
+            type string;
+          }
+
+          leaf flexport-linecard-pid {
+            tailf:info "Flexport line card PID for optics line-port";
+            description "Flexport line card PID for optics line-port";
+            type string;
+          }
+
+          leaf platform-pid {
+            tailf:info "Platform pid to identify the platform model";
+            description "Platform pid to identify the platform model";
+            type string;
+          }
+
+          leaf sip {
+            tailf:info "Service Interface Point id";
+            description "Service Interface Point id";
+            type string;
+          }
+
+          leaf transmit-power {
+            tailf:info "Power level (in units of 0.1dBm) used to configure optics on an end-point;
+                        If not configured, a default value is used;
+                        For deployments with OLS Domain, transmit-power is obtained from the optical-controller;
+                        For end-point only deployments, a default value is read from the transceiver-capability list.";
+            description 
+                "Power level (in units of 0.1dBm) used to configure optics on an end-point.
+                 If not configured, a default value is used.
+                 For deployments with OLS Domain, transmit-power is obtained from the optical-controller.
+                 For end-point only deployments, a default value is read from the transceiver-capability list.";
+            type int32 {
+              range "-150..0";
+            }
+          }
+
+          list end-point-interface {
+            tailf:info "Child interface of the controller";
+            description "Child interface of the controller";
+            key index;
+            leaf index {
+              tailf:info "Index 0-3";
+              description "Index 0-3";
+              type uint8 {
+                range "0..3";
+              }
+            }
+            leaf name {
+              tailf:info "The name of the interface configured on the router";
+              description "The name of the interface configured on the router";
+              type string {
+                pattern "[a-zA-Z0-9.:_/-]+";
+              }
+            }
+          }
+        }
+
+        leaf do-rollback {
+          tailf:info "Flag indicates the service is in rollback mode. During"
+                + " create phase of end-to-end service, failure on ZR will"
+                + " trigger a full rollback. 'clear-rollback' must be set on"
+                + " the service to re-initiate the deployment.";
+          description "Flag indicates the service is in rollback mode. During"
+                + " create phase of end-to-end service, failure on ZR will"
+                + " trigger a full rollback. 'clear-rollback' must be set on"
+                + " the service to re-initiate the deployment.";
+          type empty;
+        }
+      }
+    }
+
+    list ron-ml-plan {
+      tailf:info "RON ML Service Plan";
+      description "RON ML Service Plan";
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name";
+
+      leaf name {
+        type string;
+      }
+
+      uses ncs:nano-plan-data;
+      uses ncs:nano-plan-history;
+    }
+
+    list ron-service-lookup {
+      tailf:hidden ron;
+      tailf:info "Hidden lookup data to help redeploy kickers identify the right service";
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key service;
+      leaf service {
+        tailf:info "Underlying service key for which ron service lookup has to be performed";
+        type string;
+      }
+      leaf ron-ml-service {
+        tailf:info "RON ML service that created the service represented by key";
+        type string;
+      }
+
+      leaf optical-controller {
+        tailf:info "Optical controller for this service";
+        type string;
+      }
+    }
+
+    list uuid-lookup {
+      tailf:info "Lookup data to help identify the right uuid associated with the service";
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key ron-ml-service;
+      leaf ron-ml-service {
+        tailf:info "RON ML service that is created";
+        type string;
+      }
+
+      leaf uuid {
+        tailf:info "Underlying uuid created for the ron service ";
+        type string;
+      }
+    }
+
+    list inter-layer-link {
+      tailf:info "RON inter layer link data-base";
+      description "RON inter layer link data-base";
+      key "end-point-device line-port";
+
+      uses ncs:service-data;
+      ncs:servicepoint cisco-ron-ml-mgdb;
+
+      leaf end-point-device {
+        tailf:info "ZR-pluggable router name";
+        description "ZR-pluggable router name";
+        tailf:non-strict-leafref {
+          path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+        }
+        type string;
+      }
+
+      leaf line-port {
+        tailf:info "Optics controller port in proper format like Rack/Slot/Instance/Port";
+        description "Optics controller port in proper format like Rack/Slot/Instance/Port";
+        type string {
+          pattern "[0-9]+(/[0-9]+)*";
+        }
+      }
+
+      leaf site {
+        tailf:info "Site";
+        description "Site";
+        type string;
+      }
+
+      container ols-domain {
+        tailf:info "OLS Domain info";
+        description "OLS Domain info";
+
+
+        choice optical-service-interface {
+          case add-drop {
+            leaf network-element {
+              tailf:info "Network Element the A/D port belongs to";
+              description "Network Element the A/D port belongs to";
+              type string;
+              mandatory true;
+            }
+            leaf optical-add-drop {
+              tailf:info "Add/Drop port in proper format like Rack/Shelf/Slot/Port1(or)Port1,Port2";
+              description "Add/Drop port in proper format like Rack/Shelf/Slot/Port1(or)Port1,Port2";
+              type string;
+              mandatory true;
+            }
+          }
+          case sip {
+            leaf optical-sip {
+              tailf:info "Explicit SIP";
+              description "Explicit SIP";
+              type string;
+              mandatory true;
+            }
+          }
+        }
+
+        leaf optical-controller {
+          tailf:info "Optical controller. The default-optical-controller is used if this is not set";
+          description "Optical controller. The default-optical-controller is used if this is not set";
+          tailf:non-strict-leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          tailf:default-ref "../../../default-optical-controller";
+          type string;
+        }
+      }
+    }
+
+    list inter-layer-link-oper {
+      tailf:info "RON inter layer link data-base oper data for service usage lookup";
+      key "end-point-device line-port";
+
+      tailf:hidden ron;
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+
+      leaf end-point-device {
+        tailf:info "ZR-pluggable router name";
+        description "ZR-pluggable router name";
+        tailf:non-strict-leafref {
+          path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+        }
+        type string;
+      }
+
+      leaf line-port {
+        tailf:info "Optics controller port in proper format like Rack/Slot/Instance/Port";
+        description "Optics controller port in proper format like Rack/Slot/Instance/Port";
+        type string {
+          pattern "[0-9]+(/[0-9]+)*";
+        }
+      }
+
+      leaf ron-ml-service {
+        tailf:info "Ron-ml service referring to this inter-layer-link entry";
+        type string;
+      }
+    }
+
+    list transceiver-capability {
+      tailf:info "Transceiver capability ";
+      description "Transceiver capability";
+      key "pid mode bandwidth";
+
+      leaf pid {
+        tailf:info "Transceiver PID";
+        description "Transceiver PID";
+        type string;
+      }
+
+      leaf mode {
+        tailf:info "Mode - transponder or muxponder";
+        description "Mode - transponder or muxponder";
+        type enumeration {
+          enum "transponder";
+          enum "muxponder";
+        }
+      }
+
+      leaf bandwidth {
+        tailf:info "Bandwidth - 100, 200, 300, 400 in GB";
+        description "Bandwidth - 100, 200, 300, 400 in GB";
+        type string {
+          pattern "(100)|(200)|(300)|(400)";
+        }
+      }
+
+      leaf fec {
+        tailf:info "Forward Error Correction mode";
+        description "Forward Error Correction mode";
+        type enumeration {
+          enum "fec-cfec";
+          enum "fec-ofec";
+        }
+        mandatory true;
+      }
+
+      leaf-list modulation {
+        tailf:info "Modulation";
+        description "Modulation";
+        type enumeration {
+          enum "qpsk";
+          enum "8qam";
+          enum "16qam";
+        }
+        min-elements 1;
+        ordered-by user;
+      }
+
+      leaf-list baud-rate {
+        tailf:info "Baud rate - 30.155, 59.84, 60.14";
+        description "Baud rate - 30.155, 59.84, 60.14";
+        type string {
+          pattern "(30.155)|(59.84)|(60.14)";
+        }
+        min-elements 1;
+        ordered-by user;
+      }
+
+      leaf-list dac-rate {
+        tailf:info "DAC rate - 1x1/1x1.25 ";
+        description "DAC rate - 1x1/1x1.25";
+        type string {
+          pattern "(1x1)|(1x1.25)";
+        }
+        min-elements 1;
+        ordered-by user;
+      }
+
+      leaf transmit-power {
+        tailf:info "Power level (in units of 0.1dBm)";
+        description 
+            "Power level (in units of 0.1dBm)";
+        type int32 {
+          range "-150..0";
+        }
+        mandatory true;
+      }
+    }
+
+    leaf default-optical-controller {
+      tailf:info "Global optical controller";
+      description "Global optical controller";
+      type leafref {
+        path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+      }
+    }
+
+    tailf:action cleanup {
+      tailf:actionpoint cisco-ron-cfp-cleanup;
+      tailf:info "Clean up RON ML service configuration and operational data";
+      description "Clean up RON ML service configuration and operational data";
+      input {
+        leaf service {
+          tailf:info "Ron-ml service name";
+          description "Ron-ml service name";
+          type string;
+          mandatory true;
+        }
+        leaf no-networking {
+          tailf:info "Send nothing to the devices when set to true";
+          description "Send nothing to the devices when set to true";
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    tailf:action list-all-sips {
+      tailf:actionpoint cisco-ron-cfp-list-all-sips;
+      tailf:info "Action to print all SIPs/optical-add-drop from a given TAPI device in the format required by the inter-layer-link";
+      description "Action to print all SIPs/optical-add-drop from a given TAPI device in the format required by the inter-layer-link";
+      input {
+        leaf optical-controller {
+          tailf:info "Optical controller.";
+          description "Optical controller.";
+          type leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          mandatory true;
+        }
+        leaf no-networking {
+          tailf:info "If true, NSO does not perform the sync-from action on the TAPI device before listing the SIPs.";
+          description "If true, NSO does not perform the sync-from action on the TAPI device before listing the SIPs.";
+          type boolean;
+          default false;
+        }
+      }
+      output {
+        leaf status {
+          type string;
+        }
+        leaf message {
+          type string;
+        }
+        list optical-service-interface {
+          leaf optical-sip {
+            type string;
+          }
+          key 'optical-sip';
+          leaf optical-add-drop {
+            type string;
+          }
+          leaf network-element {
+            type string;
+          }
+        }
+      }
+    }
+
+    tailf:action validate-inter-layer-links {
+      tailf:actionpoint cisco-ron-cfp-validate-inter-layer-links;
+      tailf:info "Verifies if the SIP/optical-add-drop in the inter-layer-link matches with the SIP in the Optical Controller.";
+      description "Verifies if the SIP/optical-add-drop in the inter-layer-link matches with the SIP in the Optical Controller.";
+      input {
+        leaf no-networking {
+          tailf:info "If true, NSO does not perform the sync-from action on the TAPI device before validating the SIPs.";
+          description "If true, NSO does not perform the sync-from action on the TAPI device before validating the SIPs.";
+          type boolean;
+          default false;
+        }
+      }
+      output {
+        leaf status {
+          type string;
+        }
+        leaf message {
+          type string;
+        }
+        list inter-layer-link {
+          leaf end-point-device {
+            type string;
+          }
+          leaf line-port {
+            type string;
+          }
+          key "end-point-device line-port";
+          choice optical-service-interface {
+            case add-drop {
+              leaf network-element {
+                type string;
+                mandatory true;
+              }
+              leaf optical-add-drop {
+                type string;
+                mandatory true;
+              }
+            }
+            case sip {
+              leaf optical-sip {
+                type string;
+                mandatory true;
+              }
+            }
+          }
+          leaf valid {
+            type boolean;
+          }
+        }
+      }
+    }
+
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-ron-cfp-error-recovery;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          tailf:info "Ron-ml service name";
+          description "Ron-ml service name";
+          type string;
+          mandatory true;
+        }
+
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+
+        leaf device {
+          tailf:info "Recover this device under given service.";
+          description "Recover this device under given service.";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+      tailf:confirm-text "########################\n" +
+        "#        Warning       #\n" +
+        "########################\n" +
+        "You are about to recover a RON-ML service.\n" +
+        "This will issue a sync on the device.\n" +
+        "Are you sure you want to proceed?" {
+          tailf:confirm-default false;
+      }
+    }
+
+    tailf:action redeploy-kicker-callback {
+      tailf:info "Custom action that is used for univeral plan kicker";
+      tailf:actionpoint ron-ml-redeploy-kicker-callback;
+      tailf:hidden ron;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      // No-op
+      }
+    }
+
+    tailf:action process-failure {
+      tailf:info "Custom action for processing zr failure and trigger optical rollback";
+      tailf:actionpoint ron-ml-process-failure;
+      tailf:hidden ron;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      // No-op
+      }
+    }
+
+    tailf:action plan-failure-report-kicker-callback {
+      tailf:info "Custom action to adjust plan/self/ready state in failure";
+      tailf:actionpoint ron-ml-plan-failure-report-kicker-callback;
+      tailf:hidden ron;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      // No-op
+      }
+    }
+
+    container remote-local-data {
+      tailf:hidden ron;
+      tailf:info "Local copy of remote RFS node data";
+      description "Local copy of remote RFS node data";
+      uses remote-optics-data-grouping;
+      uses remote-plan-change-handler-grouping;
+      uses remote-local-plan-grouping;
+      uses remote-dco-metadata-grouping;
+    }
+  }
+
+  grouping status-code-plan-augmentation {
+    list status-code-detail {
+      tailf:info "Status Codes";
+      description "Status Codes";
+      key "type name";
+      leaf type {
+        tailf:info "The type of component in the service's plan. If not set,
+             all component types of the specified service types are
+             subscribed.";
+        description "The type of component in the service's plan. If not set,
+             all component types of the specified service types are
+             subscribed.";
+        type ncs:plan-component-type-t;
+      }
+      leaf name {
+        tailf:info "Component name";
+        description "Component name";
+        type string;
+      }
+      leaf code {
+        tailf:info "Status code";
+        description "Status code";
+        type string;
+      }
+      list context {
+        tailf:info "Error context";
+        description "Error context";
+        key context-name;
+        leaf context-name {
+          tailf:info "Context name";
+          description "Context name";
+          type string;
+        }
+        leaf context-msg {
+          tailf:info "Error message";
+          description "Error message";
+          type string;
+        }
+      }
+      leaf severity {
+        tailf:info "Severity of status code";
+        description "Severity of status code";
+        type enumeration {
+          enum INFO;
+          enum WARNING;
+          enum ERROR;
+          enum FATAL;
+          enum NONE;
+        }
+      }
+      leaf recommended-action {
+        tailf:info "Recommended action to recover in case of error";
+        description "Recommended action to recover in case of error";
+        type string;
+      }
+      leaf impacted-device {
+        tailf:info "NSO device impacted by the error";
+        description "NSO device impacted by the error";
+        type string;
+      }
+    }
+  }
+
+  grouping status-code-component-augmentation {
+    leaf status-code {
+      type string;
+    }
+  }
+
+  augment /ron/ron-ml-plan/plan {
+    uses status-code-plan-augmentation;
+  }
+
+  augment /ron/ron-ml-plan/plan-history {
+    uses status-code-plan-augmentation;
+  }
+
+  augment /ron/ron-ml-plan/plan/component {
+    uses status-code-component-augmentation;
+  }
+
+  augment /ron/ron-ml-plan/plan-history/plan/component {
+    uses status-code-component-augmentation;
+  }
+
+  /*
+  * Remote plan related augmentations
+  */
+  //ZR
+  augment /ron/remote-local-data/dco-plan/plan {
+    uses status-code-plan-augmentation;
+  }
+
+  augment /ron/remote-local-data/dco-plan/plan/component {
+    uses status-code-component-augmentation;
+  }
+  //Optical
+  augment /ron/remote-local-data/connectivity-service-plan/plan {
+    uses status-code-plan-augmentation;
+  }
+
+  augment /ron/remote-local-data/connectivity-service-plan/plan/component {
+    uses status-code-component-augmentation;
+  }
+
+  container cfp-configurations {
+    container router {
+      list dynamic-device-mapping {
+        tailf:info "Dynamic Device Mapping";
+        description "Dynamic Device Mapping";
+        key "ned-id";
+        leaf ned-id {
+          tailf:info "Device NED ID, eg ned:netconf";
+          description "Device NED ID, eg ned:netconf";
+          type string;
+          tailf:cli-allow-range;
+        }
+        leaf python-impl-class-name {
+          tailf:info "Device Python implementation class, eg module.class";
+          description "Device Python implementation class, eg module.class";
+          type string;
+          mandatory true;
+        }
+      }
+
+      leaf iosxr-default-ned-id {
+        tailf:info "NED ID of the default IOSXR Device.";
+        description "NED ID of the default IOSXR Device.";
+        tailf:hidden ron;
+        type string;
+        default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+      }
+    }
+
+    container optical-controller {
+      list dynamic-device-mapping {
+        tailf:info "Dynamic Device Mapping";
+        description "Dynamic Device Mapping";
+        key "ned-id";
+        leaf ned-id {
+          tailf:info "Device NED ID, eg ned:netconf";
+          description "Device NED ID, eg ned:netconf";
+          type string;
+          tailf:cli-allow-range;
+        }
+        leaf python-impl-class-name {
+          tailf:info "Device Python implementation class, eg module.class";
+          description "Device Python implementation class, eg module.class";
+          type string;
+          mandatory true;
+        }
+        leaf vendor {
+          tailf:info "Vendor.";
+          description "Vendor.";
+          type string;
+          default "Cisco";
+        }
+      }
+
+      leaf controller-default-ned-id {
+        tailf:info "NED ID of the default IOSXR Device.";
+        description "NED ID of the default IOSXR Device.";
+        tailf:hidden ron;
+        type string;
+        default "onf-tapi-nc-2.0:onf-tapi-nc-2.0";
+      }
+      leaf controller-default-vendor {
+        tailf:info "Vendor.";
+        description "Vendor.";
+        tailf:hidden ron;
+        type string;
+        default "Cisco";
+      }
+    }
+  }
+}

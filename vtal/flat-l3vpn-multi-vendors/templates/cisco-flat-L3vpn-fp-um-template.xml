@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{access-pe}</name>
+      <?set DEVICE_NAME={string(access-pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set GLOBAL_RD_ENABLED='false'?>
+      <?save-context service?>
+      <?set-root-node {/cisco-flat-L3vpn-fp-internal:cfp-configurations}?>
+      <?if {/global-rd-enabled}?>
+        <?set GLOBAL_RD_ENABLED='true'?>
+      <?end?>
+      <?switch-context service?>
+      <config>
+        <?set EXPORT_POLICY_NAME={vrf/vrf-definition}?>
+        <?if {sr-te/odn/export-route-policy-name}?>
+          <?set EXPORT_POLICY_NAME={sr-te/odn/export-route-policy-name}?>
+        <?end?>
+        <?set IMPORT_POLICY_NAME={vrf/vrf-definition}?>
+        <?if {sr-te/odn/import-route-policy-name}?>
+          <?set IMPORT_POLICY_NAME={sr-te/odn/import-route-policy-name}?>
+        <?end?>
+        <?set EXPORT_RPL_NAME_IPV4={concat("SET_COLORv4_", string($EXPORT_POLICY_NAME))}?>
+        <?set EXPORT_RPL_NAME_IPV6={concat("SET_COLORv6_", string($EXPORT_POLICY_NAME))}?>
+        <?set IMPORT_RPL_NAME_IPV4={concat("SET_COLORv4_", string($IMPORT_POLICY_NAME))}?>
+        <?set IMPORT_RPL_NAME_IPV6={concat("SET_COLORv6_", string($IMPORT_POLICY_NAME))}?>
+        <?set PASS_ALL={concat("route-policy ",  string('PASS_ALL'),string('pass\n'), "end-policy")}?>
+        <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+          <?set INTERFACE_NAME={if-type}{if-id}?>
+          <?if {vlan-id}?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+          <?end?>
+          <interface>
+            <interface-name>{$INTERFACE_NAME}</interface-name>
+            <shutdown tags="delete"/>
+            <?set IF_DESC=''?>
+            <?save-context service?>
+            <?set-root-node {/devices}?>
+            <?set IF_DESC={/device[name=$DEVICE_NAME]/config/Cisco-IOS-XR-um-interface-cfg:interfaces/interface[interface-name=$INTERFACE_NAME]/description}?>
+            <?switch-context service?>
+            <?expand intf-description?>
+            <mtu when="{mtu!=''}">{mtu}</mtu>
+            <vrf xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-vrf-cfg">{vrf/vrf-definition}</vrf>
+            <ipv4 when="{$IPV4_ADDR!=''}">
+              <addresses xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-ip-address-cfg">
+                <address>
+                  <address>{$IPV4_ADDR}</address>
+                  <netmask>{$IPV4_MASK}</netmask>
+                </address>
+              </addresses>
+            </ipv4>
+            <ipv6 when="{pe-ipv6-addr}">
+              <addresses xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-ip-address-cfg">
+                <?set IPV6_ADDRESS={substring-before(string(pe-ipv6-addr), '/')}?>
+                <?set IPV6_PREFIX_LENGTH={substring-after(string(pe-ipv6-addr), '/')}?>
+                <ipv6-address>
+                  <address>{$IPV6_ADDRESS}</address>
+                  <prefix-length>{$IPV6_PREFIX_LENGTH}</prefix-length>
+                  <zone>0</zone>
+                </ipv6-address>
+              </addresses>
+            </ipv6>
+          </interface>
+          <?if {vlan-id}?>
+            <interface>
+              <interface-name>{if-type}{if-id}</interface-name>
+              <shutdown tags="delete"/>
+              <?set IF_NAME={if-type}{if-id}?>
+              <?set IF_DESC=''?>
+              <?save-context service?>
+              <?set-root-node {/devices}?>
+              <?set IF_DESC={/device[name=$DEVICE_NAME]/config/Cisco-IOS-XR-um-interface-cfg:interfaces/interface[interface-name=$IF_NAME]/description}?>
+              <?switch-context service?>
+              <?expand intf-description?>
+            </interface>
+          <?end?>
+        </interfaces>
+        <?if {if-type = 'BVI'}?>
+          <?set BVI_INTERFACE_NAME={if-type}{if-id}?>
+          <?set BRIDGE_DOMAIN={vrf/vrf-definition}?>
+          <?foreach {l2-attachment-circuit}?>
+            <?set INTERFACE_NAME={if-type}{if-id}?>
+            <?if {vlan-id}?>
+              <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+            <?end?>
+            <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+              <interface>
+                <interface-name>{$INTERFACE_NAME}</interface-name>
+                <shutdown tags="delete"/>
+                <?set IF_DESC=''?>
+                <?save-context service?>
+                <?set-root-node {/devices}?>
+                <?set IF_DESC={/device[name=$DEVICE_NAME]/config/Cisco-IOS-XR-um-interface-cfg:interfaces/interface[interface-name=$INTERFACE_NAME]/description}?>
+                <?switch-context service?>
+                <?expand intf-description?>
+                <mtu when="{mtu!=''}">{mtu}</mtu>
+                <?if {vlan-id}?>
+                  <sub-interface-type>
+                    <l2transport/>
+                  </sub-interface-type>
+                  <l2transport-encapsulation xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2-ethernet-cfg">
+                    <dot1q>
+                      <vlan-id>{vlan-id}</vlan-id>
+                    </dot1q>
+                  </l2transport-encapsulation>
+                  <rewrite xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2-ethernet-cfg" when="{rewrite/ingress}">
+                    <?if {rewrite/ingress/pop}?>
+                      <ingress when="{rewrite/ingress/pop = '1'}">
+                        <tag>
+                          <pop>
+                            <one/>
+                          </pop>
+                        </tag>
+                      </ingress>
+                      <ingress when="{rewrite/ingress/pop = '2'}">
+                        <tag>
+                          <pop>
+                            <two/>
+                          </pop>
+                        </tag>
+                      </ingress>
+                    <?end ?>
+                    <?if {rewrite/ingress/push}?>
+                      <ingress>
+                        <tag>
+                          <push>
+                            <dot1q>
+                              <vlan-id>{rewrite/ingress/dot1q}</vlan-id>
+                              </dot1q>
+                          </push>
+                        </tag>
+                      </ingress>
+                    <?end ?>
+                      <?if {rewrite/ingress/translate}?>
+                        <ingress>
+                          <tag>
+                            <translate>
+                              <one-to-one when="{rewrite/ingress/translate = '1-to-1'}">
+                                <dot1q>
+                                  <vlan-id>{rewrite/ingress/dot1q}</vlan-id>
+                                </dot1q>
+                              </one-to-one>
+                            </translate>
+                          </tag>
+                        </ingress>
+                      <?end ?>
+                  </rewrite>
+                <?else?>
+                  <l2transport xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-l2transport-cfg"/>
+                <?end ?>
+              </interface>
+              <?if {vlan-id}?>
+                <interface>
+                  <interface-name>{if-type}{if-id}</interface-name>
+                  <shutdown tags="delete"/>
+                  <?set IF_NAME={if-type}{if-id}?>
+                  <?set IF_DESC=''?>
+                  <?save-context service?>
+                  <?set-root-node {/devices}?>
+                  <?set IF_DESC={/device[name=$DEVICE_NAME]/config/Cisco-IOS-XR-um-interface-cfg:interfaces/interface[interface-name=$IF_NAME]/description}?>
+                  <?switch-context service?>
+                  <?expand intf-description?>
+                </interface>
+              <?end?>
+            </interfaces>
+            <l2vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2vpn-cfg">
+              <bridge>
+                <groups>
+                  <group>
+                    <group-name>{$BRIDGE_DOMAIN}</group-name>
+                    <bridge-domains>
+                      <bridge-domain>
+                        <bridge-domain-name>{$BRIDGE_DOMAIN}</bridge-domain-name>
+                        <interfaces>
+                          <interface>
+                            <interface-name>{$INTERFACE_NAME}</interface-name>
+                          </interface>
+                        </interfaces>
+                      </bridge-domain>
+                    </bridge-domains>
+                  </group>
+                </groups>
+              </bridge>
+            </l2vpn>
+          <?end?>
+          <l2vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2vpn-cfg">
+            <bridge>
+              <groups>
+                <group>
+                  <group-name>{$BRIDGE_DOMAIN}</group-name>
+                  <bridge-domains>
+                    <bridge-domain>
+                      <bridge-domain-name>{$BRIDGE_DOMAIN}</bridge-domain-name>
+                      <routed>
+                        <interface>
+                          <interface-name>{$BVI_INTERFACE_NAME}</interface-name>
+                        </interface>
+                      </routed>
+                      <shutdown tags="delete"/>
+                    </bridge-domain>
+                  </bridge-domains>
+                </group>
+              </groups>
+            </bridge>
+          </l2vpn>
+        <?end?>
+        <vrfs xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-vrf-cfg">
+          <vrf>
+            <vrf-name>{vrf/vrf-definition}</vrf-name>
+            <?if {vpn-id}?>
+              <vpn>
+                <id>{vpn-id}</id>
+              </vpn>
+            <?end?>
+            <?if {$GLOBAL_RD_ENABLED='true'}?>
+              <?set AS_TYPE='as'?>
+              <?set AS_NUMBER=1?>
+              <?set AS_INDEX=1?>
+              <?set ADDRESS=''?>
+              <?set ADDRESS_INDEX=''?>
+              <?if {contains(string(route-distinguisher), '.')}?>
+                <?set AS_TYPE='ip'?>
+                <?set ADDRESS={substring-before(string(route-distinguisher), ':')}?>
+                <?set ADDRESS_INDEX={substring-after(string(route-distinguisher), ':')}?>
+              <?else?>
+                <?set AS_TYPE='as'?>
+                <?set AS_NUMBER={substring-before(string(route-distinguisher), ':')}?>
+                <?set AS_INDEX={substring-after(string(route-distinguisher), ':')}?>
+              <?end?>
+              <rd xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg">
+                <?if {$AS_TYPE='as'}?>
+                  <!-- TOOD: Change when statement? -->
+                  <?if {$AS_NUMBER<65536}?>
+                    <two-byte-as when="{route-distinguisher}">
+                      <as-number>{$AS_NUMBER}</as-number>
+                      <index>{$AS_INDEX}</index>
+                    </two-byte-as>
+                  <?else?>
+                    <four-byte-as when="{route-distinguisher}">
+                      <as-number>{$AS_NUMBER}</as-number>
+                      <index>{$AS_INDEX}</index>
+                    </four-byte-as>
+                  <?end?>
+                <?else?>
+                  <ip-address when="{route-distinguisher}">
+                    <ipv4-address>{$ADDRESS}</ipv4-address>
+                    <index>{$ADDRESS_INDEX}</index>
+                  </ip-address>
+                <?end?>
+              </rd>
+            <?end?>
+            <address-family>
+              <ipv4 when="{address-family/address-family='ipv4'}">
+                <unicast>
+                  <?foreach {address-family[address-family='ipv4']/vpn-target}?>
+                    <?set AS_TYPE='as'?>
+                    <?set AS_NUMBER=1?>
+                    <?set AS_INDEX=1?>
+                    <?set ADDRESS=''?>
+                    <?set ADDRESS_INDEX=''?>
+                    <?if {contains(string(rt-value), '.')}?>
+                      <?set AS_TYPE='ip'?>
+                      <?set ADDRESS={substring-before(string(rt-value), ':')}?>
+                      <?set ADDRESS_INDEX={substring-after(string(rt-value), ':')}?>
+                    <?else?>
+                      <?set AS_TYPE='as'?>
+                      <?set AS_NUMBER={substring-before(string(rt-value), ':')}?>
+                      <?set AS_INDEX={substring-after(string(rt-value), ':')}?>
+                    <?end?>
+                    <import xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{rt-type = 'import' or rt-type='both'}">
+                      <?expand um-vrf-ip-route-target?>
+                    </import>
+                    <export xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{rt-type = 'export' or rt-type='both'}">
+                      <?expand um-vrf-ip-route-target?>
+                    </export>
+                  <?end?>
+                  <import xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{$IMPORT_COLOR_IPV4!=''}">
+                    <route-policy>{$IMPORT_RPL_NAME_IPV4}</route-policy>
+                  </import>
+                  <export xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{$EXPORT_COLOR_IPV4!=''}">
+                    <route-policy>{$EXPORT_RPL_NAME_IPV4}</route-policy>
+                  </export>
+                </unicast>
+              </ipv4>
+              <ipv6 when="{address-family/address-family='ipv6'}">
+                <unicast>
+                  <?foreach {address-family[address-family='ipv6']/vpn-target}?>
+                    <?set AS_TYPE='as'?>
+                    <?set AS_NUMBER=1?>
+                    <?set AS_INDEX=1?>
+                    <?set ADDRESS=''?>
+                    <?set ADDRESS_INDEX=''?>
+                    <?if {contains(string(rt-value), '.')}?>
+                      <?set AS_TYPE='ip'?>
+                      <?set ADDRESS={substring-before(string(rt-value), ':')}?>
+                      <?set ADDRESS_INDEX={substring-after(string(rt-value), ':')}?>
+                    <?else?>
+                      <?set AS_TYPE='as'?>
+                      <?set AS_NUMBER={substring-before(string(rt-value), ':')}?>
+                      <?set AS_INDEX={substring-after(string(rt-value), ':')}?>
+                    <?end?>
+                    <import xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{rt-type = 'import' or rt-type='both'}">
+                      <?expand um-vrf-ip-route-target?>
+                    </import>
+                    <export xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{rt-type = 'export' or rt-type='both'}">
+                      <?expand um-vrf-ip-route-target?>
+                    </export>
+                  <?end?>
+                  <export xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{$EXPORT_COLOR_IPV6!=''}">
+                    <route-policy>{$EXPORT_RPL_NAME_IPV6}</route-policy>
+                  </export>
+                  <import xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg" when="{$IMPORT_COLOR_IPV6!=''}">
+                    <route-policy>{$IMPORT_RPL_NAME_IPV6}</route-policy>
+                  </import>
+                </unicast>
+              </ipv6>
+            </address-family>
+          </vrf>
+        </vrfs>
+        <router xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-router-bgp-cfg"  when="{$AS_NO!=''}">
+          <bgp>
+            <?set AS_TYPE='as'?>
+            <?set AS_XX=0?>
+            <?set AS_YY=1?>
+            <?set AS=1?>
+            <?if {contains(string($AS_NO), '.')}?>
+              <?set AS_XX={substring-before(string($AS_NO), '.')}?>
+              <?set AS_YY={substring-after(string($AS_NO), '.')}?>
+              <?set AS={($AS_XX * 65535) + AS_YY}?>
+            <?else?>
+              <?set AS_XX={floor($AS_NO div 65535)}?>
+              <?set AS_YY={floor($AS_NO mod 65535)}?>
+              <?set AS={$AS_NO}?>
+            <?end?>
+            <as>
+              <as-number>{$AS}</as-number>
+              <vrfs>
+                <vrf>
+                  <vrf-name>{vrf/vrf-definition}</vrf-name>
+                  <?if {$GLOBAL_RD_ENABLED='false'}?>
+                    <?if {route-distinguisher}?>
+                      <?set AS_TYPE='as'?>
+                      <?set AS_NUMBER=1?>
+                      <?set AS_INDEX=1?>
+                      <?set ADDRESS=''?>
+                      <?set ADDRESS_INDEX=''?>
+                      <?if {contains(string(route-distinguisher), '.')}?>
+                        <?set AS_TYPE='ip'?>
+                        <?set ADDRESS={substring-before(string(route-distinguisher), ':')}?>
+                        <?set ADDRESS_INDEX={substring-after(string(route-distinguisher), ':')}?>
+                      <?else?>
+                        <?set AS_TYPE='as'?>
+                        <?set AS_NUMBER={substring-before(string(route-distinguisher), ':')}?>
+                        <?set AS_INDEX={substring-after(string(route-distinguisher), ':')}?>
+                      <?end?>
+                      <?if {$AS_TYPE='as'}?>
+                        <rd when="{route-distinguisher}">
+                          <?if {$AS_NUMBER<65536}?>
+                            <two-byte-as>
+                              <as-number>{$AS_NUMBER}</as-number>
+                              <index>{$AS_INDEX}</index>
+                            </two-byte-as>
+                          <?else?>
+                            <four-byte-as>
+                              <as-number>{$AS_NUMBER}</as-number>
+                              <index>{$AS_INDEX}</index>
+                            </four-byte-as>
+                          <?end?>
+                        </rd>
+                      <?else?>
+                        <rd when="{route-distinguisher}">
+                          <ip-address>
+                            <ipv4-address>{$ADDRESS}</ipv4-address>
+                            <index>{$ADDRESS_INDEX}</index>
+                          </ip-address>
+                        </rd>
+                      <?end?>
+                    <?else?>
+                      <rd>
+                        <auto/>
+                      </rd>
+                    <?end?>
+                  <?end?>
+                  <address-families>
+                    <address-family when="{address-family/address-family='ipv4' and vrf-definition!=''}">
+                      <af-name>ipv4-unicast</af-name>
+                      <redistribute when="{address-family[address-family='ipv4']/redistribute-connected}">
+                        <connected>
+                          <metric>{address-family[address-family='ipv4']/metric}</metric>
+                        </connected>
+                      </redistribute>
+                      <segment-routing when="{address-family[address-family='ipv4']/srv6}">
+                        <srv6>
+                          <alloc>
+                            <mode>
+                              <per-vrf/>
+                            </mode>
+                          </alloc>
+                          <locator>{address-family[address-family='ipv4']/srv6/locator-name}</locator>
+                        </srv6>
+                      </segment-routing>
+                    </address-family>
+                    <address-family when="{address-family/address-family='ipv6' and vrf-definition!=''}">
+                      <af-name>ipv6-unicast</af-name>
+                      <redistribute when="{address-family[address-family='ipv6']/redistribute-connected}">
+                        <connected>
+                          <metric>{address-family[address-family='ipv6']/metric}</metric>
+                        </connected>
+                      </redistribute>
+                      <segment-routing when="{address-family[address-family='ipv6']/srv6}">
+                        <srv6>
+                          <alloc>
+                            <mode>
+                              <per-vrf/>
+                            </mode>
+                          </alloc>
+                          <locator>{address-family[address-family='ipv6']/srv6/locator-name}</locator>
+                        </srv6>
+                      </segment-routing>
+                    </address-family>
+                  </address-families>
+                  <neighbors>
+                    <neighbor when="{../ce-pe-prot/e-bgp/neighbor-ipv4!=''}">
+                      <neighbor-address>{../ce-pe-prot/e-bgp/neighbor-ipv4}</neighbor-address>
+                      <update-source when="{update-source and not(update-source/sub-if-id)}">{update-source/if-type}{update-source/if-id}</update-source>
+                      <update-source when="{update-source and update-source/sub-if-id}">{update-source/if-type}{update-source/if-id}.{update-source/sub-if-id}</update-source>
+                      <ebgp-multihop when="{ebgp-multihop}">
+                        <maximum-hop-count>{ebgp-multihop/ttl-value}</maximum-hop-count>
+                        <mpls when="{ebgp-multihop/mpls-deactivation='true'"/>
+                      </ebgp-multihop>
+                      <?set REMOTE_AS_XX=0?>
+                      <?set REMOTE_AS_YY=1?>
+                      <?if {contains(string(remote-as-ipv4), '.')}?>
+                        <?set REMOTE_AS_XX={substring-before(string(remote-as-ipv4), '.')}?>
+                        <?set REMOTE_AS_YY={substring-after(string(remote-as-ipv4), '.')}?>
+                      <?else?>
+                        <?set REMOTE_AS_XX={floor(remote-as-ipv4 div 65535)}?>
+                        <?set REMOTE_AS_YY={floor(remote-as-ipv4 mod 65535)}?>
+                      <?end?>
+                      <remote-as>{$REMOTE_AS_YY}</remote-as>
+                      <address-families>
+                        <address-family>
+                          <af-name>ipv4-unicast</af-name>
+                          <route-policy>
+                            <in>PASS_ALL</in>
+                            <out>PASS_ALL</out>
+                          </route-policy>
+                        </address-family>
+                      </address-families>
+                    </neighbor>
+                    <neighbor when="{../ce-pe-prot/e-bgp/neighbor-ipv6!=''}">
+                      <neighbor-address>{../ce-pe-prot/e-bgp/neighbor-ipv6}</neighbor-address>
+                      <update-source when="{update-source and not(update-source/sub-if-id)}">{update-source/if-type}{update-source/if-id}</update-source>
+                      <update-source when="{update-source and update-source/sub-if-id}">{update-source/if-type}{update-source/if-id}.{update-source/sub-if-id}</update-source>
+                      <ebgp-multihop when="{ebgp-multihop}">
+                        <maximum-hop-count>{ebgp-multihop/ttl-value}</maximum-hop-count>
+                        <mpls when="{ebgp-multihop/mpls-deactivation='true'}"/>
+                      </ebgp-multihop>
+                      <?set REMOTE_AS_XX=0?>
+                      <?set REMOTE_AS_YY=1?>
+                      <?if {contains(string(remote-as-ipv6), '.')}?>
+                        <?set REMOTE_AS_XX={substring-before(string(remote-as-ipv6), '.')}?>
+                        <?set REMOTE_AS_YY={substring-after(string(remote-as-ipv6), '.')}?>
+                      <?else?>
+                        <?set REMOTE_AS_XX={floor(remote-as-ipv6 div 65535)}?>
+                        <?set REMOTE_AS_YY={floor(remote-as-ipv6 mod 65535)}?>
+                      <?end?>
+                      <remote-as>{$REMOTE_AS_YY}</remote-as>
+                      <address-families>
+                        <address-family>
+                          <af-name>ipv6-unicast</af-name>
+                          <route-policy>
+                            <in>PASS_ALL</in>
+                            <out>PASS_ALL</out>
+                          </route-policy>
+                        </address-family>
+                      </address-families>
+                    </neighbor>
+                  </neighbors>
+                </vrf>
+              </vrfs>
+            </as>
+          </bgp>
+        </router>
+       </config>
+    </device>
+  </devices>
+</config-template>

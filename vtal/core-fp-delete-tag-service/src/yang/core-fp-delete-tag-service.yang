@@ -1,0 +1,39 @@
+module core-fp-delete-tag-service {
+
+  namespace "http://cisco.com/ns/nso/fp/examples/core-fp-delete-tag-service";
+  prefix core-fp-delete-tag-service;
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  revision 2020-04-20 {
+    description
+      "Initial revision.";
+  }
+
+  list core-fp-delete-shutdown-service {
+    tailf:hidden full;
+    uses ncs:service-data;
+    ncs:servicepoint core-fp-delete-shutdown-service-internal-servicepoint;
+    key "device if-type if-id";
+    leaf device {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+    leaf if-type {
+      type string;
+    }
+    leaf if-id {
+      type string;
+    }
+    leaf template-name {
+      type string;
+      mandatory true;
+    }
+  }
+}

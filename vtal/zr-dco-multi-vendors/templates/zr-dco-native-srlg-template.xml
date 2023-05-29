@@ -1,0 +1,51 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <?set ID={$NAME}?>
+        <?if {$BUNDLE_ID!=''}?>
+          <?set ID={concat("Bundle-Ether", $BUNDLE_ID)}?>
+        <?end?>
+        <srlg xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-rsi-cfg">
+          <interfaces>
+            <interface>
+              <interface-name>{$ID}</interface-name>
+              <enable></enable>
+              <values foreach="{srlg/value-list}">
+                <value>
+                  <srlg-index>{id}</srlg-index>
+                  <srlg-value>{value}</srlg-value>
+                  <?if {priority}?>
+                    <srlg-priority>{priority}</srlg-priority>
+                  <?else?>
+                    <srlg-priority>default</srlg-priority>
+                  <?end?>
+                </value>
+              </values>
+              <?if {srlg/group}?>
+                <interface-group>
+                  <enable></enable>
+                  <group-names>
+                    <group-name>
+                      <group-name-index>1</group-name-index>
+                      <srlg-priority>default</srlg-priority>
+                      <group-name>{srlg/group}</group-name>
+                    </group-name>
+                  </group-names>
+                </interface-group>
+              <?end?>
+              <interface-srlg-names foreach="{srlg/name-list}">
+                <interface-srlg-name>
+                  <srlg-name>{name}</srlg-name>
+                </interface-srlg-name>
+              </interface-srlg-names>
+            </interface>
+          </interfaces>
+          <enable></enable>
+        </srlg>
+
+      </config>
+    </device>
+  </devices>
+</config>

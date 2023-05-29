@@ -1,0 +1,144 @@
+module tapi-photonic-media-cisco-extn {
+	yang-version 1.1;
+    namespace "http://cisco.com/yang/conc/tapi/photonic-media-extn";
+    prefix tapi-photonic-media-cisco-extn;
+	import tapi-common {
+        prefix tapi-common;
+    }
+	import tapi-connectivity {
+        prefix tapi-connectivity;
+    }
+    import tapi-topology {
+        prefix tapi-topology;
+    }
+	import tapi-photonic-media {
+        prefix tapi-photonic-media;
+    }
+	import tailf-common {
+	    prefix tailf;
+	}
+	augment "/tapi-common:context/tapi-topology:topology-context/tapi-topology:topology/tapi-topology:node/tapi-topology:owned-node-edge-point/tapi-connectivity:cep-list/tapi-connectivity:connection-end-point/tapi-photonic-media:media-channel-connection-end-point-spec/tapi-photonic-media:media-channel" {
+        container media-channel {
+            uses media-channel-properties-pac;
+            description "none";
+        }
+        description "none";
+    }
+
+    augment "/tapi-common:context/tapi-topology:topology-context/tapi-topology:topology/tapi-topology:node/tapi-topology:owned-node-edge-point/tapi-connectivity:cep-list/tapi-connectivity:connection-end-point/tapi-photonic-media:ots-connection-end-point-spec/tapi-photonic-media:ots-media-channel" {
+        container ots-media-channel {
+            uses ots-media-channel-properties-pac;
+            description "none";
+        }
+        description "none";
+    }
+
+	grouping media-channel-properties-pac {
+		container media-channel-pm-history-data {
+			config false;
+			uses media-channel-pm-history-data;
+			description "none";
+		}
+	}
+	
+	grouping ots-media-channel-properties-pac {
+		container ots-media-channel-pm-history-data {
+			config false;
+			uses ots-media-channel-pm-history-data;
+			description "none";
+		}
+		container live-power-data {
+			config false;
+			uses live-power-data;
+			description "none";
+		}
+	}
+	
+	grouping live-power-data {
+		action get-live-power-data {
+			tailf:actionpoint live-power-action-point;
+			output {
+				container measured-power-egress {
+					uses tapi-photonic-media:power-properties-pac;
+                }
+                container measured-power-ingress {
+                    uses tapi-photonic-media:power-properties-pac;
+                }
+			}
+		}
+		description "none";
+	}
+		
+	grouping media-channel-pm-history-data {
+		uses pm-data-pac;
+		uses pm-power-history-data;
+		description "none";
+	}
+	
+	grouping ots-media-channel-pm-history-data {
+		uses pm-data-pac;
+		container c-band {
+			config false;
+			uses pm-power-history-data;
+			description "none";
+		}
+		description "none";
+	}
+	
+	grouping pm-power-history-data {
+		container history-power-ingress {
+			config false;
+			uses pm-power-parameters-pac;
+			description "none";
+		}
+		container history-power-egress {
+			config false;
+			uses pm-power-parameters-pac;
+			description "none";
+		}
+		description "none";
+	}	
+	
+	grouping pm-power-parameters-pac {
+		leaf avg-power {
+            type decimal64 {
+                fraction-digits 7;
+            }
+			config false;
+            description "The average power for the pm interval specified in dBm.";
+        }
+		leaf min-power {
+            type decimal64 {
+                fraction-digits 7;
+            }
+			config false;
+            description "The minimum power for the pm interval specified in dBm.";
+        }
+		leaf max-power {
+            type decimal64 {
+                fraction-digits 7;
+            }
+			config false;
+            description "The maximum power for the pm interval specified in dBm.";
+        }
+		description "none";
+	}
+	
+	grouping pm-data-pac {
+		leaf period-start-time {
+            type tapi-common:date-and-time;
+            description "none";
+        }
+		leaf period-end-time {
+            type tapi-common:date-and-time;
+            description "none";
+        }
+		leaf suspect-interval-flag {
+            type boolean;
+            config false;
+            description "This attribute indicates that the performance data may not be reliable.";
+        }
+		description "none";
+	}	
+}
+

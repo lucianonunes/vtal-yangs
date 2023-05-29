@@ -1,0 +1,27 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>zr-dco-multi-vendors</name>
+  <package-version>2.0.0</package-version>
+  <description>Multi Vendors Python Package for ZR DC0</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.3="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.3">cisco-iosxr-nc-7.3:cisco-iosxr-nc-7.3</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.4="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.4">cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.5="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.5">cisco-iosxr-nc-7.5:cisco-iosxr-nc-7.5</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.6="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.6">cisco-iosxr-nc-7.6:cisco-iosxr-nc-7.6</supported-ned-id>
+  <supported-ned-id xmlns:cisco-iosxr-nc-7.7="http://tail-f.com/ns/ned-id/cisco-iosxr-nc-7.7">cisco-iosxr-nc-7.7:cisco-iosxr-nc-7.7</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-zr-cfp</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>cisco-zr-cfp</name>
+  </required-package>
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>zr_dco_multi_vendors.main.Main</python-class-name>
+    </application>
+  </component>
+
+</ncs-package>

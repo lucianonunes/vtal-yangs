@@ -1,0 +1,10 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <kickers xmlns="http://tail-f.com/ns/kicker">
+    <data-kicker>
+      <id>tm-tc-{$NAME}-{$NODE}-init-create</id>
+      <monitor>/cisco-tm-tc-fp-internal:tm-tc-internal/tm-tc-oper-data[name='{$NAME}'][node-name='{$NODE}']</monitor>
+      <kick-node>/cisco-tm-tc-fp:tm-tc[name='{$NAME}']</kick-node>
+      <action-name>reactive-re-deploy</action-name>
+    </data-kicker>
+  </kickers>
+</config>

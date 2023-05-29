@@ -1,0 +1,1101 @@
+module cisco-flat-L3vpn-fp-internal {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L3vpn-internal";
+  prefix cisco-flat-L3vpn-fp-internal;
+
+  import ietf-inet-types { prefix inet; }
+
+  import ietf-yang-types { prefix yang; }
+
+  import tailf-common { prefix tailf; }
+
+  import tailf-ncs { prefix ncs; }
+
+  import custom-template-hook { prefix ct-hook; }
+
+  import cisco-tsdn-core-fp-common { prefix tsdn-core-fp-common; }
+
+  description "MPLS L3VPN function pack internal - example";
+
+  revision 2022-08-12 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.40";
+  }
+
+  revision 2022-05-27 {
+    description
+      "Removed: Q-in-Q enum options under grouping subinterface-rewrite-common-grouping -> ingress -> translate";
+  }
+
+  revision 2022-05-26 {
+    description
+      "Modified: vlan-id range to 1..4094";
+  }
+
+  revision 2022-05-04 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.39";
+  }
+
+  revision 2022-01-13 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.38";
+  }
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified : reading from dispatch-map to device tree";
+  }
+
+  revision 2021-11-17 {
+    description
+      "Modified: default under cfp-configurations -> iosxr-default-ned-id";
+  }
+
+  revision 2021-09-30 {
+    description "Added: container srv6 under flat-L3vpn -> endpoint -> vrf -> address-family";
+  }
+
+  revision 2021-07-01 {
+    description "Modified: type from boolean to string for l3vpn-route-policy -> color -> description";
+  }
+
+  revision 2021-05-28 {
+    description "Added: new list import-extra-policy and export-extra-policy in sr-te-grp -> odn
+                 Added: new exclusive and description fields in
+                        sr-te-grp -> odn -> import-color and export-color";
+  }
+
+  revision 2021-03-10 {
+    description "Added flat-L3vpn -> service-assurance-grouping";
+  }
+
+  revision 2021-02-22 {
+    description "Corrected typedef service-name regex pattern (removed extra backslash)";
+  }
+
+  revision 2021-02-15 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.33";
+  }
+
+  revision 2020-12-11 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.32";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-10 {
+    description "Modified: flat-L3vpn -> endpoint -> ce-pe-prot -> e-bgp -> update-source ->
+                  if-type/if-id/sub-if-id are not required for XE
+                  when endpoint interface has sub-interface.
+                Added leaf sync-direction as mandatory input to error-recovery action";
+  }
+
+  revision 2020-10-26 {
+    description "Added: leaf node BDI to support sub-interface for XE devices.";
+  }
+
+  revision 2020-10-21 {
+    description "Modified: sr-te-grp -> odn -> export-route-policy-name is now not mandatory";
+  }
+
+  revision 2020-10-14 {
+    description "Added: Ethernet interface for XE support under flat-L3vpn -> endpoint -> if-type
+                    and flat-L3vpn -> endpoint -> ce-pe-prot -> e-bgp -> update-source -> if-type";
+  }
+
+  revision 2020-10-09 {
+    description " Modified: sr-te-grp -> route-policy-name to export-route-policy-name
+                  Added: sr-te-grp -> import-route-policy-name
+                  Modified: sr-te-grp -> color to export-color
+                  Added: sr-te-grp -> import-color";
+  }
+
+  revision 2020-08-05 {
+    description "Removed: redeploy-flag & head-end-redeploy-flag
+                 Removed: no-op custom action
+                 Removed: purge action
+                 Removed: flat-L3vpn-oper-data
+                 Added: cfp-configurations
+                 Added: self-test action
+                 Added: cleanup action";
+  }
+
+  revision 2020-05-14 {
+    description "Removed all must conditions from internal yang";
+  }
+
+  revision 2020-05-08 {
+    description "
+     Added: mpls-deactivation under cisco-flat-L3vpn-fp-internal:flat-L3vpn ->
+            endpoint -> ce-pe-prot -> e-bgp -> ebgp-multihop";
+  }
+  revision 2020-05-05 {
+    description "
+     Added: sub-if-id under cisco-flat-L3vpn-fp-internal:flat-L3vpn ->
+                endpoint -> ce-pe-prot -> e-bgp -> update-source";
+  }
+
+  revision 2020-05-04 {
+    description "
+     Added: ebgp-multihop under cisco-flat-L3vpn-fp-internal:flat-L3vpn ->
+            endpoint -> ce-pe-prot -> e-bgp";
+  }
+
+  revision 2020-04-15 {
+    description "
+      Added must for checking range of Bundle-Ether.
+      Added must for checking range of BVI Interface";
+  }
+
+  revision 2020-04-13 {
+    description "Added: flat-L3vpn-internal -> flat-L3vpn-oper-data -> status-code-oper";
+  }
+
+  revision 2020-03-26 {
+    description "Added: must check for rewrite ingress tag-choice.";
+  }
+
+  revision 2020-03-24 {
+    description "Modified: mtu is hidden for Loopback interface.";
+  }
+
+  revision 2020-03-08 {
+    description "
+      Added: rewrite -> ingress -> dot1q";
+  }
+
+  revision 2020-02-27 {
+    description "Added update-source under cisco-flat-L3vpn-fp-internal:flat-L3vpn ->
+                endpoint -> ce-pe-prot -> e-bgp";
+  }
+
+  revision 2020-02-19 {
+    description "
+      Added: new container odn under sr-te,
+      Modified:
+        Move the sr-te->color into sr-te->odn,
+        Remove rd from sr-te->odn->color->{ipv4|ipv6}";
+  }
+
+  revision 2020-02-18 {
+    description "
+      Added: metric added under address-family for redistribute-connected";
+  }
+
+  revision 2020-02-14 {
+    description "
+      Removed: tunnel-route (including auto-route + static route options),
+      Added: Right regex pattern for vpn-id under vrf definition";
+  }
+
+  revision 2020-01-08 {
+    description "
+      Added: FiftyGigE, TwoHundredGigE, Bundle-Ether, FourHundredGigE,
+      TwentyFiveGigE interfaces. 'must' condition for uint16 'Bundle-Ether'
+      interface to check for numbers as interface ID ";
+  }
+
+  revision 2019-09-25 {
+    description "
+      Added BVI Support under flat-L3vpn->endpoint";
+  }
+
+  revision 2019-07-27 {
+    description "
+     Added: custom-template-hook under: flat-L3vpn and flat-L3vpn -> endpoint";
+  }
+
+  revision 2019-07-15 {
+    description "
+     Removed: flat-L3vpn -> endpoint -> pe-mask.
+     Modified: flat-L3vpn -> endpoint -> pe-ip-addr is now of format: x.x.x.x/y.
+     Modified: flat-L3vpn -> endpoint -> key is now 'endpoint-name'.
+     Modified: flat-L3vpn -> key is now 'name endpoint-name'";
+  }
+
+  revision 2019-05-10 {
+    description "Initial revision.";
+  }
+
+  typedef Bgp-default-metric-range {
+    type uint32 {
+      range "0..4294967295";
+    }
+    description "Bgp default metric range";
+  }
+
+  typedef service-name {
+    type string {
+      pattern '[a-zA-Z0-9\-_]+';
+    }
+  }
+
+  typedef vpn-id-type {
+    type string {
+      pattern "([a-fA-F0-9]{1,6})(:[a-fA-F0-9]{1,8})";
+    }
+  }
+
+  typedef asn-ip-type {
+    type string {
+      pattern '(([0-9]+)|((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+        +'\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))):[0-9]+';
+    }
+  }
+
+  typedef address-family-type {
+    type enumeration {
+      enum ipv4 {
+        tailf:info "IPv4 Address Family";
+      }
+      enum ipv6 {
+        tailf:info "IPv6 Address Family";
+      }
+    }
+    description "BGP Address family type";
+  }
+
+  typedef bgp-rt-type {
+    type enumeration {
+      enum import {
+        description "For import";
+      }
+      enum export {
+        description "For export";
+      }
+      enum both {
+        description "For both import and export";
+      }
+    }
+    description "BGP route-target type. Import from BGP YANG";
+  }
+
+  typedef as-no-type {
+    type union {
+      type uint32 {
+        tailf:info "<1-4294967295>;;Autonomous system number";
+        range "1..4294967295";
+      }
+      type string {
+        tailf:info "<1.0-XX.YY>;;Autonomous system number";
+        pattern '[0-9]+\.[0-9]+';
+      }
+    }
+  }
+
+  grouping bgp-auto-discovery-parameters-grp {
+    description "BGP parameters for auto-discovery";
+    list vpn-target {
+      tailf:info "Route Targets";
+      description "Route Targets";
+      key rt-value;
+      leaf rt-type {
+        tailf:info "Route-Target Type";
+        description "Route-Target Type";
+        type bgp-rt-type;
+        mandatory true;
+      }
+      leaf rt-value {
+        tailf:info "Route-Target Value";
+        description "Route-Target Value";
+        type asn-ip-type;
+        tailf:cli-allow-range;
+      }
+    }
+  }
+
+  grouping sr-te-grp {
+    choice type {
+      container odn {
+        tailf:info "ODN SR policy";
+        description "ODN SR policy";
+        presence true;
+
+        leaf import-route-policy-name {
+          tailf:info "Name of SR routing policy for import";
+          description "Name of SR routing policy for import";
+          type string;
+        }
+
+        leaf export-route-policy-name {
+          tailf:info "Name of SR routing policy for export";
+          description "Name of SR routing policy for export";
+          type string;
+        }
+
+        list import-color {
+          tailf:info "SR policy color";
+          description "SR policy color";
+          key id;
+          leaf id {
+            tailf:info "SR policy color";
+            description "SR policy color";
+            type uint32 {
+              range  "1..4294967295";
+            }
+            tailf:cli-allow-range;
+          }
+
+          container ipv4 {
+            tailf:info "IPv4 ODN SR";
+            description "IPv4 ODN SR";
+            presence "true";
+            leaf-list prefix {
+              tailf:info "<A.B.C.D/prefix> - IPv4 Prefix List";
+              description "<A.B.C.D/prefix> - IPv4 Prefix List";
+              type tailf:ipv4-address-and-prefix-length;
+            }
+          }
+
+          container ipv6 {
+            tailf:info "IPv6 ODN SR";
+            description "IPv6 ODN SR";
+            presence "true";
+            leaf-list ipv6-prefix {
+              tailf:info "<X:X::X/length> - IPv6 Prefix List";
+              description "<X:X::X/length> - IPv6 Prefix List";
+              type tailf:ipv6-address-and-prefix-length;
+            }
+          }
+
+          leaf exclusive {
+            tailf:info "To stop all processing when condition is matched";
+            description "To stop all processing when condition is matched";
+            type boolean;
+            default false;
+          }
+
+          leaf description {
+            tailf:info "Description";
+            description "Description";
+            type string;
+          }
+        }
+
+        list export-color {
+          tailf:info "SR policy color";
+          description "SR policy color";
+          key id;
+          leaf id {
+            tailf:info "SR policy color";
+            description "SR policy color";
+            type uint32 {
+              range  "1..4294967295";
+            }
+            tailf:cli-allow-range;
+          }
+
+          container ipv4 {
+            tailf:info "IPv4 ODN SR";
+            description "IPv4 ODN SR";
+            presence "true";
+            leaf-list prefix {
+              tailf:info "<A.B.C.D/prefix> - IPv4 Prefix List";
+              description "<A.B.C.D/prefix> - IPv4 Prefix List";
+              type tailf:ipv4-address-and-prefix-length;
+            }
+          }
+
+          container ipv6 {
+            tailf:info "IPv6 ODN SR";
+            description "IPv6 ODN SR";
+            presence "true";
+            leaf-list ipv6-prefix {
+              tailf:info "<X:X::X/length> - IPv6 Prefix List";
+              description "<X:X::X/length> - IPv6 Prefix List";
+              type tailf:ipv6-address-and-prefix-length;
+            }
+          }
+
+          leaf exclusive {
+            tailf:info "To stop all processing when condition is matched";
+            description "To stop all processing when condition is matched";
+            type boolean;
+            default false;
+          }
+
+          leaf description {
+            tailf:info "Description";
+            description "Description";
+            type string;
+          }
+        }
+
+        list import-extra-policy {
+          tailf:info "Extra policy will be applied to policy - an ordered list";
+          description "Extra policy will be applied to policy - an ordered list";
+          key name;
+          ordered-by user;
+          leaf name {
+            tailf:info "Extra policy name";
+            description "Extra policy name";
+            type string;
+          }
+          leaf operation {
+            tailf:info "Where extra policy will be applied to policy";
+            description "Where extra policy will be applied to policy";
+            type enumeration {
+              enum "prepend";
+              enum "append";
+            }
+          }
+          leaf address {
+            tailf:info "Under v4/v6 address";
+            description "Under v4/v6 address";
+            type enumeration {
+              enum "ipv4";
+              enum "ipv6";
+              enum "both";
+            }
+            default "ipv4";
+          }
+        }
+
+        list export-extra-policy {
+          tailf:info "Extra policy will be applied to policy - an ordered list";
+          description "Extra policy will be applied to policy - an ordered list";
+          key name;
+          ordered-by user;
+          leaf name {
+            tailf:info "Extra policy name";
+            description "Extra policy name";
+            type string;
+          }
+          leaf operation {
+            tailf:info "Where extra policy will be applied to policy";
+            description "Where extra policy will be applied to policy";
+            type enumeration {
+              enum "prepend";
+              enum "append";
+            }
+          }
+          leaf address {
+            tailf:info "Under v4/v6 address";
+            description "Under v4/v6 address";
+            type enumeration {
+              enum "ipv4";
+              enum "ipv6";
+              enum "both";
+            }
+            default "ipv4";
+          }
+        }
+      }
+    }
+  }
+
+  grouping subinterface-rewrite-common-grouping {
+    container ingress {
+      tailf:info "Set the tag rewriting policy for this EFP";
+      description "Set the tag rewriting policy for this EFP";
+      presence "true";
+      choice tag-choice {
+        leaf pop {
+          tailf:info "Remove one or more tags";
+          description "Remove one or more tags";
+          type enumeration {
+            enum "1" {
+              tailf:info "Remove outer tag only";
+            }
+            enum "2" {
+              tailf:info "Remove two outermost tags";
+            }
+          }
+          mandatory true;
+        }
+        leaf push {
+          tailf:info "Push one or more tags";
+          description "Push one or more tags";
+          type empty;
+          mandatory true;
+        }
+        leaf translate {
+          tailf:info "Replace tags with other tags";
+          description "Replace tags with other tags";
+          type enumeration {
+            enum "1-to-1" {
+              tailf:info "Replace the outermost tag with another tag";
+            }
+          }
+          mandatory true;
+        }
+      }
+
+      leaf dot1q {
+        tailf:info "<1-4094> - Push a Dot1Q tag";
+        description "<1-4094> - Push a Dot1Q tag";
+        when "not(../pop)";
+        mandatory true;
+        type uint16 {
+          tailf:info "<1-4094>;;VLAN Id to push";
+          range "1..4094";
+        }
+      }
+
+      leaf mode {
+        type enumeration {
+          enum symmetric {
+            tailf:info "All rewrites must be symmetric";
+          }
+        }
+      }
+    }
+  }
+
+  list flat-L3vpn {
+    tailf:hidden tsdn;
+    tailf:info "Flat L3VPN Configuration";
+    description "Flat L3VPN Configuration";
+    uses ncs:service-data;
+    ncs:servicepoint "flat-L3vpn";
+
+    tailf:validate "flat-L3vpn-internal-validation" {
+      tailf:dependency ".";
+    }
+
+    key "name endpoint-name";
+    leaf name {
+      tailf:info "Service Name for L3VPN";
+      description "Service Name for L3VPN";
+      type service-name;
+      tailf:cli-allow-range;
+    }
+
+    leaf endpoint-name {
+      tailf:info "Endpoint name";
+      description "Endpoint name";
+      type string;
+      tailf:cli-allow-range;
+    }
+
+    uses ct-hook:template-hook;
+    uses tsdn-core-fp-common:service-assurance-grouping;
+
+    list endpoint {
+      tailf:info "L3VPN End-point";
+      description "L3VPN End-point";
+      key "endpoint-name";
+      max-elements 1;
+
+      leaf endpoint-name {
+        tailf:info "Endpoint name";
+        description "Endpoint name";
+        type string;
+      }
+
+      leaf access-pe {
+        tailf:info "PE device";
+        description "PE device";
+        type leafref {
+          path "/ncs:devices/ncs:device/ncs:name";
+        }
+      }
+
+      uses ct-hook:template-hook;
+
+      leaf if-type {
+        tailf:info "Interface Type";
+        description "Interface Type";
+        type enumeration {
+          enum Bundle-Ether;
+          enum BVI;
+          enum Ethernet;
+          enum FiftyGigE;
+          enum FortyGigE;
+          enum FourHundredGigE;
+          enum GigabitEthernet;
+          enum HundredGigE;
+          enum Loopback;
+          enum TenGigE;
+          enum TwentyFiveGigE;
+          enum TwoHundredGigE;
+        }
+        mandatory true;
+      }
+
+      leaf if-id {
+        tailf:info "Interface Id";
+        description "Interface Id";
+        type string {
+          pattern '[0-9]+(/[0-9]+)*';
+        }
+        mandatory true;
+      }
+
+      leaf mtu {
+        tailf:info "<64-65535> - Set the MTU on an interface";
+        description "<64-65535> - Set the MTU on an interface";
+        when "../if-type != 'Loopback'";
+        type uint16 {
+          tailf:info "<64-65535>;;MTU size in bytes";
+          range "64..65535";
+        }
+      }
+
+      leaf pe-ip-addr {
+        tailf:info "<A.B.C.D/prefix> - PE IPv4 Address";
+        description "<A.B.C.D/prefix> - PE IPv4 Address";
+        type tailf:ipv4-address-and-prefix-length;
+      }
+
+      leaf pe-ipv6-addr {
+        tailf:info "<X:X::X/length> - PE IPv6 Address";
+        description "<X:X::X/length> - PE IPv6 Address";
+        type tailf:ipv6-address-and-prefix-length;
+      }
+
+      choice as-choice {
+        leaf as-no {
+          tailf:info "Autonomous Number";
+          description "Autonomous Number";
+          type as-no-type;
+        }
+        leaf as-no-from-device {
+          tailf:info "Autonomous Number learned from device";
+          description "Autonomous Number learned from device";
+          type empty;
+        }
+      }
+
+      leaf vlan-id {
+        tailf:info "<1-4094> - VLAN Id";
+        description "<1-4094> - VLAN Id";
+         when "../if-type != 'Loopback'";
+        type int32 {
+          range "1..4094";
+        }
+      }
+
+      leaf BDI {
+        tailf:info
+          "BDI must be unique for each sub-interface on the device.
+          <1-4095>;;BDI interface number";
+        description
+          "BDI must be unique for each sub-interface on the device.
+          <1-4095>;;BDI interface number";
+        when "../vlan-id";
+        type uint16 {
+          range "1..4095";
+        }
+      }
+
+      container ce-pe-prot {
+        when "../as-no != '' or ../as-no-from-device";
+        choice routing {
+          case e-bgp {
+            container e-bgp {
+              tailf:info "eBGP  Routing";
+              description "eBGP  Routing";
+              leaf neighbor-ipv4 {
+                tailf:info "<A.B.C.D> - Neighbor IPv4 Address";
+                description "<A.B.C.D> - Neighbor IPv4 Address";
+                type inet:ipv4-address;
+              }
+
+              leaf neighbor-ipv6 {
+                tailf:info "<X:X::X> - Neighbor IPv6 Address";
+                description "<X:X::X> - Neighbor IPv6 Address";
+                type inet:ipv6-address;
+              }
+
+              leaf remote-as-ipv4 {
+                tailf:info "Neighbor IPv4 Remote AS";
+                description "Neighbor IPv4 Remote AS";
+                when "../neighbor-ipv4!=''";
+                type as-no-type;
+                mandatory true;
+              }
+
+              leaf remote-as-ipv6 {
+                tailf:info "Neighbor IPv6 Remote AS";
+                description "Neighbor IPv6 Remote AS";
+                when "../neighbor-ipv6!=''";
+                type as-no-type;
+                mandatory true;
+              }
+
+              container ebgp-multihop {
+                presence "true";
+                tailf:info "Allow EBGP neighbors not on directly connected networks";
+                description "Allow EBGP neighbors not on directly connected networks";
+                leaf ttl-value {
+                  tailf:info "<1-255>;;maximum hop count";
+                  description "<1-255>;;maximum hop count";
+                  type uint8 {
+                    tailf:info "<1-255>;;maximum hop count";
+                    range "1..255";
+                  }
+                  mandatory true;
+                }
+                leaf mpls-deactivation {
+                  tailf:info "Set to true to disable BGP MPLS forwarding.";
+                  description "Set to true to disable BGP MPLS forwarding.";
+                  type boolean;
+                  default "false";
+                }
+              }
+
+              container update-source {
+                presence "true";
+                tailf:info "Source of routing updates";
+                description "Source of routing updates";
+                leaf if-type {
+                  when "not(contains(/ncs:devices/ncs:device
+                  [ncs:name=current()/../../../../access-pe]/ncs:device-type/ncs:cli/ncs:ned-id,
+                  'cisco-ios-cli-')) or not(../../../../BDI)";
+                  tailf:info "Interface Type";
+                  description "Interface Type";
+                  type enumeration {
+                    enum Bundle-Ether;
+                    enum Ethernet;
+                    enum FiftyGigE;
+                    enum FortyGigE;
+                    enum FourHundredGigE;
+                    enum GigabitEthernet;
+                    enum HundredGigE;
+                    enum Loopback;
+                    enum TenGigE;
+                    enum TwentyFiveGigE;
+                    enum TwoHundredGigE;
+                  }
+                  mandatory true;
+                }
+
+                leaf if-id {
+                  when "not(contains(/ncs:devices/ncs:device
+                  [ncs:name=current()/../../../../access-pe]/ncs:device-type/ncs:cli/ncs:ned-id,
+                  'cisco-ios-cli-')) or not(../../../../BDI)";
+                  tailf:info "Interface Id";
+                  description "Interface Id";
+                  type string {
+                    pattern '[0-9]+(/[0-9]+)*';
+                  }
+                  mandatory true;
+                }
+
+                leaf sub-if-id {
+                  when "not(contains(/ncs:devices/ncs:device
+                  [ncs:name=current()/../../../../access-pe]/ncs:device-type/ncs:cli/ncs:ned-id,
+                  'cisco-ios-cli-')) or ../if-type != 'Loopback'";
+                  tailf:info "Sub Interface Id";
+                  description "Sub Interface Id";
+                  type int32;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      container vrf {
+        tailf:info "VRF Definition";
+        description "VRF Definition";
+        leaf vrf-definition {
+          tailf:info "VRF Name";
+          description "VRF Name";
+          type string;
+          mandatory true;
+        }
+
+        leaf route-distinguisher {
+          tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+          description "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+          type asn-ip-type;
+        }
+
+        leaf vpn-id {
+          tailf:info "<0-ffffff>:  VPN ID, (OUI:VPN-Index) format(hex), 3 bytes OUI Part";
+          description "<0-ffffff>:  VPN ID, (OUI:VPN-Index) format(hex), 3 bytes OUI Part";
+          type vpn-id-type;
+        }
+
+        list address-family {
+          tailf:info "Address Family";
+          description "Address Family";
+          key address-family;
+          leaf address-family {
+            type address-family-type;
+          }
+          leaf redistribute-connected {
+            tailf:info "Redistribute Connected";
+            description "Redistribute Connected";
+            type empty;
+          }
+          leaf metric {
+            tailf:info "Default metric";
+            description "Default metric";
+            when "../redistribute-connected";
+            type Bgp-default-metric-range;
+          }
+          container srv6 {
+            tailf:info "Associate SRv6 Policy";
+            description "Associate SRv6 Policy";
+            presence true;
+
+            leaf locator-name {
+              tailf:info
+                "SRv6 locator name, should match locators configured at a node-global level on each router";
+              description
+                "SRv6 locator name, should match locators configured at a node-global level on each router";
+              type string {
+                length 1..64;
+              }
+            }
+          }
+          uses bgp-auto-discovery-parameters-grp;
+        }
+      }
+
+      container sr-te {
+        tailf:info "Segment Routing Association";
+        description "Segment Routing Association";
+        when "../ce-pe-prot";
+        presence "true";
+        uses  sr-te-grp;
+      }
+
+      list l2-attachment-circuit {
+        tailf:info "L2 Attachment Ciruit";
+        description "L2 Attachment Ciruit";
+        when "../if-type='BVI'";
+
+        key "name";
+        leaf name {
+          tailf:info "L2 AC name";
+          description "L2 AC name";
+          type string;
+          tailf:cli-allow-range;
+        }
+
+        leaf if-type {
+          tailf:info "Interface Type";
+          description "Interface Type";
+          type enumeration {
+            enum Bundle-Ether;
+            enum FiftyGigE;
+            enum FortyGigE;
+            enum FourHundredGigE;
+            enum GigabitEthernet;
+            enum HundredGigE;
+            enum TenGigE;
+            enum TwentyFiveGigE;
+            enum TwoHundredGigE;
+          }
+          mandatory true;
+        }
+
+        leaf if-id {
+          tailf:info "Interface Id";
+          description "Interface Id";
+          type string {
+            pattern '[0-9]+(/[0-9]+)*';
+          }
+          mandatory true;
+        }
+
+        leaf vlan-id {
+          tailf:info "<1-4094> - VLAN Id";
+          description "<1-4094> - VLAN Id";
+          type int32 {
+            range "1..4094";
+          }
+        }
+
+        container rewrite {
+          tailf:info "Tag Rewrite";
+          description "Tag Rewrite";
+          when "../vlan-id";
+          presence "true";
+          uses subinterface-rewrite-common-grouping;
+        }
+      }
+    }
+
+    container action {
+      tailf:action self-test {
+        tailf:hidden tsdn;
+        tailf:actionpoint flat-L3vpn-internal-self-test-actionpoint;
+        input {
+          leaf src-ip {
+            type string;
+          }
+          leaf dst-ip {
+            type string;
+          }
+        }
+        output {
+          leaf status {
+            type string;
+          }
+          leaf message {
+            type string;
+          }
+        }
+      }
+    }
+  }
+
+  container flat-L3vpn-actions {
+    tailf:hidden tsdn;
+    tailf:action cleanup {
+      tailf:actionpoint cisco-flat-L3vpn-fp-cleanup-internal;
+      tailf:info "Clean up L3vpn service configuration and operational data";
+      description "Clean up L3vpn service configuration and operational data";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf-list endpoints {
+          tailf:info "Clean up L3vpn service configuration for a given endpoint";
+          description "Clean up L3vpn service configuration for a given endpoint";
+          type string;
+        }
+        leaf no-networking {
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-flat-L3vpn-fp-error-recovery-internal;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          tailf:info "Service to recover";
+          description "Service to recover";
+          type string;
+          mandatory true;
+        }
+        leaf-list endpoints {
+          tailf:info "Recover all endpoints under given service.";
+          description "Recover all endpoints under given service.";
+          type string;
+        }
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+  }
+
+  // This container is so we can write nano pre-conditions on plan and oper data.
+  // If they are at root, the monitor path is not possible to define for eg:
+  //ncs:monitor "/" {
+  //  ncs:trigger-expr "not(cisco-flat-L3vpn-fp-internal:"
+  //                        + "flat-L3vpn-plan[name=$NAME][endpoint-name=$ENDPOINT])"
+  //                  + "or (cisco-flat-L3vpn-fp-internal:flat-L3vpn-oper-data"
+  //                  + "[name=$NAME][endpoint-name=$ENDPOINT]/status = 'failed')";
+  //}
+
+  container flat-L3vpn-internal {
+    tailf:hidden tsdn;
+    list flat-L3vpn-plan {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name endpoint-name";
+      leaf name {
+        type string;
+        tailf:info "L3VPN Service name";
+        description "L3VPN Service name";
+      }
+      leaf endpoint-name {
+        type string;
+        tailf:info "Endpoint name";
+        description "Endpoint name";
+      }
+      uses ncs:nano-plan-data;
+      uses ncs:nano-plan-history;
+    }
+  }
+
+  container cfp-configurations {
+    tailf:hidden tsdn;
+    list dynamic-device-mapping {
+      tailf:info "Dynamic Device Mapping";
+      description "Dynamic Device Mapping";
+      key "ned-id";
+      leaf ned-id {
+        tailf:info "Device NED ID, eg ned:netconf";
+        description "Device NED ID, eg ned:netconf";
+        type string;
+        tailf:cli-allow-range;
+      }
+      leaf python-impl-class-name {
+        tailf:info "Device Python implementation class, eg module.class";
+        description "Device Python implementation class, eg module.class";
+        type string;
+        mandatory true;
+      }
+    }
+
+    leaf l3vpn-validation-enabled {
+      tailf:info "If set to true, following validations are done for l3vpn service:
+                  1. All the endpoint interfaces are available on the endpoint.";
+      description "If set to true, following validations are done for l3vpn service:
+                  1. All the endpoint interfaces are available on the endpoint.";
+      type boolean;
+      default true;
+    }
+
+    leaf l3vpn-device-error-validation-enabled {
+      tailf:info "If set to true, following validations are done for l3vpn service:
+                  1. Check if RD change will be accepted by endpoint.";
+      description "If set to true, following validations are done for l3vpn service:
+                  1. Check if RD change will be accepted by endpoint.";
+      type boolean;
+      default true;
+    }
+
+    leaf iosxr-default-ned-id {
+      tailf:info "NED ID of the default IOSXR Device.";
+      description "NED ID of the default IOSXR Device.";
+      tailf:hidden tsdn;
+      type string;
+      default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+    }
+
+    container global-rd-enabled {
+      tailf:info "Set this flag to apply RD under global VRF definition.";
+      description "Set this flag to apply RD under global VRF definition.";
+      presence "true";
+    }
+  }
+}

@@ -1,0 +1,10 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <kickers xmlns="http://tail-f.com/ns/kicker">
+    <data-kicker>
+      <id>service-assurance-subsciption-kicker-{$SERVICE_PATH}</id>
+      <monitor>{$SERVICE_PATH}</monitor>
+      <kick-node>/cisco-aa-service-assurance:service-assurance</kick-node>
+      <action-name>service-assurance-action</action-name>
+    </data-kicker>
+  </kickers>
+</config>

@@ -1,0 +1,142 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0"
+                 servicepoint="sr-mpls-with-ospf">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <!--
+          Select the devices from some data structure in the service
+          model. In this skeleton the devices are specified in a leaf-list.
+          Select all devices in that leaf-list:
+      -->
+      <name>{/device}</name>
+            <config>
+                   <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     <Loopback>
+                       <id>{/loopback_id}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/loopback_ipv4_address}</ip>
+                           <mask>/32</mask>
+                         </address>
+                       </ipv4>
+                       <shutdown tags="delete"/>
+                     </Loopback>
+                   </interface>
+                   <router xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     <ospf>
+                       <name>{/opspf_process_id}</name>
+                       <router-id>{/loopback_ipv4_address}</router-id>
+                       <distribute>
+                         <link-state/>
+                       </distribute>
+                       <network>
+                         <point-to-point/>
+                       </network>
+                       <area>
+                         <id>{/opspf_area_id}</id>
+                         <mpls>
+                           <traffic-eng/>
+                         </mpls>
+                         <interface foreach="{/interface_xr}">
+                           <name>{PHYSICAL_INTERFACE_TYPE}{interface_id}</name>
+                           <network>point-to-point</network>
+                         </interface>
+                         <interface>
+                           <name>Loopback{/loopback_id}</name>
+                           <passive>
+                             <mode>enable</mode>
+                           </passive>
+                           <prefix-sid>
+                             <absolute>{/abs_prefix_sid}</absolute>
+                           </prefix-sid>
+                         </interface>
+                       </area>
+                       <segment-routing>
+                         <mpls/>
+                         <forwarding>mpls</forwarding>
+                         <sr-prefer/>
+                       </segment-routing>
+                       <mpls>
+                         <traffic-eng>
+                           <router-id>
+                             <Loopback>{/loopback_id}</Loopback>
+                           </router-id>
+                         </traffic-eng>
+                         <ldp>
+                           <sync/>
+                         </ldp>
+                       </mpls>
+                     </ospf>
+                   </router>
+                   <mpls xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     <traffic-eng>
+                       <auto-tunnel>
+                         <pcc>
+                           <tunnel-id>
+                             <min>1000</min>
+                             <max>1999</max>
+                           </tunnel-id>
+                         </pcc>
+                       </auto-tunnel>
+                       <interface foreach="{/interface_xr}">
+                         <name>{PHYSICAL_INTERFACE_TYPE}{interface_id}</name>
+                       </interface>
+                       <logging>
+                         <events>
+                           <all/>
+                         </events>
+                       </logging>
+                     </traffic-eng>
+                     <ldp>
+                       <log>
+                         <neighbor/>
+                       </log>
+                       <router-id>{/loopback_ipv4_address}</router-id>
+                       <address-family>
+                         <ipv4/>
+                       </address-family>
+                       <interface foreach="{/interface_xr}">
+                         <name>{PHYSICAL_INTERFACE_TYPE}{interface_id}</name>
+                         <address-family>
+                           <ipv4/>
+                         </address-family>
+                       </interface>
+                     </ldp>
+                   </mpls>
+                   <segment-routing xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     <global-block>
+                       <lower-bound>16000</lower-bound>
+                       <upper-bound>80000</upper-bound>
+                     </global-block>
+                     <traffic-eng>
+                       <logging>
+                         <policy>
+                           <status/>
+                         </policy>
+                       </logging>
+                       <on-demand>
+                         <color>
+                           <id>10</id>
+                           <dynamic>
+                             <pcep/>
+                             <metric>
+                               <type>te</type>
+                             </metric>
+                           </dynamic>
+                         </color>
+                         <color>
+                           <id>20</id>
+                           <dynamic>
+                             <pcep/>
+                             <metric>
+                               <type>igp</type>
+                             </metric>
+                           </dynamic>
+                         </color>
+                       </on-demand>
+                       <maximum-sid-depth>8</maximum-sid-depth>
+                     </traffic-eng>
+                   </segment-routing>
+        </config>
+    </device>
+  </devices>
+</config-template>

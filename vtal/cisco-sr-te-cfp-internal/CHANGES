@@ -1,0 +1,16 @@
+cisco-sr-te-cfp-internal (v2.0) [November 16, 2020]
+===================================================
+A. Added validate callpoint to ODN service.
+    tailf:validate "sr-odn-internal-validation" {
+      tailf:dependency ".";
+    }
+B. Added validate callpoint to Policy service.
+    tailf:validate "sr-policies-internal-validation" {
+      tailf:dependency ".";
+    }
+
+
+cisco-sr-te-cfp-internal (v1.1.0) [June 23, 2020]
+=================================================
+
+Initial Revision

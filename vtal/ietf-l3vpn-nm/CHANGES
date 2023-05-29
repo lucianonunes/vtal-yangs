@@ -1,0 +1,72 @@
+ietf-l3vpn-nm (v2.0.0) [March 31, 2021]
+=================================================
+  A. Added: l3vpn-ntw->vpn-services->vpn-service->vpn-nodes->vpn-node
+     ->vpn-network-accesses->vpn-network-access->connection
+      when "../encapsulation-type='l3vpn-ntw:tagged-int'";
+
+ietf-l3vpn-nm (v2.0.0) [March 16, 2021]
+=================================================
+  A. Modified: l3vpn-ntw->vpn-services->vpn-service->vpn-nodes->vpn-node
+     ->vpn-network-accesses->vpn-network-access->connection->tagged-interface
+     ->dot1q-vlan-tagged->cvlan-id is now mandatory
+
+ietf-l3vpn-nm (v2.0.0) [March 4, 2021]
+=================================================
+  A. Modified tailf:info for site-routing->routing-protocol
+
+ietf-l3vpn-nm (v2.0.0) [January 27, 2021]
+=================================================
+  A. Removed unused elements containing tailf:hidden full;
+
+ietf-l3vpn-nm (v2.0.0) [November 16, 2020]
+=================================================
+  A. Added validate callpoint to service
+      tailf:validate "ietf-l3vpn-nm-validation" {
+        tailf:dependency ".";
+      }
+
+ietf-l3vpn-nm (v2.0.0) [October 21, 2020]
+=================================================
+  A. Added support for multiple vpn-network-access under single vpn-node
+  B. Added redistribute-connected-ipv4-af empty leaf under bgp
+  C. Added redistribute-connected-ipv6-af empty leaf under bgp
+
+ietf-l3vpn-nm (v2.0.0) [October 08, 2020]
+=================================================
+  A. Added import route policy under vpn-targets -> vpn-policies -> import-policy
+
+      Current Payload:
+
+          <l3vpn-ntw xmlns="urn:ietf:params:xml:ns:yang:ietf-l3vpn-ntw">
+            <vpn-services>
+              <vpn-service>
+                <vpn-id>0-65008740</vpn-id>
+                <ie-profiles>
+                  <ie-profile>
+                    <ie-profile-id>ie_00</ie-profile-id>
+                    <vpn-targets>
+                      <vpn-policies>
+                        <export-policy>TEST_EXPORT_POLICY</export-policy>
+                        <import-policy>TEST_IMPORT_POLICY</import-policy>   <------ ADDED
+                      </vpn-policies>
+                    </vpn-targets>
+                  </ie-profile>
+                </ie-profiles>
+                <vpn-nodes>
+                  <vpn-node>
+                    <ne-id>PIOSXR-1</ne-id>
+                    <vpn-targets>
+                      <vpn-policies>
+                        <export-policy>TEST_EXPORT_POLICY</export-policy>
+                        <import-policy>TEST_IMPORT_POLICY</import-policy>   <------ ADDED
+                      </vpn-policies>
+                    </vpn-targets>
+                  </vpn-node>
+                </vpn-nodes>
+              </vpn-service>
+            </vpn-services>
+          </l3vpn-ntw>
+
+ietf-l3vpn-nm (v2.0.0) [August 13, 2020]
+=================================================
+  A. Initial Revision

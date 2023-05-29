@@ -1,0 +1,47 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{device}</name>
+      <config>
+        <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <Bundle-Ether when="{if-type='Bundle-Ether'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </Bundle-Ether>
+          <FiftyGigE when="{if-type='FiftyGigE'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </FiftyGigE>
+          <TwoHundredGigE when="{if-type='TwoHundredGigE'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </TwoHundredGigE>
+          <FourHundredGigE when="{if-type='FourHundredGigE'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </FourHundredGigE>
+          <TwentyFiveGigE when="{if-type='TwentyFiveGigE'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </TwentyFiveGigE>
+          <GigabitEthernet when="{if-type='GigabitEthernet'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </GigabitEthernet>
+          <TenGigE when="{if-type='TenGigE'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </TenGigE>
+          <FortyGigE when="{if-type='FortyGigE'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </FortyGigE>
+          <HundredGigE when="{if-type='HundredGigE'}">
+            <id>{if-id}</id>
+            <shutdown tags="delete"/>
+          </HundredGigE>
+        </interface>
+      </config>
+    </device>
+  </devices>
+</config>

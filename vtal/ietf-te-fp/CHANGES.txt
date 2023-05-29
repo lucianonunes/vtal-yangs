@@ -1,0 +1,525 @@
+ietf-te-fp (v2.0) [February 15, 2021]
+=============================================
+A. Removed unused groupings from the YANG model
+
+ietf-te-fp (v2.0) [January 28, 2021]
+=============================================
+A. Commented out unused elements from the YANG model
+   1. ietf-te
+   2. ietf-te-type
+   3. ieft-te-mpls
+   4. ietf-te-device
+
+ietf-te-fp (v2.0) [December 1, 2020]
+=============================================
+A. Added tailf:hidden full to hold-priority and setup-priority under p2p-primary-paths.
+    refine setup-priority {
+      tailf:hidden full;
+    }
+    refine hold-priority {
+      tailf:hidden full;
+    }
+B. Added tailf:hidden full to te -> tunnels -> tunnel -> p2p-primary-paths -> 
+                 p2p-primary-path -> path-computation-server
+    leaf path-computation-server {
+      // NSO ADDITION - START
+      tailf:hidden full;
+      // NSO ADDITION - END
+      when "../path-computation-method = "+
+      "'te-types:path-externally-queried'" {
+        description
+          "The path-computation server when the path is
+           externally queried";
+      }
+      type inet:ip-address;
+      tailf:info "Address of the external path computation
+         server";
+      description
+        "Address of the external path computation
+         server";
+    }
+
+ietf-te-fp (v2.0) [November 16, 2020]
+=============================================
+A. Added validate callpoint to service.
+    tailf:validate "ietf-te-validation" {
+      tailf:dependency ".";
+    }
+
+ietf-te-fp (v2.0) [Oct 6, 2020]
+=============================================
+A. Added augmentation for traffic steering grouping
+    container traffic-steering {
+      tailf:info "Steer traffic traffic through the tunnel";
+      description  "Steer traffic traffic through the tunnel";
+      choice steering-choice {
+        // interface tunnel-te* / autoroute
+        default autoroute;
+        case autoroute {
+          container autoroute {
+            tailf:info "Parameters for IGP routing over tunnel";
+            description "Parameters for IGP routing over tunnel";
+
+            // interface tunnel-te* / autoroute announce
+            container announce {
+              tailf:info "Announce tunnel to IGP";
+              description "Announce tunnel to IGP";
+
+              leaf enable{
+                tailf:info "Enable autoroute announce";
+                description "Enable autoroute announce";
+                type boolean;
+                default 'true';
+              }
+              // interface tunnel-te* / autoroute announce / metric
+              container metric {
+                presence true;
+                tailf:info "Specify MPLS tunnel metric";
+                description "Specify MPLS tunnel metric";
+                choice metric-choice {
+                  // interface tunnel-te* / autoroute announce / metric constant
+                  leaf constant {
+                    tailf:info "<1-2147483647> - Set constant metric";
+                    description "<1-2147483647> - Set constant metric";
+                    type uint32 {
+                      range "1..2147483647";
+                    }
+                  }
+                  // interface tunnel-te* / autoroute announce / metric absolute
+                  leaf absolute {
+                    tailf:info "<1-2147483647> - Set absolute metric";
+                    description "<1-2147483647> - Set absolute metric";
+                    type uint32 {
+                      range "1..2147483647";
+                    }
+                  }
+                  // interface tunnel-te* / autoroute announce / metric relative
+                  leaf relative {
+                    tailf:info "<-10,+10> - Set relative metric";
+                    description "<-10,+10> - Set relative metric";
+                    type int8 {
+                      range "-10..10";
+                    }
+                  }
+                }
+              }
+            }
+
+            // interface tunnel-te* / autoroute destination *
+            list destination {
+              tailf:info "Adds static route address A.B.C.D to destination";
+              description "Adds static route address A.B.C.D to destination";
+              key address;
+              leaf address {
+                tailf:info "A.B.C.D - IPv4 Address of static route to add";
+                description "A.B.C.D - IPv4 Address of static route to add";
+                type inet:ipv4-address;
+              }
+            }
+          }
+        }
+        // interface tunnel-te* / forwarding-adjacency
+         case forwarding-adjacency {
+          container forwarding-adjacency {
+            presence "true";
+            tailf:info "Enable tunnel as a forwarding-adjacency";
+            description "Enable tunnel as a forwarding-adjacency";
+
+            // interface tunnel-te* / forwarding-adjacency / holdtime
+            leaf holdtime {
+              tailf:info "<0-20000> - Hold time in ms";
+              description "<0-20000> - Hold time in ms";
+              type uint16 {
+                range "0..20000";
+              }
+            }
+
+            // interface tunnel-te* / forwarding-adjacency / include-ipv6
+            leaf include-ipv6 {
+              tailf:info "Announce tunnel as an IPv6 FA also";
+              description "Announce tunnel as an IPv6 FA also";
+              type empty;
+            }
+          }
+        }
+      }
+    }
+
+  B. Removed tailf:hidden full from hold-priority and setup-priority.
+   
+
+ietf-te-fp (v2.0) [Aug 20, 2020]
+=============================================
+A. Moved device source and destination device inputs
+   1. Removed cisco-device-te-node.yang
+   2. Added head-end and tail-end to ietf-te.yang
+
+      leaf head-end {
+        tailf:info "Source device name.";
+        description "Source device name.";
+        type leafref {
+          tailf:no-leafref-check;
+          path "/core-fp-common:dispatch-map/core-fp-common:device";
+        }
+        mandatory true;
+      }
+
+      leaf tail-end {
+        tailf:info "Destination device name.";
+        description "Destination device name.";
+        type leafref {
+          tailf:no-leafref-check;
+          path "/core-fp-common:dispatch-map/core-fp-common:device";
+        }
+      }
+
+    3. Made source and destination leafs mandatory in YANG:
+
+      leaf source {
+        type te-types:te-node-id;
+        tailf:info "TE tunnel source node ID.";
+        description "TE tunnel source node ID.";
+        //NSO MODIFICATION - START
+        mandatory true;
+        // NSO MODIFICATION - END
+      }
+      leaf destination {
+        type te-types:te-node-id;
+        tailf:info "TE tunnel destination node ID";
+        description "TE tunnel destination node ID";
+        //NSO MODIFICATION - START
+        mandatory true;
+        // NSO MODIFICATION - END
+      }
+
+B. Added tail:hidden full to elements not being used to push device configuration to.
+
+C. Removed the following unused YANG models:
+   1. ietf-key-chain.yang
+   2. ietf-mpls-static-extended.yang
+   3. ietf-netconf-acm.yang
+   4. ietf-rsvp-extended.yang
+   5. ietf-rsvp-te-mpls.yang
+   6. ietf-rsvp-te.yang
+   7. ietf-rsvp.yang
+   8. ietf-te-sr-mpls.yang
+
+D. Sample Payload
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <te xmlns="urn:ietf:params:xml:ns:yang:ietf-te">
+    <tunnels>
+      <tunnel>
+        <name>IETF-RSVP-TE</name>
+        <identifier>1234</identifier>
+        <description>RSVP_TE</description>
+        <source>111.1.1.1</source>
+        <head-end>PIOSXR-0</head-end>
+        <destination>222.2.2.2</destination>
+        <tail-end>PIOSXR-1</tail-end>
+        <te-bandwidth>
+          <generic>94967295</generic>
+        </te-bandwidth>
+        <signaling-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-setup-rsvp</signaling-type>
+        <p2p-primary-paths>
+          <p2p-primary-path>
+            <name>PATH-1</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-explicitly-defined</path-computation-method>
+            <preference>1</preference>
+            <explicit-route-objects-always>
+              <route-object-include-exclude>
+                <index>1</index>
+                <numbered-node-hop>
+                  <node-id>1.1.1.1</node-id>
+                  <hop-type>loose</hop-type>
+                </numbered-node-hop>
+              </route-object-include-exclude>
+              <route-object-include-exclude>
+                <index>2</index>
+                <label-hop>
+                  <te-label>
+                    <generic>Afw=</generic>
+                  </te-label>
+                </label-hop>
+              </route-object-include-exclude>
+            </explicit-route-objects-always>
+          </p2p-primary-path>
+          <p2p-primary-path>
+            <name>PATH-2</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-locally-computed</path-computation-method>
+            <optimizations>
+              <optimization-metric>
+                <metric-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-metric-te</metric-type>
+              </optimization-metric>
+            </optimizations>
+            <preference>2</preference>
+          </p2p-primary-path>
+          <p2p-primary-path>
+            <name>PATH-3</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-externally-queried</path-computation-method>
+            <optimizations>
+              <optimization-metric>
+                <metric-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-metric-te</metric-type>
+              </optimization-metric>
+            </optimizations>
+            <preference>3</preference>
+          </p2p-primary-path>
+          <p2p-primary-path>
+            <name>PATH-4</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-externally-queried</path-computation-method>
+            <path-computation-server>1.2.3.4</path-computation-server>
+            <optimizations>
+              <optimization-metric>
+                <metric-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-metric-te</metric-type>
+              </optimization-metric>
+            </optimizations>
+            <preference>4</preference>
+          </p2p-primary-path>
+        </p2p-primary-paths>
+      </tunnel>
+    </tunnels>
+  </te>
+</config>
+
+
+
+ietf-te-fp (v2.0) [Aug 14, 2020]
+=============================================
+A. Added Error recovery action.
+   1. Above service level - te -> tunnels -> actions
+      tailf:action error-recovery {
+          tailf:actionpoint cisco-ietf-te-fp-error-recovery;
+          tailf:info "Action to recover a service during create/update/delete from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync-from on the device
+                      & redeploys the service with reconcile option.
+                      For delete failures, this action issues a sync-from on the device &
+                      redeploys zombie services.";
+          description "Action to recover a service during create/update/delete from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync-from on the device
+                      & redeploys the service with reconcile option.
+                      For delete failures, this action issues a sync-from on the device &
+                      redeploys zombie services.";
+          input {
+            leaf service {
+              tailf:info "Service to recover";
+              description "Service to recover";
+              type string;
+              mandatory true;
+            }
+            choice node-type {
+              leaf source {
+                tailf:info "Trigger error recovery for source";
+                description "Trigger error recovery for source";
+                type te-types:te-node-id;
+              }
+              leaf destination {
+                tailf:info "Trigger error recovery for destination";
+                description "Trigger error recovery for destination";
+                type te-types:te-node-id;
+              }
+            }
+          }
+          output {
+            leaf success {
+              type boolean;
+              mandatory true;
+            }
+            leaf detail {
+              type string;
+            }
+          }
+          tailf:confirm-text "########################\n" +
+            "#        Warning       #\n" +
+            "########################\n" +
+            "You are about to recover a T-SDN service.\n" +
+            "This will issue a sync-from on the device.\n" +
+            "Are you sure you want to proceed?" {
+              tailf:confirm-default false;
+          }
+        }
+
+    2. At service level - te -> tunnels -> tunnel <SERVICE-NAME> -> actions
+        tailf:action error-recovery {
+          tailf:actionpoint cisco-ietf-te-fp-service-error-recovery;
+          tailf:info "Action to recover a service during create/update/delete from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync-from on the device
+                      & redeploys the service with reconcile option.
+                      For delete failures, this action issues a sync-from on the device &
+                      redeploys zombie services.";
+          description "Action to recover a service during create/update/delete from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync-from on the device
+                      & redeploys the service with reconcile option.
+                      For delete failures, this action issues a sync-from on the device &
+                      redeploys zombie services.";
+          input {
+            choice node-type {
+              leaf source {
+                tailf:info "Trigger error recovery for source";
+                description "Trigger error recovery for source";
+                type te-types:te-node-id;
+              }
+              leaf destination {
+                tailf:info "Trigger error recovery for destination";
+                description "Trigger error recovery for destination";
+                type te-types:te-node-id;
+              }
+            }
+          }
+          output {
+            leaf success {
+              type boolean;
+              mandatory true;
+            }
+            leaf detail {
+              type string;
+            }
+          }
+          tailf:confirm-text "########################\n" +
+            "#        Warning       #\n" +
+            "########################\n" +
+            "You are about to recover a T-SDN service.\n" +
+            "This will issue a sync-from on the device.\n" +
+            "Are you sure you want to proceed?" {
+              tailf:confirm-default false;
+          }
+        }
+
+ietf-te-fp (v2.0) [Aug 10, 2020]
+=============================================
+A. Added Cleanup action under te -> tunnels -> actions
+   tailf:action cleanup {
+          tailf:actionpoint ietf-te-fp-cleanup;
+          tailf:info "Clean up RSVP-TE service configuration and operational data";
+          description "Clean up RSVP-TE service configuration and operational data";
+          input {
+            leaf service {
+              type string;
+              mandatory true;
+            }
+            leaf no-networking {
+              type boolean;
+              mandatory true;
+            }
+          }
+          output {
+            leaf success {
+              type boolean;
+              mandatory true;
+            }
+            leaf detail {
+              type string;
+            }
+          }
+          tailf:confirm-text "########################\n" +
+            "#        Warning       #\n" +
+            "########################\n" +
+            "You are about to forcefully cleanup a T-SDN service.\n" +
+            "This will affect the deploying service and leave T-SDN & NSO out-of-sync (for no-networking=true).\n" +
+            "Are you sure you want to proceed?" {
+              tailf:confirm-default false;
+          }
+        }
+
+ietf-te-fp (v2.0) [July 8, 2020]
+=============================================
+
+A. Sample Payload:
+
+Devices bootstrap:
+------------------
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <device-te-node xmlns="http://cisco.com/ns/nso/device/te">
+    <te-node-id>111.1.1.1</te-node-id>
+    <device>PIOSXR-0</device>
+  </device-te-node>
+  <device-te-node xmlns="http://cisco.com/ns/nso/device/te">
+    <te-node-id>222.2.2.2</te-node-id>
+    <device>PIOSXR-1</device>
+    <loopback>1</loopback>
+  </device-te-node>
+</config>
+
+Service Payload:
+----------------
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <te xmlns="urn:ietf:params:xml:ns:yang:ietf-te">
+    <tunnels>
+      <tunnel>
+        <name>IETF-RSVP-TE</name>
+        <identifier>1234</identifier>
+        <description>RSVP_TE</description>
+        <source>111.1.1.1</source>
+        <destination>222.2.2.2</destination>
+        <te-bandwidth>
+          <generic>94967295</generic>
+        </te-bandwidth>
+        <signaling-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-setup-rsvp</signaling-type>
+        <p2p-primary-paths>
+          <p2p-primary-path>
+            <name>PATH-1</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-explicitly-defined</path-computation-method>
+            <preference>1</preference>
+            <explicit-route-objects-always>
+              <route-object-include-exclude>
+                <index>1</index>
+                <numbered-node-hop>
+                  <node-id>1.1.1.1</node-id>
+                  <hop-type>loose</hop-type>
+                </numbered-node-hop>
+              </route-object-include-exclude>
+              <route-object-include-exclude>
+                <index>2</index>
+                <label-hop>
+                  <te-label>
+                    <generic>Afw=</generic>
+                  </te-label>
+                </label-hop>
+              </route-object-include-exclude>
+              <route-object-include-exclude>
+                <index>3</index>
+                <explicit-route-usage xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:route-exclude-object</explicit-route-usage>
+                <numbered-node-hop>
+                  <node-id>10.10.10.10</node-id>
+                </numbered-node-hop>
+              </route-object-include-exclude>
+            </explicit-route-objects-always>
+          </p2p-primary-path>
+          <p2p-primary-path>
+            <name>PATH-2</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-locally-computed</path-computation-method>
+            <optimizations>
+              <optimization-metric>
+                <metric-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-metric-te</metric-type>
+              </optimization-metric>
+            </optimizations>
+            <preference>2</preference>
+          </p2p-primary-path>
+          <p2p-primary-path>
+            <name>PATH-3</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-externally-queried</path-computation-method>
+            <optimizations>
+              <optimization-metric>
+                <metric-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-metric-te</metric-type>
+              </optimization-metric>
+            </optimizations>
+            <preference>3</preference>
+          </p2p-primary-path>
+          <p2p-primary-path>
+            <name>PATH-4</name>
+            <path-computation-method xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-externally-queried</path-computation-method>
+            <path-computation-server>1.2.3.4</path-computation-server>
+            <optimizations>
+              <optimization-metric>
+                <metric-type xmlns:te-types="urn:ietf:params:xml:ns:yang:ietf-te-types">te-types:path-metric-te</metric-type>
+              </optimization-metric>
+            </optimizations>
+            <preference>4</preference>
+          </p2p-primary-path>
+        </p2p-primary-paths>
+      </tunnel>
+    </tunnels>
+  </te>
+</config>

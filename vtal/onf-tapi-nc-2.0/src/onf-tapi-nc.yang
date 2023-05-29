@@ -1,0 +1,18 @@
+module onf-tapi-nc {
+  yang-version 1.1;
+  namespace "http://tail-f.com/ns/ned-id/onf-tapi-nc";
+  prefix onf-tapi-nc;
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs-ned {
+    prefix ned;
+  }
+
+  identity onf-tapi-nc {
+    tailf:abstract;
+    base ned:netconf-ned-id;
+  }
+}

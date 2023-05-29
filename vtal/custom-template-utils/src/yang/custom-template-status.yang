@@ -1,0 +1,87 @@
+/*
+ ***************************************************
+ * Copyright (c) 2020 Cisco Systems, Inc.
+ * All rights reserved.
+ ***************************************************
+ */
+module custom-template-status {
+  namespace "http://cisco.com/yang/nso/custom-template-status";
+  prefix ct-status;
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  organization "Cisco Systems";
+  description "Custom Template apply status";
+
+  grouping key-grouping {
+   leaf name {
+      tailf:info "template name";
+      description "template name";
+      type string;
+    }
+    leaf device {
+      tailf:info "device name to which template applied";
+      description "device name to which template applied";
+      type string;
+    }
+    leaf owner {
+      tailf:info "service owner";
+      description "service owner";
+      type string;
+    }
+  }
+
+  grouping status-grouping {
+    leaf status {
+      tailf:info "template apply status";
+      description "template apply status";
+      type string;
+    }
+    leaf message {
+      tailf:info "message about success/failure of applying template";
+      description "message about success/failure of applying template";
+      type string;
+    }
+  }
+
+  list applied-custom-templates {
+    tailf:info "List of applied custom-templates";
+    description "List of applied custom-templates";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+    key "name device owner";
+    uses key-grouping;
+  }
+
+  notification customization-notif {
+    description "Custom template apply notification.";
+    uses key-grouping;
+    uses status-grouping;
+  }
+
+  list custom-template-status {
+    tailf:hidden "debug";
+    tailf:info "List of applied custom-templates";
+    description "List of applied custom-templates";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+    key "name device";
+    leaf name {
+      tailf:info "template name";
+      description "template name";
+      type string;
+    }
+    leaf device {
+      tailf:info "device name to which template applied";
+      description "device name to which template applied";
+      type string;
+    }
+    uses status-grouping;
+  }
+}

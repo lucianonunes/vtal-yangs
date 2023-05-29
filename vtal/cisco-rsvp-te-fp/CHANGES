@@ -1,0 +1,6 @@
+cisco-rsvp-te (v2.0) [November 16, 2020]
+===================================================
+A. Added validate callpoint to service.
+    tailf:validate "rsvp-te-validation" {
+      tailf:dependency ".";
+    }

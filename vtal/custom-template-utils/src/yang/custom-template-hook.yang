@@ -1,0 +1,129 @@
+/*
+ ***************************************************
+ * Copyright (c) 2020 Cisco Systems, Inc.
+ * All rights reserved.
+ ***************************************************
+ */
+module custom-template-hook {
+  namespace "http://cisco.com/yang/nso/common/custom-template-hook";
+  prefix ct-hook;
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import custom-template-info {
+    prefix ct-info;
+  }
+
+  organization "Cisco Systems";
+  description "Custom Template groupings, which can be hooked to other core function packs";
+
+  revision 2021-02-16 {
+    description "Added must expression to not allow device template deletion if
+                it is being used.";
+  }
+
+  grouping variable-map {
+    list variable {
+      tailf:cli-suppress-mode;
+      tailf:info "Variables to bind when applying template one time";
+      description "Variables to bind when applying template one time";
+      key "name";
+      leaf name {
+        tailf:info "Name of template variable";
+        description "Name of template variable";
+        type leafref {
+          tailf:no-leafref-check;
+          path "deref(../../name)/../ct-info:variables";
+        }
+      }
+      leaf value {
+        tailf:info "Value of template variable";
+        description "Value of template variable";
+        type string;
+        mandatory true;
+      }
+    }
+  }
+
+  grouping itr-grouping {
+    list iteration {
+      tailf:cli-suppress-mode;
+      tailf:info "Apply custom template multiple times with iteration";
+      description "Apply custom template multiple times with iteration";
+      ordered-by user;
+      key "number";
+      leaf number {
+        tailf:info "<1-65535>;;Iteration number";
+        description "<1-65535>;;Iteration number";
+        type uint16 {
+          range "1..max";
+        }
+      }
+      list variable {
+        tailf:cli-suppress-mode;
+        tailf:info "Variables to bind when applying template in iteration";
+        description "Variables to bind when applying template in iteration";
+        min-elements 1;
+        key "name";
+        leaf name {
+          tailf:info "Name of template variable";
+          description "Name of template variable";
+          type leafref {
+            tailf:no-leafref-check;
+            path "deref(../../../name)/../ct-info:variables";
+          }
+        }
+        leaf value {
+          tailf:info "Value of template variable";
+          description "Value of template variable";
+          type string;
+          mandatory true;
+        }
+      }
+    }
+  }
+
+  grouping template-hook {
+    list custom-template {
+      tailf:cli-suppress-mode;
+      tailf:info "Custom templates to apply when device is ready";
+      description "Custom templates to apply when device is ready";
+      ordered-by user;
+      key "name";
+      leaf name {
+        tailf:info "Name of template to apply";
+        description "Name of template to apply";
+        type leafref {
+          path "/ct-info:custom-template-info/ct-info:template-name";
+        }
+      }
+      uses variable-map;
+      uses itr-grouping;
+      must "count(variable) = 0 or count(iteration) = 0 or "
+        + "(count(variable) = 0 and count(iteration) > 0) or "
+        + "(count(variable) > 0 and count(iteration) = 0)" {
+        error-message "Set either custom-template/variable or custom-template/iteration but not both.";
+        tailf:dependency "iteration";
+        tailf:dependency "variable";
+      }
+      must "not(/ct-info:custom-template-info[ct-info:template-name=current()/name])"
+        + " or (deref(name)/../ct-info:type='DEVICE' and ((deref(name)/../ct-info:rfs-node)"
+        + " or (not(deref(name)/../ct-info:rfs-node) and /ncs:devices/ncs:template[ncs:name=current()/name])))"
+        + " or deref(name)/../ct-info:type='FEATURE'"{
+        error-message "Device template is being used in service, cannot be deleted";
+        tailf:dependency "/ncs:devices/ncs:template/ncs:name";
+      }
+    }
+  }
+
+  leaf apply-custom-template {
+    tailf:info "Flag to turn ON/OFF custom-template feature";
+    description "Flag to turn ON/OFF custom-template feature";
+    type boolean;
+    default "true";
+  }
+}

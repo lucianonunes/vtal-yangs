@@ -1,0 +1,64 @@
+module bgp-ls-ls {
+  namespace "http://com/example/bgplsls";
+  prefix bgp-ls-ls;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  list bgp-ls-ls {
+    key name;
+
+    uses ncs:service-data;
+    ncs:servicepoint "bgp-ls-ls";
+
+    leaf name {
+      tailf:info "BGP LS LS Service Name";
+      type string;
+    }
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select an IOS XR router";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf local_bgp_id {
+      tailf:info "Enter Local BGP ID";
+      type uint32;
+    }
+
+    leaf bgp_router_id {
+      tailf:info "Enter BGP router ID IPv4 Address";
+      type inet:ipv4-address;
+    }
+
+    leaf neighbor_ipv4_address {
+      tailf:info "Enter Neighbor IPv4 Address";
+      type inet:ipv4-address;
+    }
+
+    leaf remote_bgp_id {
+      tailf:info "Enter Remote BGP ID";
+      type uint32;
+    }
+
+    leaf description {
+      tailf:info "Enter Description to the Neighbor";
+      type string;
+    }
+
+    leaf loopback_id {
+      tailf:info "Enter Loopback ID";
+      type uint32;
+    }
+
+  }
+}

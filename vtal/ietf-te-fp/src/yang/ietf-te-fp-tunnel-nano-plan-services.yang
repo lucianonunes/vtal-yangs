@@ -1,0 +1,147 @@
+module ietf-te-fp-tunnel-nano-plan-services {
+  yang-version 1.1;
+
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-te-fp-tunnel-nano-plan-services";
+  prefix ietf-te-fp-tunnel-nano-plan-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+  import ietf-te {prefix te; }
+
+  revision 2021-03-25 {
+    description "Updated: Replaced nano service-behavior-tree's selector pre-conditions
+                          with multiplier foreach to avoid extra per service kickers.";
+  }
+
+  revision 2020-06-10 {
+    description "Initial version";
+  }
+
+  identity source {
+    base ncs:plan-component-type;
+  }
+
+  identity destination {
+    base ncs:plan-component-type;
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline ietf-te-tunnel-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "ncs:ready" {
+      ncs:create {
+          // this checks if there are errors in another components, show it in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "ietf-te-fp-tunnel-nano-plan-services:source" {
+      ncs:state "ncs:init" {
+        ncs:delete {
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ietf-te-fp-tunnel-nano-plan-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+
+    }
+
+    ncs:component-type "ietf-te-fp-tunnel-nano-plan-services:destination" {
+      ncs:state "ncs:init" {
+
+        ncs:delete {
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ietf-te-fp-tunnel-nano-plan-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+
+  }
+
+  ncs:service-behavior-tree ietf-te-tunnel-p2p {
+    ncs:plan-outline-ref "ietf-te-fp-tunnel-nano-plan-services:ietf-te-tunnel-nano-plan";
+    ncs:plan-location "/te:te/te:tunnels/te:tunnel-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:selector {
+        ncs:variable "SOURCE" {
+          ncs:value-expr "$SERVICE/source";
+        }
+        ncs:variable "ID" {
+          ncs:value-expr "$SERVICE/identifier";
+        }
+        ncs:variable "INTERNAL_SERVICE_NAME" {
+          ncs:value-expr "concat(name, '-', source, '-internal')";
+        }
+        ncs:variable "DEVICE" {
+          ncs:value-expr "$SERVICE/head-end";
+        }
+        ncs:create-component "$SOURCE" {
+          ncs:component-type-ref "ietf-te-fp-tunnel-nano-plan-services:source";
+        }
+      }
+
+      ncs:multiplier {
+        ncs:foreach "$SERVICE/bidirectional" {
+          ncs:when "(. = 'true')";
+          ncs:variable "SOURCE" {
+            ncs:value-expr "$SERVICE/destination";
+          }
+          ncs:variable "ID" {
+            ncs:value-expr "$SERVICE/identifier";
+          }
+          ncs:variable "INTERNAL_SERVICE_NAME" {
+            ncs:value-expr "concat($NAME, '-', $SERVICE/destination, '-internal')";
+          }
+          ncs:variable "DEVICE" {
+            ncs:value-expr "$SERVICE/tail-end";
+          }
+          ncs:create-component "$SOURCE" {
+            ncs:component-type-ref "ietf-te-fp-tunnel-nano-plan-services:destination";
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,165 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <status-code-cfp xmlns="http://com/cisco/cfp-common-status-codes">
+    <name>L2VPN</name>
+  </status-code-cfp>
+  <status-codes xmlns="http://com/cisco/cfp-common-status-codes">
+    <core-function-pack>
+      <name>L2VPN</name>
+      <status-code-enum-path>cisco-tsdn-core-fp-common/python/cisco_tsdn_core_fp_common/status_codes/flat_L2vpn_status_codes</status-code-enum-path>
+      <status-code>
+        <code>701</code>
+        <reason>Allocation has failed</reason>
+        <category>resource</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>702</code>
+        <reason>Allocation request failed</reason>
+        <category>resource</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>503</code>
+        <reason>Cleanup failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>303</code>
+        <reason>Config push failed</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Device configuration rejected, fix the service payload and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>301</code>
+        <reason>Device unreachable</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Check device connectivity from NSO and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>870</code>
+        <reason>Custom Template apply failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>302</code>
+        <reason>Device out of sync</reason>
+        <category>device</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Check sync between device and NSO, and perform recovery steps.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>407</code>
+        <reason>Dynamic class for device not found</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Load correct classpath for the ned-id in CFP dynamic device mapping list</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>409</code>
+        <reason>Dynamic class method for device not found</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure dynamic method is implemented in multi-vendor implementation</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>406</code>
+        <reason>Device interface not present on device</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify that provided interface exists on device and corresponding dynamic class interface method is implemented</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>412</code>
+        <reason>ietf-te-service does not reference a valid IETF-TE service instance</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Fix the service payload with the correct IETF-TE service name</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>411</code>
+        <reason>IETF-TE package does not exist for ietf-te-service</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Install IETF-TE service package and create the IETF-TE service to be associated.</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>413</code>
+        <reason>Missing input</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify that missing input elements are provided in the payload</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>408</code>
+        <reason>Router NED not supported</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Ensure dynamic device mapping is set for the ned-id</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>504</code>
+        <reason>Service Recovery failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>415</code>
+        <reason>Invalid Parent Policy Defined</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>PASS_ALL is not allowed as parent route policy name</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>414</code>
+        <reason>No Parent Policy Found</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Define parent route policy on device before using as local route-policy attach-point</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>501</code>
+        <reason>Self test failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>502</code>
+        <reason>Unsupported status returned for self test</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>410</code>
+        <reason>Service Type evpn-vpws not supported for given device</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Fix the service payload with service type P2P</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>416</code>
+        <reason>L2VPN association with SRv6 via SR policy is not supported for this release.</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Fix the payload to remove SRv6 association</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>400</code>
+        <reason>Status code mapping has not been loaded for function pack during install</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Bootstrap status code mapping</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>404</code>
+        <reason>The value for the input element is not supported</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify that input element's value is supported in the payload</recommended-actions>
+      </status-code>
+    </core-function-pack>
+  </status-codes>
+</config>

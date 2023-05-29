@@ -1,0 +1,141 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{/name}</name>
+      <?set DEVICE = {/name} ?>
+      <config>
+          <telemetry xmlns="http://tail-f.com/ned/cisco-ios-xr">
+            <model-driven>
+              <?foreach {telemetry-model-driven-subscription/subscription}?>
+                <?set SUB_ID={id}?>
+                <?foreach {sensor-group}?>
+                  <?set SENSOR_ID={id}?>
+                  <sensor-group>
+                    <id>{$SENSOR_ID}</id>
+                    <?foreach {../../../telemetry-model-driven/sensor-group[id=$SENSOR_ID]/sensor-path}?>
+                      <sensor-path>
+                        <name>{path}</name>
+                      </sensor-path>
+                    <?end?>
+                  </sensor-group>
+                <?end?>
+                <?foreach {destination-group}?>
+                  <?set DEST_ID={id}?>
+                    <destination-group>
+                      <id>{$DEST_ID}</id>
+                      <vrf>{deref(id)/../vrf}</vrf>
+                      <address-family>
+                      <?foreach {../../../telemetry-model-driven/destination-group[id=$DEST_ID]/ipv4-destination}?>
+                        <ipv4>
+                          <address>{address}</address>
+                          <port>{port}</port>
+                          <encoding>{encoding}</encoding>
+                          <protocol>
+                            <?if {protocol/tcp}?>
+                              <tcp />
+                            <?end?>
+                            <?if {protocol/udp}?>
+                              <udp>
+                                <packetsize>{protocol/udp/packetsize}</packetsize>
+                              </udp>
+                            <?end?>
+                            <?if {protocol/grpc}?>
+                              <grpc>
+                                <no-tls when="{protocol/grpc/no-tls}" />
+                                <tls-hostname>{protocol/grpc/tls-hostname}</tls-hostname>
+                              </grpc>
+                            <?end?>
+                          </protocol>
+                        </ipv4>
+                      <?end?>
+                      <?foreach {../../../telemetry-model-driven/destination-group[id=$DEST_ID]/ipv6-destination}?>
+                        <ipv6>
+                          <address>{address}</address>
+                          <port>{port}</port>
+                          <encoding>{encoding}</encoding>
+                          <protocol>
+                            <?if {protocol/tcp}?>
+                              <tcp />
+                            <?end?>
+                            <?if {protocol/udp}?>
+                              <udp>
+                                <packetsize>{protocol/udp/packetsize}</packetsize>
+                              </udp>
+                            <?end?>
+                            <?if {protocol/grpc}?>
+                              <grpc>
+                                <no-tls when="{protocol/grpc/no-tls}" />
+                                <tls-hostname>{protocol/grpc/tls-hostname}</tls-hostname>
+                              </grpc>
+                            <?end?>
+                          </protocol>
+                        </ipv6>
+                      <?end?>
+                      </address-family>
+                    </destination-group>
+                <?end?>
+                <subscription>
+                  <id>{$SUB_ID}</id>
+                  <?foreach {sensor-group}?>
+                    <sensor-group-id>
+                      <name>{id}</name>
+                      <strict-timer when="{../strict-timer}"/>
+                      <sample-interval>{sample-interval}</sample-interval>
+                    </sensor-group-id>
+                  <?end?>
+                  <?foreach {destination-group}?>
+                    <destination-id>
+                      <name>{id}</name>
+                    </destination-id>
+                  <?end?>
+                  <source-qos-marking>{source-qos-marking}</source-qos-marking>
+                  <source-interface when="{source-interface}">
+                    <Loopback when="{source-interface/if-type='Loopback'}">{source-interface/if-id}</Loopback>
+                    <GigabitEthernet when="{source-interface/if-type='GigabitEthernet'}">{source-interface/if-id}</GigabitEthernet>
+                    <TenGigE when="{source-interface/if-type='TenGigE'}">{source-interface/if-id}</TenGigE>
+                    <TwentyFiveGigE when="{source-interface/if-type='TwentyFiveGigE'}">{source-interface/if-id}</TwentyFiveGigE>
+                    <FortyGigE when="{source-interface/if-type='FortyGigE'}">{source-interface/if-id}</FortyGigE>
+                    <FiftyGigE when="{source-interface/if-type='FiftyGigE'}">{source-interface/if-id}</FiftyGigE>
+                    <HundredGigE when="{source-interface/if-type='HundredGigE'}">{source-interface/if-id}</HundredGigE>
+                    <TwoHundredGigE when="{source-interface/if-type='TwoHundredGigE'}">{source-interface/if-id}</TwoHundredGigE>
+                    <FourHundredGigE when="{source-interface/if-type='FourHundredGigE'}">{source-interface/if-id}</FourHundredGigE>
+                    <Bundle-Ether when="{source-interface/if-type='Bundle-Ether'}">{source-interface/if-id}</Bundle-Ether>
+                  </source-interface>
+                </subscription>
+              <?end?>
+            </model-driven>
+          </telemetry>
+          <?set GLOBAL_TC='false'?>
+          <?set LOCAL_TC='false'?>
+          <?if {../traffic-collector}?>
+            <?set GLOBAL_TC='true'?>
+          <?end?>
+          <?if {traffic-collector}?>
+            <?set LOCAL_TC='true'?>
+          <?end?>
+          <traffic-collector xmlns="http://tail-f.com/ned/cisco-ios-xr" when="{$GLOBAL_TC='true' or $LOCAL_TC='true'}">
+            <?foreach {traffic-collector/external-interface}?>
+              <interface>
+                <name>{if-type}{if-id}</name>
+              </interface>
+            <?end?>
+            <?if {traffic-collector/statistics}?>
+              <statistics>
+                <history-size>{traffic-collector/statistics/history-size}</history-size>
+                <?set COLLECTION_INTERVAL={substring-before(string(traffic-collector/statistics/collection-interval),'-')}?>
+                  <collection-interval>{$COLLECTION_INTERVAL}</collection-interval>
+                <history-timeout>{traffic-collector/statistics/history-timeout}</history-timeout>
+              </statistics>
+            <?else?>
+              <statistics when="{../traffic-collector/statistics}">
+                <history-size>{../traffic-collector/statistics/history-size}</history-size>
+                <?set COLLECTION_INTERVAL={substring-before(string(../traffic-collector/statistics/collection-interval),'-')}?>
+                  <collection-interval>{$COLLECTION_INTERVAL}</collection-interval>
+                <history-timeout>{../traffic-collector/statistics/history-timeout}</history-timeout>
+              </statistics>
+            <?end?>
+          </traffic-collector>
+      </config>
+    </device>
+  </devices>
+</config>

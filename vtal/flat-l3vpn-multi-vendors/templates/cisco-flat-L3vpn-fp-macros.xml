@@ -1,0 +1,214 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <?macro cli-vrf-address-route-target ipVersion?>
+    <route-target when="{address-family[address-family='$ipVersion']/vpn-target/rt-type='import'}">
+      <import>
+        <asn-ip>{address-family[address-family='$ipVersion']/vpn-target[rt-type='import']/rt-value}</asn-ip>
+      </import>
+    </route-target>
+    <route-target when="{address-family[address-family='$ipVersion']/vpn-target/rt-type='export'}">
+      <export>
+        <asn-ip>{address-family[address-family='$ipVersion']/vpn-target[rt-type='export']/rt-value}</asn-ip>
+      </export>
+    </route-target>
+    <route-target when="{address-family[address-family='$ipVersion']/vpn-target/rt-type='both'}">
+      <import>
+        <asn-ip>{address-family[address-family='$ipVersion']/vpn-target[rt-type='both']/rt-value}</asn-ip>
+      </import>
+      <export>
+        <asn-ip>{address-family[address-family='$ipVersion']/vpn-target[rt-type='both']/rt-value}</asn-ip>
+      </export>
+    </route-target>
+  <?endmacro?>
+  <?macro cli-ip-prefix-list prefix name start?>
+    <?set COLOR={id}?>
+    <?set i = $start ?>
+    <prefixes foreach="{$prefix}">
+      <name>$name</name>
+      <seq>
+        <no>{$i}</no>
+        <permit>
+          <ip>{.}</ip>
+        </permit>
+      </seq>
+      <?set i={$i+5}?>
+    </prefixes>
+  <?endmacro?>
+  <?macro cli-router-map-ipv4 name prefix prefixList?>
+    <route-map xmlns="urn:ios">
+      <name>$name</name>
+      <sequence>{$i}</sequence>
+      <operation>permit</operation>
+      <?if {count($prefix) > 0}?>
+        <match>
+          <ip>
+            <address>
+              <prefix-list>$prefixList</prefix-list>
+            </address>
+          </ip>
+        </match>
+      <?end?>
+      <set>
+        <extcommunity>
+          <color>{id}</color>
+        </extcommunity>
+      </set>
+    </route-map>
+  <?endmacro?>
+  <?macro cli-router-map-ipv6 name prefix prefixList?>
+    <route-map xmlns="urn:ios">
+      <name>$name</name>
+      <sequence>{$i}</sequence>
+      <operation>permit</operation>
+      <?if {count($prefix) > 0}?>
+        <match>
+          <ipv6>
+            <address>
+              <prefix-list>$prefixList</prefix-list>
+            </address>
+          </ipv6>
+        </match>
+      <?end?>
+      <set>
+        <extcommunity>
+          <color>{id}</color>
+        </extcommunity>
+      </set>
+    </route-map>
+  <?endmacro?>
+  <?macro cli-router-bgp-with-vrf-ip ipVersion?>
+    <vrf>
+      <name>{vrf/vrf-definition}</name>
+      <redistribute when="{address-family[address-family='$ipVersion']/redistribute-connected}">
+        <connected>
+          <metric>{address-family[address-family='$ipVersion']/metric}</metric>
+        </connected>
+      </redistribute>
+      <neighbor when="{../ce-pe-prot/e-bgp/neighbor-$ipVersion!=''}">
+        <id>{../ce-pe-prot/e-bgp/neighbor-$ipVersion}</id>
+        <remote-as>{remote-as-$ipVersion}</remote-as>
+        <activate/>
+        <update-source when="{update-source and not (../../BDI)}">
+          <Loopback when="{update-source/if-type='Loopback'}">{update-source/if-id}</Loopback>
+          <GigabitEthernet when="{update-source/if-type='GigabitEthernet'}">{update-source/if-id}</GigabitEthernet>
+          <Ethernet when="{update-source/if-type='Ethernet'}">{update-source/if-id}</Ethernet>
+          <?if {update-source/if-type='Bundle-Ether'}?>
+            <Port-channel>{update-source/if-id}</Port-channel>
+          <?end?>
+        </update-source>
+        <update-source when="{update-source and (../../BDI)}">
+          <BDI>{../../BDI}</BDI>
+        </update-source>
+        <ebgp-multihop when="{ebgp-multihop}">
+          <max-hop>{ebgp-multihop/ttl-value}</max-hop>
+        </ebgp-multihop>
+      </neighbor>
+    </vrf>
+  <?endmacro?>
+  <?macro cli-intf-ipv4?>
+    <address>
+      <primary>
+        <address>{$IPV4_ADDR}</address>
+        <mask>{$IPV4_MASK}</mask>
+      </primary>
+    </address>
+  <?endmacro?>
+  <?macro cli-intf-ipv6?>
+    <address>
+      <prefix-list>
+        <prefix>{pe-ipv6-addr}</prefix>
+      </prefix-list>
+    </address>
+  <?endmacro?>
+  <?macro cli-router-bgp-vpn-neigh ipVersion?>
+    <neighbor>
+      <id>{ce-pe-prot/e-bgp/neighbor-ip$ipVersion}</id>
+      <activate/>
+      <route-map when="{$EXPORT_ROUTE_MAP_CONFIG$ipVersion='true'}" >
+        <direction>out</direction>
+        <route-map-name>SET_COLOR$ipVersion_{$EXPORT_POLICY_NAME}</route-map-name>
+      </route-map>
+      <route-map when="{$IMPORT_ROUTE_MAP_CONFIG$ipVersion='true'}" >
+        <direction>in</direction>
+        <route-map-name>SET_COLOR$ipVersion_{$IMPORT_POLICY_NAME}</route-map-name>
+      </route-map>
+    </neighbor>
+  <?endmacro?>
+  <?macro cli-intf-service?>
+    <service when="{BDI}">
+      <instance>
+        <id>{vlan-id}</id>
+        <ethernet/>
+        <encapsulation>
+          <dot1q>
+            <id>{vlan-id}</id>
+          </dot1q>
+        </encapsulation>
+        <bridge-domain>
+          <bridge-id>{BDI}</bridge-id>
+        </bridge-domain>
+      </instance>
+    </service>
+  <?endmacro?>
+  <?macro native-asf-bgp-route-target?>
+    <?if {$AS_TYPE='as'}?>
+      <route-target>
+        <type>as</type>
+        <as-or-four-byte-as>
+          <as-xx>{$AS_XX}</as-xx>
+          <as>{$AS_YY}</as>
+          <as-index>{$AS_INDEX}</as-index>
+          <stitching-rt>0</stitching-rt>
+        </as-or-four-byte-as>
+      </route-target>
+    <?else?>
+      <route-target>
+        <type>ipv4-address</type>
+        <ipv4-address>
+          <address>{$ADDRESS}</address>
+          <address-index>{$ADDRESS_INDEX}</address-index>
+          <stitching-rt>0</stitching-rt>
+        </ipv4-address>
+      </route-target>
+    <?end?>
+  <?endmacro?>
+  <?macro um-vrf-ip-route-target?>
+    <?if {$AS_TYPE='as'}?>
+      <route-target>
+        <?if {$AS_NUMBER<65536}?>
+          <two-byte-as-rts>
+            <two-byte-as-rt>
+              <as-number>{$AS_NUMBER}</as-number>
+              <index>{$AS_INDEX}</index>
+              <stitching>false</stitching>
+            </two-byte-as-rt>
+          </two-byte-as-rts>
+        <?else?>
+          <four-byte-as-rts>
+            <four-byte-as-rt>
+              <as-number>{$AS_NUMBER}</as-number>
+              <index>{$AS_INDEX}</index>
+              <stitching>false</stitching>
+            </four-byte-as-rt>
+          </four-byte-as-rts>
+        <?end?>
+      </route-target>
+    <?else?>
+      <route-target>
+        <ip-addresse-rts>
+          <ip-address-rt>
+            <ip-address>{$ADDRESS}</ip-address>
+            <index>{$ADDRESS_INDEX}</index>
+            <stitching>false</stitching>
+          </ip-address-rt>
+        </ip-addresse-rts>
+      </route-target>
+    <?end?>
+  <?endmacro?>
+  <?macro intf-description?>
+    <?if {$IF_DESC=''}?>
+      <description>{$DEFAULT_INTF_DESC}</description>
+    <?else?>
+      <description>{$IF_DESC}</description>
+    <?end?>
+  <?endmacro?>
+</config-template>

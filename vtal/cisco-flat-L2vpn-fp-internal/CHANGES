@@ -1,0 +1,18 @@
+cisco-flat-L2vpn-fp-internal (v2.0) [November 16, 2020]
+=======================================================
+  A. Added validate callpoint to local-site service.
+    tailf:validate "flat-L2vpn-internal-local-site-validation" {
+      tailf:dependency ".";
+    }
+  B. Added validate callpoint to remote-site service.
+    tailf:validate "flat-L2vpn-internal-remote-site-validation" {
+      tailf:dependency ".";
+    }
+
+cisco-flat-L2vpn-fp (v2.0) [November 06, 2020]
+===============================================
+  A. Removed evpn-bgp-grp (all bgp related config)
+  B. Removed bgp when condition from sr-te-grp -> odn
+  C. Removed unconditional-pass from sr-te-grp -> odn
+  D. Added attach-point container to sr-te-grp -> odn (new config for route policies)
+  E. Added l2vpn-rr-parent-route-policy service to handle Route Policy config

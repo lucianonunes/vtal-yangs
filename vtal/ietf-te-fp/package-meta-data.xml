@@ -1,0 +1,31 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>ietf-te-fp</name>
+  <package-version>4.1.0</package-version>
+  <description>NSO T-SDN IETF-TE FP CFS Service</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <python-package>
+    <vm-name>ietf-te-fp</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>custom-template-utils</name>
+  </required-package>
+
+  <required-package>
+    <name>core-fp-common</name>
+  </required-package>
+  <required-package>
+    <name>cisco-tsdn-core-fp-common</name>
+  </required-package>
+  <required-package>
+    <name>lsa-utils</name>
+  </required-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>ietf_te_fp.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

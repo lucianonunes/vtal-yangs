@@ -1,0 +1,105 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <sr-te xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-internal">
+    <policies xmlns="http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies-internal">
+      <policy>
+        <name>{$POLICY_NAME}</name>
+        <head-end>{$HEAD_END}</head-end>
+        <?foreach {custom-template}?>
+          <custom-template>
+              <name>{name}</name>
+              <?copy-tree {.}?>
+          </custom-template>
+        <?end?>
+        <tail-end>{tail-end}</tail-end>
+        <color>{color}</color>
+        <binding-sid>{binding-sid}</binding-sid>
+        <?foreach {path}?>
+        <path>
+          <preference>{preference}</preference>
+          <?copy-tree {.}?>
+          <explicit when="{explicit}">
+            <?foreach {explicit/sid-list}?>
+              <sid-list>
+                <name>{name}</name>
+                <weight>{weight}</weight>
+                <?foreach {deref(name)/../sid}?>
+                  <sid>
+                    <index>{index}</index>
+                    <?copy-tree {.}?>
+                  </sid>
+                <?end ?>
+              </sid-list>
+            <?end ?>
+          </explicit>
+        </path>
+        <?end ?>
+        <bandwidth>{bandwidth}</bandwidth>
+        <auto-route when="{auto-route}">
+          <?copy-tree {/auto-route}?>
+        </auto-route>
+        <srv6 when="{srv6}">
+          <?copy-tree {/srv6}?>
+        </srv6>
+        <source-address>{source-address}</source-address>
+        <!-- TODO: Circuit Style, ETA: TSDN 5.0 -->
+        <!-- circuit-style when="{circuit-style}">
+          <?copy-tree {/circuit-style}?>
+          <?if {circuit-style/working-path/explicit}?>
+            <working-path when="{circuit-style/working-path/explicit/forward-sid-list-name}">
+              <explicit>
+                <?foreach {deref(circuit-style/working-path/explicit/forward-sid-list-name)/../sid}?>
+                  <forward-sid>
+                     <index>{index}</index>
+                     <?copy-tree {.}?>
+                   </forward-sid>
+                 <?end ?>
+                <?foreach {deref(circuit-style/working-path/explicit/reverse-sid-list-name)/../sid}?>
+                  <reverse-sid>
+                     <index>{index}</index>
+                     <?copy-tree {.}?>
+                   </reverse-sid>
+                 <?end ?>
+              </explicit>
+            </working-path>
+          <?end?>
+          <?if {circuit-style/protect-path/explicit}?>
+            <protect-path when="{circuit-style/protect-path/explicit/forward-sid-list-name}">
+              <explicit>
+                <?foreach {deref(circuit-style/protect-path/explicit/forward-sid-list-name)/../sid}?>
+                  <forward-sid>
+                     <index>{index}</index>
+                     <?copy-tree {.}?>
+                   </forward-sid>
+                <?end ?>
+                <?foreach {deref(circuit-style/protect-path/explicit/reverse-sid-list-name)/../sid}?>
+                  <reverse-sid>
+                    <index>{index}</index>
+                    <?copy-tree {.}?>
+                  </reverse-sid>
+                <?end ?>
+              </explicit>
+            </protect-path>
+          <?end?>
+          <?if {circuit-style/restore-path/explicit}?>
+            <restore-path when="{circuit-style/restore-path/explicit/forward-sid-list-name}">
+              <explicit>
+                <?foreach {deref(circuit-style/restore-path/explicit/forward-sid-list-name)/../sid}?>
+                  <forward-sid>
+                     <index>{index}</index>
+                     <?copy-tree {.}?>
+                   </forward-sid>
+                <?end ?>
+                <?foreach {deref(circuit-style/restore-path/explicit/reverse-sid-list-name)/../sid}?>
+                  <reverse-sid>
+                    <index>{index}</index>
+                      <?copy-tree {.}?>
+                  </reverse-sid>
+                <?end ?>
+              </explicit>
+            </restore-path>
+          <?end?>
+        </circuit-style -->
+      </policy>
+    </policies>
+  </sr-te>
+</config>

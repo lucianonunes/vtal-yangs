@@ -1,0 +1,13 @@
+module onf-tapi-nc-2.0 {
+  yang-version 1.1;
+  namespace "http://tail-f.com/ns/ned-id/onf-tapi-nc-2.0";
+  prefix onf-tapi-nc-2.0;
+
+  import onf-tapi-nc {
+    prefix family;
+  }
+
+  identity onf-tapi-nc-2.0 {
+    base family:onf-tapi-nc;
+  }
+}

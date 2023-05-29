@@ -1,0 +1,245 @@
+module cisco-flat-L2vpn-fp-nano-plan-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-nano-plan-services";
+  prefix cisco-flat-L2vpn-fp-nano-plan-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-flat-L2vpn-fp {prefix cisco-flat-L2vpn-fp; }
+
+  description "Models for L2vpn external nano plan.";
+
+  revision 2022-02-15 {
+    description
+      "Added: EVPN Multipoint Support";
+  }
+
+  revision 2021-03-25 {
+    description "Updated: Replaced nano service-behavior-tree's selector pre-conditions
+                          with multiplier foreach to avoid extra per service kickers.";
+  }
+
+  revision 2020-08-11 {
+    description "Removed: self:init create callback
+                 Removed: pre-conditions
+                 Added: delete nano-callback in init state of local-site and remote-site component.";
+  }
+
+  revision 2020-03-16 {
+    description "
+      Removed: self-test-component and related states.";
+  }
+
+  revision 2019-12-01 {
+    description "Added: flat-L2vpn-nano-plan -> component-type ncs:self
+                          -> state ncs:init -> create callback.";
+  }
+
+  revision 2019-05-10 {
+    description
+      "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity local-site {
+    base ncs:plan-component-type;
+  }
+
+  identity remote-site {
+    base ncs:plan-component-type;
+  }
+
+  identity site {
+    base ncs:plan-component-type;
+  }
+
+  ncs:plan-outline flat-L2vpn-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // this checks if there are errors in another components, show it in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-flat-L2vpn-fp-nano-plan-services:local-site" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          // create a kicker on l2vpn-route-policy
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          // marks failure - internal plan failures
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-flat-L2vpn-fp-nano-plan-services:config-apply" {
+        ncs:create {
+          // create flat-L2vpn internal local-site service for this device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+
+    }
+
+    ncs:component-type "cisco-flat-L2vpn-fp-nano-plan-services:remote-site" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          // create a kicker on l2vpn-route-policy
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          // marks failure - internal plan failures
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-flat-L2vpn-fp-nano-plan-services:config-apply" {
+        ncs:create {
+          // create flat-L2vpn internal remote-site service for this device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-flat-L2vpn-fp-nano-plan-services:site" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          // create a kicker on l2vpn-route-policy
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          // marks failure - internal plan failures
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-flat-L2vpn-fp-nano-plan-services:config-apply" {
+        ncs:create {
+          // create flat-L2vpn internal local-site service for this device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree flat-L2vpn-external {
+    ncs:plan-outline-ref "cisco-flat-L2vpn-fp-nano-plan-services:flat-L2vpn-nano-plan";
+    ncs:plan-location "/cisco-flat-L2vpn-fp:flat-L2vpn-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+
+      ncs:variable "SERVICE_TYPE" {
+        ncs:value-expr "service-type";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:multiplier {
+        ncs:foreach "$SERVICE/flat-L2vpn-p2p/local-site/pe" {
+          ncs:variable "LOCAL_SITE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-p2p/local-site/pe";
+          }
+          ncs:variable "PE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-p2p/local-site/pe";
+          }
+          ncs:create-component "$LOCAL_SITE" {
+            ncs:component-type-ref "cisco-flat-L2vpn-fp-nano-plan-services:local-site";
+          }
+        }
+      }
+
+      ncs:multiplier {
+        ncs:foreach "$SERVICE/flat-L2vpn-p2p/remote-site/pe" {
+          ncs:variable "REMOTE_SITE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-p2p/remote-site/pe";
+          }
+          ncs:variable "PE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-p2p/remote-site/pe";
+          }
+          ncs:create-component "$REMOTE_SITE" {
+            ncs:component-type-ref "cisco-flat-L2vpn-fp-nano-plan-services:remote-site";
+          }
+        }
+      }
+
+      ncs:multiplier {
+        ncs:foreach "$SERVICE/flat-L2vpn-evpn-vpws/local-site/pe" {
+          ncs:variable "LOCAL_SITE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-evpn-vpws/local-site/pe";
+          }
+          ncs:variable "PE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-evpn-vpws/local-site/pe";
+          }
+          ncs:create-component "$LOCAL_SITE" {
+            ncs:component-type-ref "cisco-flat-L2vpn-fp-nano-plan-services:local-site";
+          }
+        }
+      }
+
+      ncs:multiplier {
+        ncs:foreach "$SERVICE/flat-L2vpn-evpn-vpws/remote-site/pe" {
+          ncs:variable "REMOTE_SITE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-evpn-vpws/remote-site/pe";
+          }
+          ncs:variable "PE" {
+            ncs:value-expr "$SERVICE/flat-L2vpn-evpn-vpws/remote-site/pe";
+          }
+          ncs:create-component "$REMOTE_SITE" {
+            ncs:component-type-ref "cisco-flat-L2vpn-fp-nano-plan-services:remote-site";
+          }
+        }
+      }
+
+      ncs:multiplier {
+        ncs:foreach "$SERVICE/flat-L2vpn-evpn-multipoint/site" {
+          ncs:variable "SITE" {
+            ncs:value-expr "site-name";
+          }
+          ncs:variable "PE" {
+            ncs:value-expr "pe";
+          }
+          ncs:create-component "$SITE" {
+            ncs:component-type-ref "cisco-flat-L2vpn-fp-nano-plan-services:site";
+          }
+        }
+      }
+    }
+  }
+}

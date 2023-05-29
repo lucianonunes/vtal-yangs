@@ -1,0 +1,107 @@
+module ietf-l3vpn-ntw-nano-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-l3vpn-ntw-nano-services";
+  prefix ietf-l3vpn-ntw-nano-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+  import ietf-l3vpn-ntw { prefix l3vpn-ntw; }
+
+  description "Models for IETF L3VPN nano plan.";
+
+  revision 2021-09-24 {
+    description "Added: Create callback for component vpn-node -> state config-apply
+                 as RT-46976 Resolved";
+  }
+
+  revision 2021-08-12 {
+    description "Removed: Create callback for component vpn-node -> state config-apply
+                 as a workaround to RT-46976";
+  }
+  revision 2020-10-21 {
+    description "Changed vpn-node component to have composite key <ne-id>_<vpn-network-access id>";
+  }
+
+  revision 2020-08-11 {
+    description "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity vpn-node {
+    base ncs:plan-component-type;
+  }
+
+  ncs:plan-outline ietf-l3vpn-ntw-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "ietf-l3vpn-ntw-nano-services:config-apply" {
+        ncs:create {
+          // Apply service level config
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // Check if there are errors in other components, show in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    // Each L3NM vpn-node component will track its respective L3VPN endpoint component
+    ncs:component-type "ietf-l3vpn-ntw-nano-services:vpn-node" {
+      ncs:state "ncs:init" {
+        ncs:delete {
+          // Marks failure if internal plan has failure
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ietf-l3vpn-ntw-nano-services:config-apply" {
+        ncs:create {
+          // Create "endpoint" flat-L3vpn per L3NM "vpn-node"
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // Check corresponding internal L3VPN plan endpoint component reached
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree ietf-l3vpn-ntw-servicepoint {
+    ncs:plan-outline-ref "ietf-l3vpn-ntw-nano-services:ietf-l3vpn-ntw-nano-plan";
+    ncs:plan-location "/l3vpn-ntw:l3vpn-ntw/l3vpn-ntw:vpn-services/l3vpn-ntw:vpn-service-plan";
+
+    ncs:selector {
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:multiplier {
+        ncs:foreach "vpn-nodes/vpn-node/vpn-network-accesses/vpn-network-access" {
+          ncs:variable "VPN_NODE"  {
+            ncs:value-expr "../../vpn-node-id";
+          }
+          ncs:variable "NE_ID" {
+            ncs:value-expr "../../ne-id";
+          }
+          ncs:variable "VPN_NETWORK_ACCESS_ID"  {
+            ncs:value-expr "id";
+          }
+          ncs:create-component "concat($NE_ID, '_', $VPN_NETWORK_ACCESS_ID)" {
+            ncs:component-type-ref "ietf-l3vpn-ntw-nano-services:vpn-node";
+          }
+        }
+      }
+    }
+  }
+}

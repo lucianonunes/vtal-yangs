@@ -1,0 +1,138 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <?macro intf-desc-shut?>
+    <?if {$IF_DESC=''}?>
+      <description>{$DEFAULT_INTF_DESC}</description>
+    <?else?>
+      <description>{$IF_DESC}</description>
+    <?end?>
+    <shutdown tags="delete"/>
+  <?endmacro?>
+  <?macro subintf-encap-rewrite-mtu?>
+    <mtu when="{mtu!=''}">{mtu}</mtu>
+    <encapsulation>
+      <dot1q when="{if-encap='dot1q'}">
+        <vlan-id>{vlan-id}</vlan-id>
+      </dot1q>
+      <untagged when="{if-encap='untagged'}"/>
+    </encapsulation>
+    <rewrite when="{rewrite/ingress}">
+      <ingress>
+        <tag>
+          <pop when="{rewrite/ingress/pop}">{rewrite/ingress/pop}</pop>
+          <push when="{rewrite/ingress/push}" />
+          <translate when="{rewrite/ingress/translate}">{rewrite/ingress/translate}</translate>
+          <mode when="{rewrite/ingress/mode}">{rewrite/ingress/mode}</mode>
+          <dot1q when="{not(rewrite/ingress/pop)}">{rewrite/ingress/dot1q}</dot1q>
+        </tag>
+      </ingress>
+    </rewrite>
+  <?endmacro?>
+  <?macro intf-ethernet-service-oam?>
+    <?if {ethernet-service-oam}?>
+      <ethernet>
+        <cfm>
+          <mep>
+            <?set MD_NAME={ethernet-service-oam/md-name}?>
+            <?foreach {ethernet-service-oam/y-1731}?>
+              <?set MEP_ID={mep-id}?>
+              <?set REMOTE_MEP_ID={remote-mep-id}?>
+              <domain>
+                <name>{$MD_NAME}</name>
+                <service>{$SERVICE_NAME}</service>
+                <mep-id when="{$MEP_ID!='' and $REMOTE_MEP_ID!=''}">{$MEP_ID}</mep-id>
+                <?foreach {y-1731-profile}?>
+                  <sla>
+                    <operation>
+                      <profile>
+                        <name>{name}</name>
+                        <mep-id>{$REMOTE_MEP_ID}</mep-id>
+                        <target/>
+                      </profile>
+                    </operation>
+                  </sla>
+                <?end?>
+              </domain>
+            <?end?>
+          </mep>
+        </cfm>
+      </ethernet>
+    <?end?>
+  <?endmacro?>
+  <?macro intf-desc-mtu-l2?>
+    <?expand intf-desc-shut?>
+    <description when="{if-description!=''}">{if-description}</description>
+    <mtu when="{mtu!=''}">{mtu}</mtu>
+    <l2transport />
+  <?endmacro?>
+  <?macro intf-desc-mtu-l2-eth?>
+    <?expand intf-desc-mtu-l2?> 
+    <?expand intf-ethernet-service-oam?>
+  <?endmacro?>
+  <?macro subintf-desc-mode-mtu-encap-rewrite?>
+    <?expand intf-desc-shut?>
+    <description when="{if-description!=''}">{if-description}</description>
+    <mode>l2transport</mode> 
+    <?expand subintf-encap-rewrite-mtu?>
+  <?endmacro?>
+  <?macro subintf-desc-mode-mtu-encap-rewrite-eth?>
+    <?expand subintf-desc-mode-mtu-encap-rewrite?>
+    <?expand intf-ethernet-service-oam?>
+  <?endmacro?>
+  <?macro params-stats-measure-buckets?>
+    <buckets>
+      <size>
+        <number>{$BUCKET_SIZE}</number>
+        <probes/>
+      </size>
+      <archive>{$BUCKET_ARCHIVE}</archive>
+    </buckets>
+  <?endmacro?>
+  <?macro delay-params-stats-measure type id?>
+    <?if {delay-params/statistic[type='$type']}?>
+      <measure>
+        <id>$id</id>
+        <?expand params-stats-measure-buckets?>
+      </measure>
+    <?end?>
+  <?endmacro?>
+  <?macro loss-params-stats-measure type id?>
+    <?if {loss-params/statistic[type='$type']}?>
+      <measure>
+        <id>$id</id>
+        <aggregate>
+          <bins>5</bins>
+          <width>5</width>
+        </aggregate>
+        <?expand params-stats-measure-buckets?>
+      </measure>
+    <?end?>
+  <?endmacro?>
+  <?macro copy-site-ethernet-service-oam?>
+    <y-1731>
+      <maid>{maid}</maid>
+      <remote-mep-id>{$REMOTE_MEP_ID}</remote-mep-id>
+      <?if {id-type='icc-based'}?>
+        <icc-based>{$SMAN_ID}</icc-based>
+      <?else?>
+        <number>{$SMAN_ID}</number>
+      <?end?>
+      <?foreach {y-1731-profile}?>
+        <y-1731-profile>
+          <name>{name}</name>
+          <?copy-tree {deref(name)/..}?>
+          <!-- override global y-1731-profile with service level schedule -->
+          <schedule>
+            <interval>{schedule/interval}</interval>
+            <duration>{schedule/duration}</duration>
+          </schedule>
+        </y-1731-profile>
+      <?end?>
+    </y-1731>
+  <?endmacro?>
+  <?macro copy-site-vpn-target rtValue rtType?>
+    <vpn-target>
+      <rt-value>$rtValue</rt-value>
+      <rt-type>$rtType</rt-type>
+    </vpn-target>
+  <?endmacro?>
+</config-template>

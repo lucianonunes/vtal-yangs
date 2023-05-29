@@ -1,0 +1,202 @@
+ [property] Loading Environment env.
+Build sequence for target(s) `all' is [compile, package, all]
+Complete build sequence is [compile, package, all, echo, clean, clean-resources, ]
+
+compile:
+     [copy] conf-api-current.jar added as conf-api-current.jar doesn't exist.
+     [copy] log4j-1.2.17.jar added as log4j-1.2.17.jar doesn't exist.
+     [copy] ncs-current.jar added as ncs-current.jar doesn't exist.
+     [copy] nso-dao-current.jar added as nso-dao-current.jar doesn't exist.
+     [copy] protobuf-java-3.11.4.jar added as protobuf-java-3.11.4.jar doesn't exist.
+     [copy] robot_api-current.jar added as robot_api-current.jar doesn't exist.
+     [copy] tailf-ganymed-ssh2-262-current.jar added as tailf-ganymed-ssh2-262-current.jar doesn't exist.
+     [copy] No sources found.
+     [copy] Copying 7 files to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar
+     [copy] Copying /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/conf-api-current.jar to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/conf-api-current.jar
+     [copy] Copying /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/log4j-1.2.17.jar to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/log4j-1.2.17.jar
+     [copy] Copying /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/ncs-current.jar to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/ncs-current.jar
+     [copy] Copying /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/nso-dao-current.jar to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/nso-dao-current.jar
+     [copy] Copying /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/protobuf-java-3.11.4.jar to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/protobuf-java-3.11.4.jar
+     [copy] Copying /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/robot_api-current.jar to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/robot_api-current.jar
+     [copy] Copying /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/tailf-ganymed-ssh2-262-current.jar to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/tailf-ganymed-ssh2-262-current.jar
+    [mkdir] Created dir: /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/build/classes
+    [javac] com/cisco/crossworks/DLMConnection.java added as com/cisco/crossworks/DLMConnection.class doesn't exist.
+    [javac] com/cisco/crossworks/DlmServer.java added as com/cisco/crossworks/DlmServer.class doesn't exist.
+    [javac] com/cisco/crossworks/DlmService.java added as com/cisco/crossworks/DlmService.class doesn't exist.
+    [javac] com/cisco/crossworks/Security.java added as com/cisco/crossworks/Security.class doesn't exist.
+    [javac] com/cisco/crossworks/encoder/Encoder.java added as com/cisco/crossworks/encoder/Encoder.class doesn't exist.
+    [javac] com/cisco/crossworks/encoder/_Int32.java added as com/cisco/crossworks/encoder/_Int32.class doesn't exist.
+    [javac] com/cisco/crossworks/encoder/_Proto.java added as com/cisco/crossworks/encoder/_Proto.class doesn't exist.
+    [javac] com/cisco/crossworks/encoder/_Slice.java added as com/cisco/crossworks/encoder/_Slice.class doesn't exist.
+    [javac] com/cisco/crossworks/encoder/_String.java added as com/cisco/crossworks/encoder/_String.class doesn't exist.
+    [javac] com/cisco/crossworks/encoder/test/TestEncoder.java added as com/cisco/crossworks/encoder/test/TestEncoder.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/CheckSyncHandler.java added as com/cisco/crossworks/handlers/CheckSyncHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/CompareConfigHandler.java added as com/cisco/crossworks/handlers/CompareConfigHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/ConnectHandler.java added as com/cisco/crossworks/handlers/ConnectHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/CredentialsHandler.java added as com/cisco/crossworks/handlers/CredentialsHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/DevicesHandler.java added as com/cisco/crossworks/handlers/DevicesHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/FetchSshKeysHandler.java added as com/cisco/crossworks/handlers/FetchSshKeysHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/Handler.java added as com/cisco/crossworks/handlers/Handler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/HandlerUtils.java added as com/cisco/crossworks/handlers/HandlerUtils.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/OnboardCredentialsHandler.java added as com/cisco/crossworks/handlers/OnboardCredentialsHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/OnboardDeviceHandler.java added as com/cisco/crossworks/handlers/OnboardDeviceHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/PackagesHandler.java added as com/cisco/crossworks/handlers/PackagesHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/PingHandler.java added as com/cisco/crossworks/handlers/PingHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/SyncFromHandler.java added as com/cisco/crossworks/handlers/SyncFromHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/SyncToHandler.java added as com/cisco/crossworks/handlers/SyncToHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/TMTCCleanHandler.java added as com/cisco/crossworks/handlers/TMTCCleanHandler.class doesn't exist.
+    [javac] com/cisco/crossworks/handlers/TMTCDeployHandler.java added as com/cisco/crossworks/handlers/TMTCDeployHandler.class doesn't exist.
+    [javac] Compiling 26 source files to /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/build/classes
+    [javac] Using modern compiler
+    [javac] Compilation arguments:
+'-d'
+'/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/build/classes'
+'-classpath'
+'/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/build/classes:/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/conf-api-current.jar:/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/log4j-1.2.17.jar:/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/ncs-current.jar:/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/nso-dao-current.jar:/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/protobuf-java-3.11.4.jar:/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/robot_api-current.jar:/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/thirdparty/tailf-ganymed-ssh2-262-current.jar'
+'-sourcepath'
+'/home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src'
+'-g:lines,vars,source'
+'-Xlint:unchecked'
+'-Xlint:deprecation'
+
+The ' characters around the executable and arguments are
+not part of the command.
+    [javac] Files to be compiled:
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/DLMConnection.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/DlmServer.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/DlmService.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/Security.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/Encoder.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/_Int32.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/_Proto.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/_Slice.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/_String.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/test/TestEncoder.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/CheckSyncHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/CompareConfigHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/ConnectHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/CredentialsHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/DevicesHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/FetchSshKeysHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/Handler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/HandlerUtils.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/OnboardCredentialsHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/OnboardDeviceHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/PackagesHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/PingHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/SyncFromHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/SyncToHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/TMTCCleanHandler.java
+    /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/handlers/TMTCDeployHandler.java
+    [javac] /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/Encoder.java:11: warning: [unchecked] unchecked conversion
+    [javac]     private static final Map<String, TypeEncoder> encoders = new HashMap();
+    [javac]                                                              ^
+    [javac]   required: Map<String,TypeEncoder>
+    [javac]   found:    HashMap
+    [javac] /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/Encoder.java:12: warning: [unchecked] unchecked conversion
+    [javac]     private static final Map<Integer, TypeEncoder> encodersKind = new HashMap();
+    [javac]                                                                   ^
+    [javac]   required: Map<Integer,TypeEncoder>
+    [javac]   found:    HashMap
+    [javac] /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/_Proto.java:16: warning: [unchecked] unchecked conversion
+    [javac]         private Map<String, Class> protos = new HashMap();
+    [javac]                                             ^
+    [javac]   required: Map<String,Class>
+    [javac]   found:    HashMap
+    [javac] /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/src/com/cisco/crossworks/encoder/_Proto.java:64: warning: [unchecked] unchecked call to getMethod(String,Class<?>...) as a member of the raw type Class
+    [javac]             Method m = protoClass.getMethod("parseFrom", new Class[]{byte[].class});
+    [javac]                                            ^
+    [javac] 4 warnings
+compile:  duration 0 seconds
+
+package:
+      [jar] Building jar: /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/shared-jar/dlm-ns.jar
+      [jar] adding directory META-INF/
+      [jar] adding entry META-INF/MANIFEST.MF
+      [jar] adding directory com/
+      [jar] adding directory com/cisco/
+      [jar] adding directory com/cisco/crossworks/
+      [jar] adding entry com/cisco/crossworks/DLMConnection$1.class
+      [jar] adding entry com/cisco/crossworks/DLMConnection.class
+      [jar] adding entry com/cisco/crossworks/DlmServer$1.class
+      [jar] adding entry com/cisco/crossworks/DlmServer.class
+      [jar] adding entry com/cisco/crossworks/DlmService.class
+      [jar] adding entry com/cisco/crossworks/Security.class
+      [jar] adding directory com/cisco/crossworks/encoder/
+      [jar] adding entry com/cisco/crossworks/encoder/Encoder$Location.class
+      [jar] adding entry com/cisco/crossworks/encoder/Encoder$TypeEncoder.class
+      [jar] adding entry com/cisco/crossworks/encoder/Encoder.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Int32.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Proto$ProtoTypes.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Proto.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Slice.class
+      [jar] adding entry com/cisco/crossworks/encoder/_String.class
+      [jar] adding directory com/cisco/crossworks/encoder/test/
+      [jar] adding entry com/cisco/crossworks/encoder/test/TestEncoder.class
+      [jar] adding directory com/cisco/crossworks/handlers/
+      [jar] adding entry com/cisco/crossworks/handlers/CheckSyncHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/CompareConfigHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/ConnectHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/CredentialsHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/DevicesHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/FetchSshKeysHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/Handler.class
+      [jar] adding entry com/cisco/crossworks/handlers/HandlerUtils.class
+      [jar] adding entry com/cisco/crossworks/handlers/OnboardCredentialsHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/OnboardDeviceHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/PackagesHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/PingHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/SyncFromHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/SyncToHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/TMTCCleanHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/TMTCDeployHandler.class
+      [jar] No Implementation-Title set.No Implementation-Version set.No Implementation-Vendor set.
+Location: /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/build.xml:45: 
+      [jar] Building jar: /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/private-jar/dlm.jar
+      [jar] adding directory META-INF/
+      [jar] adding entry META-INF/MANIFEST.MF
+      [jar] adding directory com/
+      [jar] adding directory com/cisco/
+      [jar] adding directory com/cisco/crossworks/
+      [jar] adding entry com/cisco/crossworks/DLMConnection$1.class
+      [jar] adding entry com/cisco/crossworks/DLMConnection.class
+      [jar] adding entry com/cisco/crossworks/DlmServer$1.class
+      [jar] adding entry com/cisco/crossworks/DlmServer.class
+      [jar] adding entry com/cisco/crossworks/DlmService.class
+      [jar] adding entry com/cisco/crossworks/Security.class
+      [jar] adding directory com/cisco/crossworks/encoder/
+      [jar] adding entry com/cisco/crossworks/encoder/Encoder$Location.class
+      [jar] adding entry com/cisco/crossworks/encoder/Encoder$TypeEncoder.class
+      [jar] adding entry com/cisco/crossworks/encoder/Encoder.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Int32.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Proto$ProtoTypes.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Proto.class
+      [jar] adding entry com/cisco/crossworks/encoder/_Slice.class
+      [jar] adding entry com/cisco/crossworks/encoder/_String.class
+      [jar] adding directory com/cisco/crossworks/encoder/test/
+      [jar] adding entry com/cisco/crossworks/encoder/test/TestEncoder.class
+      [jar] adding directory com/cisco/crossworks/handlers/
+      [jar] adding entry com/cisco/crossworks/handlers/CheckSyncHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/CompareConfigHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/ConnectHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/CredentialsHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/DevicesHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/FetchSshKeysHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/Handler.class
+      [jar] adding entry com/cisco/crossworks/handlers/HandlerUtils.class
+      [jar] adding entry com/cisco/crossworks/handlers/OnboardCredentialsHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/OnboardDeviceHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/PackagesHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/PingHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/SyncFromHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/SyncToHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/TMTCCleanHandler.class
+      [jar] adding entry com/cisco/crossworks/handlers/TMTCDeployHandler.class
+      [jar] No Implementation-Title set.No Implementation-Version set.No Implementation-Vendor set.
+Location: /home/jenkins/workspace/robot-builds/dlmInvMgr/dlm_service_pack/dlm-service/ncs-packages/services/dlm-svc/src/java/build.xml:49: 
+package:  duration 0 seconds
+
+all:
+all:  duration 0 seconds
+
+BUILD SUCCESSFUL

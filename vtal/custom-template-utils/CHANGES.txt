@@ -1,0 +1,15 @@
+custom-template-utils 2.0.9
+======================================
+   TSDN-899 - Update build structure for common packages
+
+custom-template-utils 2.0.8
+======================================
+   TSDN-937 - custom-template-project flake8 compliance 
+
+custom-template-utils 2.0.5
+======================================
+   TSDN-863 - Fix sync-custom-templates in custom-template package 
+
+custom-template-utils 2.0.0
+======================================
+   Initial Release

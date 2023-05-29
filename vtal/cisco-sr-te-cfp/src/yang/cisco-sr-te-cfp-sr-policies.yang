@@ -1,0 +1,824 @@
+module cisco-sr-te-cfp-sr-policies {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies";
+  prefix cisco-sr-te-cfp-sr-policies;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import cisco-sr-te-cfp {
+    prefix cisco-sr-te-cfp;
+  }
+
+  import cisco-sr-te-cfp-sr-types {
+    prefix cisco-sr-te-cfp-sr-types;
+  }
+
+  import cisco-sr-te-cfp-sr-common {
+    prefix cisco-sr-te-cfp-sr-common;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  import tailf-kicker {
+    prefix kicker;
+  }
+  
+  import lsa-utils {
+	prefix lsa-utils;
+  }
+
+  import cisco-tsdn-core-fp-common {
+    prefix tsdn-core-fp-common;
+  }
+
+  description "SR policies module";
+
+  revision 2022-01-12 {
+    description "Removed: Commented circuit-style and related conditions";
+  }
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified: Read dispatch-map using lsa-utils";
+  }
+
+  revision 2021-11-22 {
+    description
+	  "Added: circuit-style support
+                 sr-te -> policies -> policy -> circuit-style
+                 When condition for cs/non-cs";
+  }
+
+  revision 2021-11-10 {
+    description "Added: must condition for SRv6 ipv6 sr-te -> policies -> policy -> tail-end";
+  }
+
+  revision 2021-09-27 {
+    description "Added: When condition for
+                 sr-te -> policies -> policy -> bandwidth
+                 sr-te -> policies -> policy -> auto-route";
+  }
+
+  revision 2021-06-17 {
+    description "Added: description for when statement
+                 sr-te -> policies -> policy -> binding-sid
+                 sr-te -> policies -> policy -> path -> sr-te-path-choice -> explicit-path
+                 Updated: tailf info for
+                /cisco-sr-te-cfp:sr-te -> policies -> policy -> source-address";
+  }
+
+  revision 2021-05-21 {
+    description
+    "Removed: Must condition to allow PCE or Sid-alogorithm under
+                  sr-te -> policies -> policy -> path -> dynamic";
+  }
+
+  revision 2021-05-07 {
+    description 
+    "Modified: augment sr-te->policies->plan to use tsdn-core-fp-common:status-code-plan-augmentation";
+  }
+
+  revision 2021-03-10 {
+    description "Add SRv6 support";
+  }
+
+  revision 2021-02-19 {
+    description "Added when condition to restrict include-prefix, force-sr-include and
+                forward-class on XE device under
+                /cisco-sr-te-cfp:sr-te -> policies -> policy -> auto-route -> include-prefixes";
+  }
+
+  revision 2021-02-15 {
+    description "Modified: tailf:info for head-end";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-10 {
+    description "Added leaf sync-direction as mandatory input to error-recovery action";
+  }
+
+  revision 2020-11-05 {
+    description "Added source under disjointness for XE devices.";
+  }
+
+  revision 2020-07-24 {
+    description "Added: Error Recovery actions for transient failures";
+  }
+
+  revision 2020-07-13 {
+    description "Modified: Head-end now leafref to dispatch-map
+                Removed: service redeploy-flag
+                Removed: service redeploy custom action
+                Removed: service get-modifications custom action
+                Added: Custom action to handle internal plan change.
+                ";
+  }
+
+  revision 2020-06-10 {
+    description "Added uses redeploy-input to redeploy action (reconcile options)";
+  }
+
+  revision 2020-04-21 {
+    description "Added: Must condition to allow either PCE or Sid-alogorithm under
+                  sr-te -> policies -> policy -> path -> dynamic";
+  }
+
+  revision 2020-04-15 {
+    description "Removed: custom reconcile action under sr-te -> policies -> policy -> action.";
+  }
+
+  revision 2020-04-13 {
+    description "
+      Added: augment plan with : status-code-plan-augmentation
+      Added: augment plan-history with : status-code-plan-augmentation
+      Added: augment plan component with : status-code-component-augmentation
+      Added: augment plan-history component with : status-code-component-augmentation";
+  }
+
+  revision 2020-04-06 {
+    description "Modified: forward-class range updated to 0-7 under
+                  /cisco-sr-te-cfp:sr-te -> policies -> policy -> auto-route";
+  }
+
+  revision 2020-03-23 {
+    description "Removed: string format entry support for tail-end under
+                  /cisco-sr-te-cfp:sr-te -> policies -> policy -> tail-end";
+  }
+
+  revision 2020-03-19 {
+    description "Modified: path preference range updated to 1-65535.";
+  }
+
+  revision 2020-03-18 {
+    description
+      "Removed: sr-te -> policies -> policy -> path -> name field.";
+  }
+
+  revision 2020-03-16 {
+    description
+      "Modified: Removed self-test-delay.
+      Modified: Moved ODN to a separate service.";
+  }
+
+  revision 2020-03-06 {
+    description
+      "Modified: Removed policy name validation.";
+  }
+
+  revision 2020-02-26 {
+    description
+      "Modified: Removed sid-limit option for ODN.";
+  }
+
+  revision 2020-02-25 {
+    description
+      "Modified: Removed re-match function used for policy name validation,
+                replaced with simple string match.
+                Renamed sr-te -> policies -> policy -> odn -> odn-template";
+  }
+
+  revision 2020-02-24 {
+    description
+      "Added: must condition that validates only one head-end for non-ODN policies.";
+  }
+
+  revision 2020-02-21 {
+    description
+      "Added: tailf:meta-data 'TSDN-UI' under cisco-sr-te-cfp-sr-policies:sid-list";
+  }
+
+  revision 2020-02-18 {
+    description
+      "Added: maximum-sid-depth to policy for ODN services.
+       Added: Added hopcount under sr-te -> policies -> policy -> path -> dynamic -> metric-type";
+  }
+
+  revision 2020-02-14 {
+    description
+      "Modified: Added head-end-redeploy-flag for head-end level redeploys.";
+  }
+
+  revision 2020-02-12 {
+    description
+      "Added: sub-id is added under
+       sr-te -> policies -> policy -> path -> dynamic/explict -> constraints.";
+  }
+
+  revision 2020-02-05 {
+    description
+      "Modified: Sr-policy name validation is not done for non-ODN service, when
+                cfp-configurations -> policy-name-validation-disabled is set.";
+  }
+
+  revision 2020-01-31 {
+    description
+      "Removed: sr-te -> policies -> policy -> color must statement
+       Added: sr-te -> policies -> policy -> color mandatory statement.
+       Modified: Only one head-end allowed for sr-te -> policies -> policy -> head-end, unless
+                cfp-configurations -> multiple-headends-enabled is set.";
+  }
+
+  revision 2020-01-27 {
+    description
+      "Modified: sr-te -> policies -> policy -> tail-end-choice to sr-te -> policies
+                  -> policy -> tail-end.";
+  }
+
+  revision 2019-10-24 {
+    description "Added device under get modification actions
+      request sr-te cisco-sr-te-cfp-sr-policies:policies
+        policy {service} action get-modifications input device";
+  }
+
+  revision 2019-09-11 {
+    description "Added Get modifications under actions
+                request sr-te cisco-sr-te-cfp-sr-policies:policies
+                        policy {service} action get-modifications";
+  }
+
+  revision 2019-08-19 {
+    description "
+    Added: custom-template-hook under:
+      cisco-sr-te-cfp:sr-te->policies->policy,
+      cisco-sr-te-cfp:sr-te->policies->policy->head-end";
+  }
+
+  revision 2019-06-18 {
+    description
+      "Modified: sr-te -> policies -> policy -> tail-end to sr-te -> policies
+                  -> policy -> tail-end-choice.";
+  }
+
+  revision 2019-05-15 {
+    description
+      "Added: sr-te -> policies -> policy -> path -> explict -> constraints.";
+  }
+
+  revision 2019-05-10 {
+    description "
+     Added: custom redeploy action under sr-te -> policies -> policy -> action to redeploy
+              internal services.
+     Added: global self-test action under sr-te -> policies -> policy -> action.
+     Added: custom reconcile action under sr-te -> policies -> policy -> action.
+     Added: redeploy action under sr-te -> policies -> policy -> head-end -> action.
+     Added: per head-end self-test action under sr-te -> policies -> policy -> head-end -> action.
+     Added: policy-plan; represents service state.
+     Modified: New namespace.";
+  }
+
+  revision 2019-04-23 {
+    description
+      "Removed: Non supported config on device removed:
+                sr-te -> policies -> policy -> path -> dynamic -> weight.";
+  }
+
+  revision 2019-04-18 {
+    description
+      "Modified: SRTE path definition is now a choice between dynamic/explict:
+                sr-te -> policies -> policy -> path -> dynamic OR explict.";
+  }
+
+  revision 2019-03-08 {
+    description
+      "Modified: sr-te -> policies -> policy -> head-end is now a list.";
+  }
+
+  revision 2019-02-05 {
+    description "Initial revision.";
+  }
+
+  typedef outformat2 {
+    default cli;
+    type enumeration {
+      enum cli {
+        tailf:code-name outformat_cli;
+        description
+          "NCS CLI curly bracket format.";
+      }
+      enum xml {
+        tailf:code-name outformat_xml;
+        description
+          "NETCONF XML edit-config format, i.e., the edit-config that
+           would be applied locally (at NCS) to get a config
+           that is equal to that of the managed device.";
+      }
+    }
+  }
+
+  grouping explicit-path {
+    container explicit {
+      presence "true";
+      tailf:info "Use a predefine explicit path";
+      description "Use a predefine explicit path";
+      list sid-list {
+        key name;
+        leaf name {
+          type leafref {
+            path "/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/"
+                +"cisco-sr-te-cfp-sr-policies:sid-list/cisco-sr-te-cfp-sr-policies:name";
+          }
+          tailf:cli-allow-range;
+        }
+
+        leaf weight {
+          tailf:info "<1-4294967295> - SID-List weight ";
+          description "<1-4294967295> - SID-List weight ";
+          type uint32 {
+            range "1..4294967295";
+          }
+        }
+      }
+      container constraints {
+        uses cisco-sr-te-cfp-sr-common:constraints-grp {
+          augment "disjoint-path" {
+            leaf source {
+              tailf:info "<A.B.C.D> - Association source, applicable only on XE device
+                This config is mandatory when setting association-group.";
+              description "<A.B.C.D> - Association source, applicable only on XE device
+                This config is mandatory when setting association-group.";
+              when "contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                [lsa-utils:name=current()/../../../../../head-end/name]
+                /lsa-utils:ned-id,'cisco-ios-cli-')";
+              type inet:ipv4-address;
+            }
+          }
+        }
+        container segments {
+          tailf:info "Path segments constraints";
+          description "Path segments constraints";
+          presence true;
+
+          leaf sid-algorithm {
+            tailf:info "<128-255> - Specify the path computation metric options";
+            description "<128-255> - Specify the path computation metric options";
+            type uint16 {
+              tailf:info "<128-255>;;Sid-algorithm value";
+              range "128..255";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping cs-path-choice {
+    choice sr-te-path-choice {
+      case explicit-path {
+        uses cisco-sr-te-cfp-sr-common:cs-explicit-grp {
+          augment "explicit" {
+            leaf forward-sid-list-name {
+              tailf:info "Use a predefined forward explicit path";
+              description "Use a predefined forward explicit path";
+              type leafref {
+                path "/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/"
+                    +"cisco-sr-te-cfp-sr-policies:sid-list/cisco-sr-te-cfp-sr-policies:name";
+              }
+              mandatory true;
+            }
+
+            leaf reverse-sid-list-name {
+              tailf:info "Use a predefined reverse explicit path";
+              description "Use a predefined reverse explicit path";
+              type leafref {
+                path "/cisco-sr-te-cfp:sr-te/cisco-sr-te-cfp-sr-policies:policies/"
+                    +"cisco-sr-te-cfp-sr-policies:sid-list/cisco-sr-te-cfp-sr-policies:name";
+              }
+              mandatory true;
+            }
+          }
+        }
+      }
+      // case dynamic-path {
+      //   uses cs-dynamic-grp;
+      // }
+    }
+  }
+
+  augment /cisco-sr-te-cfp:sr-te {
+    container policies {
+      tailf:info "SR-TE Policy container";
+      description "SR-TE Policy container";
+      list policy {
+        tailf:info "SR-Policy";
+        description "SR-Policy";
+
+        key "name";
+        uses ncs:service-data;
+        ncs:servicepoint sr-policies-external-servicepoint;
+
+        tailf:validate "sr-policies-validation" {
+          tailf:dependency ".";
+        }
+
+        uses ct-hook:template-hook;
+
+        leaf name {
+          tailf:info "Unique identifier for a SR-Policy";
+          description "Unique identifier for a SR-Policy";
+          type cisco-sr-te-cfp-sr-types:Cisco-ios-xr-string;
+          tailf:cli-allow-range;
+        }
+
+        list head-end {
+          tailf:info "Policy headend router. Only one headend can be given for a policy service";
+          description "Policy headend router. Only one headend can be given for a policy service";
+          key name;
+          leaf name {
+            type leafref {
+              path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+            }
+          }
+          min-elements 1;
+          max-elements 1;
+        }
+
+        uses cisco-sr-te-cfp-sr-common:srv6-grp;
+
+        leaf tail-end {
+          tailf:info "<A.B.C.D or X:X::X> - Router-Id of the tail-end device of the SR policy";
+          description "<A.B.C.D or X:X::X> - Router-Id of the tail-end device of the SR policy";
+          type inet:ip-address;
+          mandatory true;
+          must "not(../srv6)" +
+             " or (contains(string(.),':'))" {
+            error-message "tail-end must be IPv6 address for SRv6 TE policy";
+          }
+        }
+
+        leaf color {
+          tailf:info "<1-4294967295> - SR policy color";
+          description "<1-4294967295> - SR policy color";
+          type uint32 {
+            range  "1..4294967295";
+          }
+          mandatory true;
+        }
+
+        leaf binding-sid {
+          when "not(../srv6)" {
+            description "Binding-Sid is not supported for SRv6 in the current release.";
+          }
+          tailf:info "<16-1048575> - Binding SID of the SR-Policy applied at the headend";
+          description "<16-1048575> - Binding SID of the SR-Policy applied at the headend";
+          type uint32 {
+            range "16..1048575";
+          }
+        }
+
+        // TODO: Circuit Style, ETA: TSDN 5.0
+        // container circuit-style {
+        //   when "not(../srv6) and
+        //         not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+        //                                      [lsa-utils:name=current()/../head-end/name]
+        //                                      /lsa-utils:ned-id,
+        //           'cisco-ios-cli-'))" {
+        //     description "Circuit style is not supported for SRv6 or XE in the current release.";
+        //   }
+        //   tailf:info "Service to configure a SR Circuit Style policy";
+        //   description "This is service to configure a SR Circuit Style policy";
+        //   presence "true";
+
+        //   uses cisco-sr-te-cfp-sr-common:cs-protection-grp;
+        //   uses cisco-sr-te-cfp-sr-common:cs-steering-grp;
+
+        //   container working-path {
+        //     tailf:info "Working path";
+        //     description "Working path";
+        //     uses cs-path-choice;
+        //   }
+
+        //   container protect-path {
+        //     presence "true";
+        //     tailf:info "Protect path";
+        //     description "Protect path";
+        //     uses cs-path-choice;
+        //     leaf revertive {
+        //       tailf:info "Revertive protect path. Default = false";
+        //       description "Revertive protect path. Default = false";
+        //       type boolean;
+        //       default false;
+        //     }
+        //     leaf wait-to-revert-timer {
+        //       when "../revertive = 'true'";
+        //       tailf:info "<0 - 3000> -- seconds to wait before reverting. Default = 300";
+        //       description "<0 - 3000> -- seconds to wait before reverting. Default = 300";
+        //       type uint32 {
+        //         range "0..3000";
+        //       }
+        //       default 300;
+        //     }
+        //   }
+
+        //   container restore-path {
+        //     presence "true";
+        //     tailf:info "Restore path";
+        //     description "Restore path";
+        //     uses cs-path-choice;
+        //   }
+        // }
+
+        list path {
+          // TODO: Circuit Style, ETA: TSDN 5.0
+          // when "not(../circuit-style)";
+          tailf:info "SR-Policy candidate paths";
+          description "SR-Policy candidate paths";
+          key preference;
+          leaf preference {
+            tailf:info "<1-65535> - Path preference - Higher value indicates higher preference";
+            description "<1-65535> - Path preference - Higher value indicates higher preference";
+            type uint16 {
+              range  "1..65535";
+            }
+            tailf:cli-allow-range;
+          }
+
+          min-elements 1;
+
+          choice sr-te-path-choice {
+            case explicit-path {
+              uses explicit-path {
+                when "not(../srv6)"{
+                  description "Explicit Path is not supported for SRv6 in the current release.";
+                }
+              }
+            }
+            case dynamic-path {
+              uses cisco-sr-te-cfp-sr-common:dynamic-path {
+                augment "dynamic" {
+                  container constraints {
+                    leaf sid-limit {
+                      tailf:info "<1-255> - Absolute limit on the number of SIDs in the SID-list";
+                      description "<1-255> - Absolute limit on the number of SIDs in the SID-list";
+                      type uint32 {
+                        range "1..255";
+                      }
+                    }
+
+                    uses cisco-sr-te-cfp-sr-common:constraints-grp {
+                      augment "disjoint-path" {
+                        leaf source {
+                          tailf:info "<A.B.C.D> - Association source, applicable only on XE device
+                            This config is mandatory when setting association-group.";
+                          description "<A.B.C.D> - Association source, applicable only on XE device
+                            This config is mandatory when setting association-group.";
+                          when "contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                            [lsa-utils:name=current()/../../../../../head-end/name]
+                            /lsa-utils:ned-id,'cisco-ios-cli-')";
+                          type inet:ipv4-address;
+                        }
+                      }
+                    }
+
+                    container segments {
+                      tailf:info "Path segments constraints";
+                      description "Path segments constraints";
+                      presence true;
+
+                      leaf sid-algorithm {
+                        tailf:info "<128-255> - Specify the path computation metric options";
+                        description "<128-255> - Specify the path computation metric options";
+                        type uint16 {
+                          tailf:info "<128-255>;;Sid-algorithm value";
+                          range "128..255";
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        leaf bandwidth {
+          when "not(../srv6)" {
+            description "bandwidth is not supported for SRv6 in the current release.";
+          }
+          tailf:info "<1-4294967295> Requested Bandwidth value in kbps";
+          description "<1-4294967295> Requested Bandwidth value in kbps";
+          type uint32 {
+            range "1..4294967295";
+          }
+        }
+
+        container auto-route {
+          when "not(../srv6)" {
+            description "auto-route is not supported for SRv6 in the current release.";
+          }
+          tailf:info "Enable Autoroute on this SR-policy";
+          description "Enable Autoroute on this SR-policy";
+          presence true;
+          container auto-route-metric {
+            tailf:info "Autoroute metric";
+            description "Autoroute metric";
+            presence true;
+            choice metric-choice {
+              leaf metric-relative-value {
+                tailf:info "<(-10)-10> - Autoroute relative metric";
+                description "<(-10)-10> - Autoroute relative metric";
+                type int32 {
+                  range "-10..10";
+                }
+              }
+              leaf metric-constant-value {
+                tailf:info "<1-2147483647> - Autoroute constant metric";
+                description "<1-2147483647> - Autoroute constant metric";
+                type uint32 {
+                  range "1..2147483647";
+                }
+              }
+            }
+          }
+
+          container include-prefixes {
+            tailf:info "Autoroute include prefix table configuration";
+            description "Autoroute include prefix table configuration";
+            presence true;
+            list include-prefix {
+              tailf:info "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+              description "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+              when "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                  [lsa-utils:name=current()/../../../head-end]/lsa-utils:ned-id,
+                  'cisco-ios-cli-'))";
+              key "prefix-address";
+              leaf prefix-address {
+                tailf:info "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+                description "<A.B.C.D/prefix> - Autoroute IP prefix to include";
+                type tailf:ipv4-address-and-prefix-length;
+                tailf:cli-allow-range;
+
+              }
+            }
+          }
+
+          leaf force-sr-include {
+            tailf:info "Force autoroute policy to be safe for carrying SR labelled traffic";
+            description "Force autoroute policy to be safe for carrying SR labelled traffic";
+            type empty;
+            when "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                  [lsa-utils:name=current()/../../head-end]/lsa-utils:ned-id,
+                  'cisco-ios-cli-'))";
+          }
+
+          leaf forward-class {
+            tailf:info "<0-7> - Specify forward class for policy based routing";
+            description "<0-7> - Specify forward class for policy based routing";
+            when "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                  [lsa-utils:name=current()/../../head-end]/lsa-utils:ned-id,
+                  'cisco-ios-cli-'))";
+            type uint8 {
+              tailf:info "<0-7>;;Forward class value, default value is 0";
+              range "0..7";
+            }
+          }
+        }
+
+        leaf source-address {
+          tailf:info "Source address of policy. The value set on a per-policy basis
+                      will override the value set globally on the device.";
+          description "Source address of policy. The value set on a per-policy basis
+                        will override the value set globally on the device.";
+          type inet:ip-address;
+        }
+
+        tailf:action error-recovery {
+          tailf:actionpoint cisco-sr-te-cfp-policy-error-recovery;
+          tailf:info "Action to recover a service during create/update from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync on the device
+                      & redeploys the service with reconcile option.";
+          description "Action to recover a service during create/update from a transient failures
+                      like device connection issues once the device is reachable again.
+                      For create/update failures, this action issues a sync on the device
+                      & redeploys the service with reconcile option.";
+          input {
+            leaf sync-direction {
+              tailf:info "sync device with sync-from or sync-to";
+              description "sync device with sync-from or sync-to";
+              type enumeration {
+                enum sync-from;
+                enum sync-to;
+              }
+              mandatory true;
+            }
+          }
+          output {
+            leaf success {
+              type boolean;
+              mandatory true;
+            }
+            leaf detail {
+              type string;
+            }
+          }
+          tailf:confirm-text "########################\n" +
+            "#        Warning       #\n" +
+            "########################\n" +
+            "You are about to recover a T-SDN service.\n" +
+            "This will issue a sync on the device.\n" +
+            "Are you sure you want to proceed?" {
+              tailf:confirm-default false;
+          }
+        }
+
+        container action {
+          tailf:action self-test {
+            tailf:actionpoint sr-policy-global-self-test-actionpoint;
+            input {
+            }
+            output {
+              leaf status {
+                type string;
+              }
+              leaf message {
+                type string;
+              }
+            }
+          }
+        }
+      }
+
+      list sid-list {
+        tailf:info "SID list";
+        description "SID list";
+        tailf:meta-data "TSDN-UI";
+
+        key name;
+        leaf name {
+          tailf:info "Unique list id";
+          description "Unique list id";
+          type cisco-sr-te-cfp-sr-types:Cisco-ios-xr-string;
+          tailf:cli-allow-range;
+        }
+
+        uses cisco-sr-te-cfp-sr-common:sid-grp;
+
+        leaf discovered {
+          tailf:hidden full;
+          type empty;
+        }
+
+        must "(boolean(discovered)" +
+             " or (not(boolean(discovered)) and not(contains(string(name),'-discovered-'))))" {
+          error-message "Name with -discovered- is not allowed";
+        }
+      }
+
+      list policy-plan {
+        config false;
+        tailf:cdb-oper {
+          tailf:persistent true;
+        }
+        key "name";
+
+        leaf name {
+          type string;
+        }
+
+        uses ncs:nano-plan-data;
+        uses ncs:nano-plan-history;
+      }
+
+      // these actions are to drive external plan in case of stacked-service
+      container actions {
+        tailf:hidden full;
+        tailf:action internal-plan-change-handler {
+          tailf:actionpoint policy-internal-plan-change-handler;
+          input {
+            uses kicker:action-input-params;
+          }
+          output {
+          }
+        }
+      }
+    }
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/policies/policy-plan/plan {
+    uses tsdn-core-fp-common:status-code-plan-augmentation;
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/policies/policy-plan/plan-history/plan {
+    uses tsdn-core-fp-common:status-code-plan-augmentation;
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/policies/policy-plan/plan/component {
+    uses tsdn-core-fp-common:status-code-component-augmentation;
+  }
+
+  augment /cisco-sr-te-cfp:sr-te/policies/policy-plan/plan-history/plan/component {
+    uses tsdn-core-fp-common:status-code-component-augmentation;
+  }
+}

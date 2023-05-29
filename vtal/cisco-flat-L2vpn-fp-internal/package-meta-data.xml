@@ -1,0 +1,40 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>cisco-flat-L2vpn-fp-internal</name>
+  <package-version>4.1.0</package-version>
+  <description>NSO T-SDN Flat L2VPN Internal</description>
+  <ncs-min-version>5.4.0.2</ncs-min-version>
+
+  <supported-ned-id xmlns:cisco-iosxr-cli-7.40="http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.40">cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40</supported-ned-id>
+
+  <python-package>
+    <vm-name>cisco-flat-L2vpn-fp</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>custom-template-utils</name>
+  </required-package>
+
+  <required-package>
+    <name>core-fp-common</name>
+  </required-package>
+
+  <required-package>
+    <name>cisco-tsdn-core-fp-common</name>
+  </required-package>
+
+  <required-package>
+    <name>core-fp-delete-tag-service</name>
+  </required-package>
+
+  <required-package>
+    <name>lsa-utils</name>
+  </required-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>cisco_flat_L2vpn_fp_internal.main.Main</python-class-name>
+    </application>
+  </component>
+
+</ncs-package>

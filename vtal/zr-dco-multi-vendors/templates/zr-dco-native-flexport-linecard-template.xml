@@ -1,0 +1,85 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <?if {$PORT_MODE = 'NCS'}?>
+            <?if-ned-id cisco-iosxr-nc-7.3:cisco-iosxr-nc-7.3?>
+                <node xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-optics-port-mode-cfg">
+                    <acts>
+                    <act>
+                        <node-name>{$R}_{$S}_CPU0</node-name>
+                        <port-ranges>
+                            <port-range>
+                            <first-port>{$P}</first-port>
+                            <sec-port>{$P_SEC}</sec-port>
+                            <instance>
+                                <inst-id>{$I}</inst-id>
+                                <mode>
+                                <speed>{$SPEED}</speed>
+                                </mode>
+                            </instance>
+                            </port-range>
+                        </port-ranges>
+                    </act>
+                    </acts>
+                </node>
+            <?elif-ned-id cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4?>
+                <active-nodes xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-config-mda-cfg">
+                <active-node>
+                    <node-name>{$R}/{$S}/CPU0</node-name>
+                    <port-ranges xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-optics-port-mode-cfg">
+                        <port-range>
+                        <first-port>{$P}</first-port>
+                        <sec-port>{$P_SEC}</sec-port>
+                        <instance>
+                            <inst-id>{$I}</inst-id>
+                            <mode>
+                            <speed>{$SPEED}</speed>
+                            </mode>
+                        </instance>
+                        </port-range>
+                    </port-ranges>
+                    </active-node>
+                </active-nodes>
+            <?end?>
+        <?end?>
+        <?if {$PORT_MODE = 'A9903-20HG-PEC'}?>
+          <active-nodes xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-config-mda-cfg">
+            <active-node>
+              <node-name>{$R}/{$S}/CPU0</node-name>
+                <hw-module-ep-breakout xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-asr9k-lc-ep-breakout-port-cfg">
+                  <bays>
+                    <bay>
+                      <bay-number>1</bay-number>
+                      <ports>
+                        <port>
+                          <port-number>{$P}</port-number>
+                          <iftype>{$SPEED}</iftype>
+                        </port>
+                      </ports>
+                    </bay>
+                  </bays>
+                </hw-module-ep-breakout>
+            </active-node>
+          </active-nodes>
+        <?end?>
+        <?if {$PORT_MODE = 'A9K'}?>
+          <active-nodes xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-config-mda-cfg">
+            <active-node>
+              <node-name>{$R}/{$S}/CPU0</node-name>
+                <hardware-module-breakout xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-asr9k-lc-breakout-port-cfg">
+                  <ports>
+                    <port>
+                      <port-number>{$P}</port-number>
+                      <iftype>{$SPEED}</iftype>
+                    </port>
+                  </ports>
+                </hardware-module-breakout>
+            </active-node>
+          </active-nodes>
+        <?end?>
+      </config>
+    </device>
+  </devices>
+</config>

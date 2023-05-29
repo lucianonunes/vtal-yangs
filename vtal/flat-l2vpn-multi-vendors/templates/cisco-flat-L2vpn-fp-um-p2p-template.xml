@@ -1,0 +1,121 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+      <?set DEVICE_NAME={string(pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set SERVICE_NAME={string(../../name)}?>
+      <?if {string-length($SERVICE_NAME)>14 and starts-with($SERVICE_NAME,'L2NM-') and (substring($SERVICE_NAME, (string-length($SERVICE_NAME) - 8))='-internal')}?>
+        <?set SERVICE_NAME={substring($SERVICE_NAME,6,string-length($SERVICE_NAME)-14)}?>
+      <?end?>
+      <config>
+        <?set INTERFACE_NAME={if-type}{if-id}?>
+        <?if {sub-if-id or vlan-id}?>
+          <?if {sub-if-id}?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{sub-if-id}?>
+          <?else?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+          <?end?>
+        <?end?>
+        <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+          <?expand um-intf-config?>
+        </interfaces>
+        <l2vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2vpn-cfg">
+          <pw-classes>
+            <pw-class>
+              <pw-class-name>{pw-class}</pw-class-name>
+              <encapsulation>
+                <mpls>
+                  <control-word when="{control-word='yes'}"/>
+                  <?expand um-mpls-sr-te-path?>
+                  <?if {rsvp-te/preferred-path}?>
+                    <preferred-path>
+                      <interface>
+                        <tunnel-te>
+                          <tunnel-number>{rsvp-te/preferred-path/te-tunnel-id}</tunnel-number>
+                        </tunnel-te>
+                      </interface>
+                      <fallback when="{rsvp-te/preferred-path/fallback='disable'}">
+                        <disable/>
+                      </fallback>
+                    </preferred-path>
+                  <?end?>
+                </mpls>
+              </encapsulation>
+            </pw-class>
+          </pw-classes>
+          <xconnect>
+            <groups>
+              <group>
+                <group-name>{xconnect-group-name}</group-name>
+                <p2ps>
+                  <p2p>
+                    <p2p-xconnect-name>{p2p-name}</p2p-xconnect-name>
+                    <interfaces>
+                      <interface>
+                        <interface-name>{$INTERFACE_NAME}</interface-name>
+                      </interface>
+                    </interfaces>
+                    <?set NEIGHBOR=?>
+                    <?if {$LOCAL_NODE='true'}?>
+                    <?set NEIGHBOR={xconnect-remote-ip}?>
+                    <?else ?>
+                    <?set NEIGHBOR={../local-site/xconnect-local-ip}?>
+                    <?end ?>
+                    <?set LOCAL_LABEL=?>
+                    <?set REMOTE_LABEL=?>
+                    <?if {$LOCAL_NODE='true'}?>
+                    <?set LOCAL_LABEL={mpls-local-label}?>
+                    <?set REMOTE_LABEL={mpls-remote-label}?>
+                    <?else ?>
+                    <?set LOCAL_LABEL={../local-site/mpls-remote-label}?>
+                    <?set REMOTE_LABEL={../local-site/mpls-local-label}?>
+                    <?end ?>
+                    <?set PW_CLASS={pw-class}?>
+                    <?set PW_ID={../pw-id}?>
+                    <neighbor>
+                      <?if {contains(string($NEIGHBOR), '.')}?>
+                        <ipv4s>
+                          <ipv4>
+                            <address>{$NEIGHBOR}</address>
+                            <pw-id>{$PW_ID}</pw-id>
+                            <mpls>
+                              <static>
+                                <label>
+                                  <local when="{$LOCAL_LABEL!=''}">{$LOCAL_LABEL}</local>
+                                  <remote when="{$REMOTE_LABEL!=''}">{$REMOTE_LABEL}</remote>
+                                </label>
+                              </static>
+                            </mpls>
+                            <pw-class>{pw-class}</pw-class>
+                          </ipv4>
+                        </ipv4s>
+                      <?else?>
+                        <ipv6s>
+                          <ipv6>
+                            <address>{$NEIGHBOR}</address>
+                            <pw-id>{$PW_ID}</pw-id>
+                            <mpls>
+                              <static>
+                                <label>
+                                  <local when="{$LOCAL_LABEL!=''}">{$LOCAL_LABEL}</local>
+                                  <remote when="{$REMOTE_LABEL!=''}">{$REMOTE_LABEL}</remote>
+                                </label>
+                              </static>
+                            </mpls>
+                            <pw-class>{pw-class}</pw-class>
+                          </ipv6>
+                        </ipv6s>
+                      <?end?>
+                    </neighbor>
+                  </p2p>
+                </p2ps>
+              </group>
+            </groups>
+          </xconnect>
+        </l2vpn>
+        <?expand um-ethernet-service-oam?> 
+      </config>
+    </device>
+  </devices>
+</config-template>

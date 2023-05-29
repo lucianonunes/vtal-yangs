@@ -1,0 +1,15 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>cw-dlm-fp</name>
+  <package-version>4.4.0-nso-5.7.6</package-version>
+  <description>DLM Service Pack for synching DLM 2 NSO data</description>
+  <ncs-min-version>5.7.6</ncs-min-version>
+
+  <!-- It's possible to add more components to the -->
+  <!-- same package, multiple services, data providers etc -->
+  <component>
+    <name>DLM Service</name>
+    <callback>
+      <java-class-name>com.cisco.crossworks.DlmService</java-class-name>
+    </callback>
+  </component>
+</ncs-package>

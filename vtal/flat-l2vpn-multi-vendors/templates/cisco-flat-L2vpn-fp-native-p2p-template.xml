@@ -1,0 +1,124 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{pe}</name>
+      <?set DEVICE_NAME={string(pe)}?>
+      <?set DEFAULT_INTF_DESC='T-SDN Interface'?>
+      <?set SERVICE_NAME={string(../../name)}?>
+      <?if {string-length($SERVICE_NAME)>14 and starts-with($SERVICE_NAME,'L2NM-') and (substring($SERVICE_NAME, (string-length($SERVICE_NAME) - 8))='-internal')}?>
+        <?set SERVICE_NAME={substring($SERVICE_NAME,6,string-length($SERVICE_NAME)-14)}?>
+      <?end?>
+      <config>
+        <?set INTERFACE_NAME={if-type}{if-id}?>
+        <?if {sub-if-id or vlan-id}?>
+          <?if {sub-if-id}?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{sub-if-id}?>
+          <?else?>
+            <?set INTERFACE_NAME={if-type}{if-id}.{vlan-id}?>
+          <?end?>
+        <?end?>
+        <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+          <?expand native-intf-config?> 
+        </interface-configurations>
+        <l2vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-l2vpn-cfg">
+          <enable/>
+          <database>
+            <pseudowire-classes>
+              <pseudowire-class>
+                <name>{pw-class}</name>
+                <enable/>
+                <mpls-encapsulation>
+                  <enable/>
+                  <control-word when="{control-word='yes'}">enable</control-word>
+                  <?if {sr-te/preferred-path/policy}?>
+                    <preferred-path>
+                      <type>sr-te-policy</type>
+                      <fallback-disable when="{sr-te/preferred-path/fallback='disable'}"/>
+                      <path-name>{$SR_POLICY_NAME}</path-name>
+                    </preferred-path>
+                  <?end?>
+                  <?if {rsvp-te/preferred-path}?>
+                    <preferred-path>
+                      <type>te-tunnel</type>
+                      <interface-tunnel-number>{rsvp-te/preferred-path/te-tunnel-id}</interface-tunnel-number>
+                      <fallback-disable when="{rsvp-te/preferred-path/fallback='disable'}"/>
+                    </preferred-path>
+                  <?end?>
+                </mpls-encapsulation>
+              </pseudowire-class>
+            </pseudowire-classes>
+            <xconnect-groups>
+              <xconnect-group>
+                <name>{xconnect-group-name}</name>
+                <p2p-xconnects>
+                  <p2p-xconnect>
+                    <name>{p2p-name}</name>
+                    <attachment-circuits>
+                      <attachment-circuit>
+                        <name>{$INTERFACE_NAME}</name>
+                        <enable/>
+                      </attachment-circuit>
+                    </attachment-circuits>
+                    <?set NEIGHBOR=?>
+                    <?if {$LOCAL_NODE='true'}?>
+                    <?set NEIGHBOR={xconnect-remote-ip}?>
+                    <?else ?>
+                    <?set NEIGHBOR={../local-site/xconnect-local-ip}?>
+                    <?end ?>
+                    <?set LOCAL_LABEL=?>
+                    <?set REMOTE_LABEL=?>
+                    <?if {$LOCAL_NODE='true'}?>
+                    <?set LOCAL_LABEL={mpls-local-label}?>
+                    <?set REMOTE_LABEL={mpls-remote-label}?>
+                    <?else ?>
+                    <?set LOCAL_LABEL={../local-site/mpls-remote-label}?>
+                    <?set REMOTE_LABEL={../local-site/mpls-local-label}?>
+                    <?end ?>
+                    <?set PW_CLASS={pw-class}?>
+                    <?set PW_ID={../pw-id}?>
+                    <pseudowire-neighbor-pseudowire-ids>
+                      <?if {contains(string($NEIGHBOR), '.')}?>
+                      <pseudowire-neighbor-pseudowire-id>
+                        <neighbor>{$NEIGHBOR}</neighbor>
+                        <pseudowire-id>{$PW_ID}</pseudowire-id>
+                        <mpls-static-labels>
+                          <local-static-label when="{$LOCAL_LABEL!=''}">{$LOCAL_LABEL}</local-static-label>
+                          <remote-static-label when="{$REMOTE_LABEL!=''}">{$REMOTE_LABEL}</remote-static-label>
+                        </mpls-static-labels>
+                        <class>{pw-class}</class>
+                      </pseudowire-neighbor-pseudowire-id>
+                      <?else?>
+                      <pseudowire-pseudowire-address-pseudowire-id>
+                        <pseudowire-address>{$NEIGHBOR}</pseudowire-address>
+                        <pseudowire-id>{$PW_ID}</pseudowire-id>
+                        <mpls-static-labels>
+                          <local-static-label when="{$LOCAL_LABEL!=''}">{$LOCAL_LABEL}</local-static-label>
+                          <remote-static-label when="{$REMOTE_LABEL!=''}">{$REMOTE_LABEL}</remote-static-label>
+                        </mpls-static-labels>
+                        <class>{pw-class}</class>
+                      </pseudowire-pseudowire-address-pseudowire-id>
+                      <?end?>
+                    </pseudowire-neighbor-pseudowire-ids>
+                  </p2p-xconnect>
+                </p2p-xconnects>
+              </xconnect-group>
+            </xconnect-groups>
+          </database>
+        </l2vpn>
+        <?if-ned-id cisco-iosxr-nc-7.3:cisco-iosxr-nc-7.3
+                    cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4?>
+          <?if {ethernet-service-oam}?>
+            <?set GROUP_NAME={xconnect-group-name}?>
+            <?set SWITCHING_NAME={p2p-name}?>
+            <ethernet-features xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-l2-eth-infra-cfg">
+              <?expand native-ethernet-features?> 
+            </ethernet-features>
+            <sla xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-sla-cfg">
+              <?expand native-sla-protocols-eth-profiles?> 
+            </sla>
+          <?end?>
+        <?end?>
+      </config>
+    </device>
+  </devices>
+</config-template>

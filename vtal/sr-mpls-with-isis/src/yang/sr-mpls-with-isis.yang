@@ -1,0 +1,109 @@
+module sr-mpls-with-isis {
+
+  namespace "http://example.com/sr-mpls-with-isis";
+  prefix sr-mpls-with-isis;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  description
+    "Config SR-MPLS-with-ISIS";
+
+  revision 2016-01-01 {
+    description
+      "Initial revision.";
+  }
+
+  list sr-mpls-with-isis {
+    description "This is an RFS skeleton service";
+
+    key name;
+    leaf name {
+      tailf:info "Service Name to Configure SR-MPLS with ISIS";
+      tailf:cli-allow-range;
+      type string;
+    }
+
+    uses ncs:service-data;
+    ncs:servicepoint sr-mpls-with-isis-servicepoint;
+
+    // may replace this with other ways of refering to the devices.
+    leaf device {
+      tailf:info "Select IOS XR device";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    leaf loopback_id {
+      tailf:info "Enter Loopback ID";
+      type uint32;
+    }
+
+    leaf loopback_ipv4_address {
+      tailf:info "Enter Loopback IPv4 Address";
+      type inet:ipv4-address;
+    }
+
+    leaf isis_process_id {
+      tailf:info "Enter ISIS Process ID";
+      type string;
+    }
+
+//    leaf isis_net_id {
+//      tailf:info "Enter ISIS System Net ID";
+//      type string;
+//    }
+    
+//    leaf instance_id {
+//      tailf:info "Enter ISIS instance id";
+//      type uint32;
+//    }
+    list interface_xr {
+      description "Interfaces for SR-MPLS-with-ISIS config";
+      key interface_id;
+      typedef physical_interface_type {
+       type enumeration {
+        enum FiftyGigE;
+        enum FortyGigE;
+        enum FourHundredGigE;
+        enum GigabitEthernet;
+        enum HundredGigE;
+        enum TenGigE;
+        enum TwentyFiveGigE;
+        enum TwoHundredGigE;
+       }
+       description
+          "Physical Interface Type";
+      }
+
+      leaf PHYSICAL_INTERFACE_TYPE {
+        tailf:info "Select physical interface type";
+        type physical_interface_type;
+      }      
+
+      leaf interface_id {
+        description "Select Interfaces";
+        type string;
+        //type leafref {
+             // path  "/ncs:devices/ncs:device[ncs:name=current()/../../device]/ncs:config/cisco-ios-xr:interface/cisco-ios-xr:PHYSICAL_INTERFACE_TYPE/cisco-ios-xr:id";
+        //     path "/ncs:devices/ncs:device[ncs:name=current()/../../device]/ncs:config/ifmgr-cfg:interface-configurations/ifmgr-cfg:interface-configuration/ifmgr-cfg:interface-name";
+        //}
+      }
+    }
+
+    leaf abs_prefix_sid {
+      tailf:info "Enter Absolute Prefix SID for SR";
+      type uint32;
+    }
+
+
+  }
+}

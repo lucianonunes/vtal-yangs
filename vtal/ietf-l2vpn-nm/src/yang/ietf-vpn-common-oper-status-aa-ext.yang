@@ -1,0 +1,41 @@
+module ietf-vpn-common-oper-status-aa-ext {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-vpn-common-oper-status-aa-ext";
+  prefix vpn-common-oper-status-aa-ext;
+
+  import ietf-vpn-common {
+    prefix vpn-common;
+    reference
+          "RFC XXX: YANG Data Model for VPNs types.";
+  }
+
+  revision 2021-06-16 {
+    description "Modified: Updated operational status name and description";
+  }
+
+  revision 2021-05-10 {
+    description "Initial revision.";
+  }
+
+  identity operational-state-degraded {
+    base vpn-common:operational-status;
+      description
+        "Service Health is degraded due to one or more parts being monitored
+        has issues.";
+  }
+  identity operational-state-monitor-paused {
+    base vpn-common:operational-status;
+      description
+        "Service Assurance monitoring is paused.";
+  }
+  identity operational-state-monitor-initiated {
+    base vpn-common:operational-status;
+      description
+        "Service Assurance monitoring is being initiated.";
+  }
+  identity operational-state-monitor-failed {
+    base vpn-common:operational-status;
+      description
+        "Service Assurance monitoring encountered failure.";
+  }
+}

@@ -1,0 +1,103 @@
+
+
+[doc Test of ip-pool with spaces in name]
+
+[config skip=TAILFSKIP_JAVA]
+[config skip=TAILFSKIP_SUNOS]
+
+[include ../../luxinc/resource-manager.luxinc]
+
+[global TEST_NCS_DIR=$DIR/../../../../ncs]
+
+[shell startup]
+    -$fail_pattern
+    [invoke startup]
+
+[shell cli]
+    -$fail_pattern
+    [invoke ncs-cli]
+    [invoke check-pkgs]
+    [invoke sync-from-device]
+    [invoke ncs-enter-config]
+
+    !set java-vm java-logging logger com.tailf.pkg level level-debug
+    ?$NCS_PROMPT_CONF
+
+    [invoke commit]
+
+    !set resource-pools ip-address-pool "management ip pool" subnet 10.0.0.0 24
+    ?$NCS_PROMPT_CONF
+    [invoke commit]
+
+    !run show status ip-allocator
+    """??
+    pool "management ip pool" {
+        subnet 10.0.0.0 24;
+        available 10.0.0.0 24;
+    }
+    """
+    ?$NCS_PROMPT_CONF
+    !set resource-pools ip-address-pool "management ip pool" allocation a1 username admin request subnet-size 32
+    ?$NCS_PROMPT_CONF
+    !set resource-pools ip-address-pool "management ip pool" allocation a2 username admin request subnet-size 32
+    ?$NCS_PROMPT_CONF
+    !set resource-pools ip-address-pool "management ip pool" allocation a3 username admin request subnet-size 32
+    ?$NCS_PROMPT_CONF
+    [invoke commit]
+
+    !run show status ip-allocator
+    """??
+    pool "management ip pool" {
+        subnet 10.0.0.0 24;
+        available 10.0.0.0 32;
+        available 10.0.0.4 30;
+        available 10.0.0.8 29;
+        available 10.0.0.16 28;
+        available 10.0.0.32 27;
+        available 10.0.0.64 26;
+        available 10.0.0.128 25;
+        allocation 10.0.0.1 32 {
+            owner      "";
+            username   admin;
+            request-id a1;
+        }
+        allocation 10.0.0.2 32 {
+            owner      "";
+            username   admin;
+            request-id a2;
+        }
+        allocation 10.0.0.3 32 {
+            owner      "";
+            username   admin;
+            request-id a3;
+        }
+    }
+    """
+    ?$NCS_PROMPT_CONF
+    !run show status resource-pools
+    """??
+    ip-address-pool "management ip pool" {
+        allocation a1 {
+            response {
+                subnet 10.0.0.1/32;
+                from   10.0.0.0/24;
+            }
+        }
+        allocation a2 {
+            response {
+                subnet 10.0.0.2/32;
+                from   10.0.0.0/24;
+            }
+        }
+        allocation a3 {
+            response {
+                subnet 10.0.0.3/32;
+                from   10.0.0.0/24;
+            }
+        }
+    }
+    """
+    ?$NCS_PROMPT_CONF
+
+[cleanup]
+    [invoke ncs-cleanup]

@@ -1,0 +1,2454 @@
+/*
+ * flat-L2vpn Static PW and EVPN-VPWS
+ */
+module cisco-flat-L2vpn-fp {
+
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn";
+
+  prefix cisco-flat-L2vpn-fp;
+
+  import ietf-inet-types { prefix inet; }
+
+  import ietf-yang-types { prefix yang; }
+
+  import tailf-common { prefix tailf; }
+
+  import tailf-ncs { prefix ncs; }
+
+  import tailf-kicker { prefix kicker; }
+
+  import lsa-utils { prefix lsa-utils; }
+
+  import custom-template-hook { prefix ct-hook; }
+
+  import cisco-tsdn-core-fp-common { prefix tsdn-core-fp-common; }
+
+  description "MPLS L2VPN function pack - example";
+
+  revision 2022-08-12 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.40";
+  }
+
+  revision 2022-06-17 {
+    description
+      "Modified: pattern under evpn-vpws-grouping -> srv6 -> locator -> type -> pattern.
+       Modified: type of flat-L2vpn -> flat-L2vpn-evpn-multipoint -> site -> site-name to string.";
+  }
+
+  revision 2022-06-10 {
+    description "
+     Added: pattern under evpn-vpws-grouping -> multi-home -> esi-value -> string.
+     Added: pattern under evpn-multipoint-grouping -> multi-home -> esi-value -> string.
+     Modified: tailf:info and description under evpn-vpws-grouping -> multi-home -> esi-value.
+     Modified: tailf:info under evpn-vpws-grouping -> multi-home -> esi-value -> string.
+     Modified: tailf:info and description under evpn-multipoint-grouping -> multi-home -> esi-value.
+     Modified: tailf:info under evpn-multipoint-grouping -> multi-home -> esi-value -> string.";
+  }
+
+  revision 2022-05-27 {
+    description
+      "Removed: Q-in-Q enum options under grouping subinterface-rewrite-common-grouping -> ingress -> translate";
+  }
+
+  revision 2022-05-26 {
+    description
+      "Modified: vlan-id range to 1..4094";
+  }
+
+  revision 2022-05-10 {
+    description
+      "Added: leaf enable under evpn-multipoint-grouping -> split-horizon
+       Removed: leaf group under evpn-multipoint-grouping -> split-horizon
+       Removed: presence statement under evpn-multipoint-grouping -> split-horizon";
+  }
+
+  revision 2022-05-04 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.39";
+  }
+
+  revision 2022-04-15 {
+    description
+      "Modified: description under evpn-vpws-grouping -> srv6 -> locator
+       Added: pattern under evpn-vpws-grouping -> srv6 -> locator -> type";
+  }
+
+  revision 2022-03-09 {
+    description
+    "Added: presence statement for flat-L2vpn -> flat-L2vpn-evpn-multipoint -> vpn-target";
+  }
+
+  revision 2022-02-15 {
+    description
+      "Added: EVPN Multipoint Support
+       Added: typedef bgp-rt-type
+       Added: grouping evpn-multipoint-grouping
+       Added: container evpn-route-type under l2vpn-route-policy
+       Added: enum evpn-multipoint to flat-L2vpn -> service-type
+       Added: container flat-L2vpn-evpn-multipoint under flat-L2vpn
+       Added: leaf site-only input for error-recovery action
+       Added: leaf pe under flat-L2vpn-plan -> plan -> component
+       Added: leaf pe under flat-L2vpn-plan -> plan-history -> plan -> component";
+  }
+
+  revision 2022-01-13 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.38";
+  }
+
+  revision 2022-01-13 {
+    description
+      "Added: srv6 under evpn-vpws-grouping";
+  }
+
+  revision 2022-01-12 {
+    description
+      "Removed: policy-type under sr-te-pref-path-grp -> preferred-path -> policy-type";
+  }
+
+  revision 2021-12-03 {
+    description
+      "Added: must condition for cs-policy policy type under sr-te -> preferred-path -> policy";
+  }
+
+  revision 2021-12-03 {
+    description
+	  "Removed: core-fp-common reference
+	   Modified: Read dispatch-map using lsa-utils
+	   Added: policy-type under sr-te-pref-path-grp -> preferred-path -> policy-type";
+  }
+
+  revision 2021-11-17 {
+    description
+      "Modified: type to union for y-1731-profile -> probe -> measurement-interval
+       Added: must condition under y-1731-profile -> probe -> measurement-interval
+       Added: when condition to grouping y-1731-profile-schedule -> schedule -> duration
+       Modified: default cfp-configurations -> iosxr-default-ned-id";
+  }
+
+  revision 2021-11-09 {
+    description
+      "Added: String length check for :
+              rsvp-tunnel-te-pref-path-grp/ietf-te-service ,
+              sr-te-grp --> odn --> attach-point --> parent-rr-route-policy ,
+              p2p-grouping --> xconnect-group-name ,
+              p2p-grouping --> p2p-name ,
+              p2p-grouping --> pw-class ,
+              evpn-vpws-grouping --> xconnect-group-name ,
+              evpn-vpws-grouping --> p2p-name ,
+              evpn-vpws-grouping --> pw-class";
+  }
+
+  revision 2021-09-28 {
+    description
+      "Removed: leaf delay-type under list y-1731-profile -> delay-params
+       Removed: leaf cos under list y-1731-profile -> delay-params -> statistic
+       Removed: leaf cos list y-1731-profile -> loss-params -> statistic
+       Removed: list statistic under grouping ethernet-y-1731-grouping -> ethernet-service-oam -> y-1731 -> y-1731-profile
+       Added: must condition under grouping ethernet-y-1731-grouping -> ethernet-service-oam";
+  }
+
+  revision 2021-09-24 {
+    description
+      "Added: must condition to y-1731-profile -> measurment-internal to y-1731-profile -> probe -> type";
+   }
+
+  revision 2021-09-17 {
+    description
+      "Added : Length check added for sr-te-pref-path-grp --> preferred-path --> policy
+       Added: site as optional input to flat-L2vpn-actions -> cleanup action ";
+  }
+
+  revision 2021-09-14 {
+    description
+      "Modified: range for leaf interval in grouping ethernet-y-1731-grouping
+                 -> y-1731 -> y-1731-profile -> schedule";
+  }
+
+  revision 2021-08-31 {
+    description
+      "Added: ethernet-y-1731-grouping -> y-1731 -> id-type enum (icc-based|number)
+       Added: flat-L2vpn-p2p -> must condition on ethernet-y-1731-grouping -> y-1731 -> id-type enum
+       Added: flat-L2vpn-evpn-vpws -> must condition on ethernet-y-1731-grouping -> y-1731 -> id-type enum
+       Added: ethernet-y-1731-grouping -> y-1731 -> sman-id-allocation-data
+       Added: Added must conditions to restrict IOSXE device for Service Type EVPN-VPWS";
+  }
+
+  revision 2021-08-27 {
+    description
+      "Added: container probe in list y-1731-profile
+       Added: leaf message-count in y-1731-profile -> probe
+       Moved: y-1731-profile -> measurment-internal to y-1731-profile -> probe -> measurement-interval
+       Moved: y-1731-profile -> message-period to y-1731-profile -> probe -> burst -> message-period
+       Moved: y-1731-profile -> frame-size to y-1731-profile -> probe -> frame-size
+       Moved: y-1731-profile -> priority to y-1731-profile -> probe -> priority
+       Added: grouping y-1731-profile-schedule
+       Added: uses y-1731-profile-schedule to grouping ethernet-service-oam -> y-1731-profile
+       Added: uses y-1731-profile-schedule to grouping y-1731-profile
+       Added: container bucket-details under list y-1731-profile";
+  }
+
+  revision 2021-07-30 {
+    description
+      "Added: tsdn-core-fp-common static-config-redeploy-indicator-component-augmentation grouping to plan component augment
+       Added: tsdn-core-fp-common static-config-redeploy-indicator-component-augmentation grouping to plan-history component augment";
+  }
+
+  revision 2021-06-25 {
+    description
+      "Modified: Moved y-1731-profile under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile to root level
+       Added: leaf statistic-id under list y-1731-profile -> delay-params -> statistic
+       Added: leaf cos under list y-1731-profile -> delay-params -> statistic
+       Added: leaf delay-type under list y-1731-profile -> delay-params -> statistic
+       Added: must condition to restrict jitter type for XE devices under list y-1731-profile -> delay-params -> statistic
+       Added: leaf statistic-id list y-1731-profile -> loss-params -> statistic
+       Added: leaf cos list y-1731-profile -> loss-params -> statistic
+       Added: enum synthetic-loss under list y-1731-profile -> type
+       Added: when condition to ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> frame-size
+       Removed: leaf synthetic-loss-measurement under list y-1731 -> loss-params";
+  }
+
+  revision 2021-06-22 {
+    description
+      "Added: Added must conditions to restrict ethernet-service-oam to have same maid, md-name and md-level on both
+              sites and unique mep-id on each site
+       Modified: leaf md-level to be mandatory under grouping ethernet-y-1731-grouping -> ethernet-service-oam";
+  }
+
+  revision 2021-06-16 {
+    description "Modified: Updated operational status name and description";
+  }
+
+  revision 2021-06-02 {
+    description
+      "Added: Added must condition to restrict Y1731 to be enabled or disable for both local and remote site
+              under list flat-l2vpn -> flat-L2vpn-evpn-vpws and under list flat-l2vpn -> flat-L2vpn-p2p";
+  }
+
+  revision 2021-06-01 {
+    description
+      "Modified: leaf md-name to be mandatory under grouping ethernet-y-1731-grouping -> ethernet-service-oam
+       Modified: list y-1731 to have minimum one element under grouping ethernet-y-1731-grouping -> ethernet-service-oam";
+  }
+
+  revision 2021-05-28 {
+    description
+      "Added: leaf version under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> delay-params";
+  }
+
+  revision 2021-05-27 {
+    description
+      "Removed: leaf loss-measurement under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Removed: leaf synthetic-loss-measurement under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Removed: container delay-measurement under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Added: container delay-params under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile
+       Added: container loss-params under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile";
+  }
+
+  revision 2021-05-25 {
+    description
+      "Added: leaf priority under grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile";
+  }
+
+  revision 2021-05-18 {
+    description "Added: when condition under flat-L2vpn -> service-assurance-grouping
+                        to hide service-assurance related configs when
+                        'cisco-aa-service-assurance' package is not installed";
+  }
+
+  revision 2021-05-13 {
+    description
+    "Modified: changed range for grouping ethernet-y-1731-grouping -> y-1731 -> y-1731-profile -> message-period
+     Added: must condition under grouping ethernet-y-1731-grouping -> ethernet-service-oam -> y-1731 -> y-1731-profile ";
+  }
+
+  revision 2021-05-11 {
+    description
+    "Modified: augment flat-L2vpn->plan to use tsdn-core-fp-common:status-code-plan-augmentation";
+  }
+
+  revision 2021-05-10 {
+    description "Added: Identities for base operational-status";
+  }
+
+  revision 2021-04-30 {
+    description "Added: flat-L2vpn -> service-status (oper-data) using IETF model";
+  }
+
+  revision 2021-03-25 {
+    description "Added: new ethernet-service-oam to p2p-grouping and evpn-vpws-grouping
+                 Added: flat-L2vpn -> service-assurance-grouping
+                 Removed: redeploy-input grouping";
+  }
+
+  revision 2021-02-15 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.33";
+  }
+
+  revision 2020-12-11 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.32";
+  }
+
+  revision 2020-11-16 {
+    description "Added validate callpoint to service";
+  }
+
+  revision 2020-11-10 {
+    description "Added leaf sync-direction as mandatory input to error-recovery action";
+  }
+
+  revision 2020-11-06 {
+    description "Removed: evpn-bgp-grp
+                 Removed: bgp when condition from sr-te-grp -> odn
+                 Removed: unconditional-pass from l2vpn-route-policy
+                 Added: attach-point container to sr-te-grp -> odn";
+  }
+
+  revision 2020-10-05 {
+    description "Added: Ethernet interface for XE support in interface-name-grouping";
+  }
+
+  revision 2020-09-01 {
+    description "Modified: moved p2p-grouping -> sr-te into choice policy-type
+                 Added: p2p-grouping -> rsvp into choice policy-type";
+  }
+
+  revision 2020-08-11 {
+    description "Removed: stacked-service-enable flag
+                 Removed: local-site-redeploy-flag and remote-site-redeploy-flag
+                 Removed: redeploy, get-modifications and no-op custom actions
+                 Removed: cfp-configurations -> local-user and auto-cleanup
+                 Added: internal-plan-change-handler, update-internal-cfp-configurations,
+                 error-recovery actions
+                 Modified: local-site and remote-site pe points to dispatch map instead of device tree
+                 Modified: cleanup action points to dispatch map instead of device tree
+                 Added: l2vpn-route-policy -> unconditional-pass";
+  }
+
+  revision 2020-06-16 {
+    description "Modified cleanup input no-networking 'default true' -> 'mandatory true'
+                 Modified cleanup input local/remote site only to include non-strict-leafref
+                   to device
+                 Added tailf:confirm-text to cleanup";
+  }
+
+  revision 2020-06-10 {
+    description "Added redeploy-input grouping (containing reconcile options)
+                 Added uses redeploy-input to redeploy action";
+  }
+
+  revision 2020-05-18 {
+    description "Removed must condition for sub-if-id when if-encap is dot1q
+                 Modified rewrite when condition to allow either sub-if-id or vlan-id";
+  }
+
+  revision 2020-05-05 {
+    description "Added sub-if-id under cisco-flat-L2vpn-fp:flat-L2vpn
+                        -> service-type -> evpn-vpws -> flat-L2vpn-evpn-vpws
+                        -> local-site/remote-site -> bgp -> update-source";
+  }
+
+  revision 2020-04-27 {
+    description "
+     Modified: Spelling corrected for preferred-path under sr-te/preferred-path";
+  }
+
+  revision 2020-04-21 {
+    description "
+     Added: tailf:info and description added to esi-value as '<0-ff>.;;9-octet ESI value'
+            under cisco-flat-L2vpn-fp:flat-L2vpn -> service-type -> evpn-vpws
+            -> flat-L2vpn-evpn-vpws -> local-site/remote-site -> multi-home.";
+  }
+
+  revision 2020-04-16 {
+    description "
+     Removed: cfp-configurations -> iosxr-nc-ned-id.
+     Added: cfp-configurations -> iosxr-default-ned-id.";
+  }
+
+  revision 2020-04-15 {
+    description "
+      Added must for checking range of Bundle-Ether.";
+  }
+
+  revision 2020-04-13 {
+    description "
+      Added: status code plan augmentation grouping : status-code-plan-augmentation
+      Added: status code plan component augmentation grouping : status-code-component-augmentation
+      Added: augment plan with : status-code-plan-augmentation
+      Added: augment plan-history with : status-code-plan-augmentation
+      Added: augment plan component with : status-code-component-augmentation
+      Added: augment plan-history component with : status-code-component-augmentation
+      Added: status code oper data grouping : status-code-oper
+      Modified: pw-id type to unit32 and range <1-4294967295> under
+        cisco-flat-L2vpn-fp:flat-L2vpn -> service-type -> p2p -> flat-L2vpn-p2p";
+  }
+
+  revision 2020-03-26 {
+    description "Added: must check for rewrite ingress tag-choice.";
+  }
+
+  revision 2020-03-25 {
+    description "Modified: Fixed label range for mpls-local-label & mpls-remote-label";
+  }
+
+  revision 2020-03-18 {
+    description "Modified: pw-class for evpn-vpws now depends on sr-te/preferred-path/policy
+                  to be set.";
+  }
+
+  revision 2020-03-16 {
+    description "
+      Removed: self-test-enabled flag & self-test related oper-data.";
+  }
+
+  revision 2020-03-08 {
+    description "
+      Modified: sub-if-id to allow for both untagged/dot1q encapsulation
+      Added: rewrite -> ingress -> dot1q";
+  }
+
+  revision 2020-02-26 {
+    description "Added update-source under cisco-flat-L2vpn-fp:flat-L2vpn
+      -> service-type -> evpn-vpws -> flat-L2vpn-evpn-vpws -> local-site/remote-site -> bgp";
+  }
+
+  revision 2020-02-21 {
+    description "
+      Added: tailf:meta-data 'TSDN-UI' under cisco-flat-L2vpn-fp:l2vpn-route-policy
+             new list cisco-flat-L2vpn-fp:l2vpn-route-policy
+      Modified: moved cisco-flat-L2vpn-fp:flat-L2vpn -> service-type -> evpn-vpws
+                  -> flat-L2vpn-evpn-vpws -> sr-te-> odn to cisco-flat-L2vpn-fp:l2vpn-route-policy
+      Removed:  ip-prefix from cisco-flat-L2vpn-fp:flat-L2vpn -> service-type -> evpn-vpws
+                                    -> flat-L2vpn-evpn-vpws -> sr-te -> odn -> color-> {ipv4|ipv6}
+                cisco-flat-L2vpn-fp:flat-L2vpn -> service-type -> p2p -> flat-L2vpn-p2p
+                                                    -> sr-te -> odn";
+  }
+
+  revision 2020-01-29 {
+    description "Added choice as site-type: flat-L2vpn-actions -> cleanup -> input";
+  }
+  revision 2020-01-29 {
+    description " Removed tailf:hidden tsdn from cfp-configurations -> self-test-enabled";
+  }
+
+  revision 2020-01-08 {
+    description "Moved must condition outside of pe leafref for L2vpn service type
+                        P2P and EVPN
+                Path: cisco-flat-L2vpn-fp:flat-L2vpn -> <Service-Name> -> service-type
+                      evpn-vpws -> flat-L2vpn-evpn-vpws -> remote-site ->pe
+                      cisco-flat-L2vpn-fp:flat-L2vpn -> <Service-Name> -> service-type
+                      p2p -> flat-L2vpn-p2p -> remote-site ->pe
+                Modified: e-bgp is rename to bgp under sr-te-grp -> odn and evpn-bgp-grp.
+                Added: FiftyGigE, TwoHundredGigE, Bundle-Ether, FourHundredGigE,
+                      TwentyFiveGigE interfaces. 'must' condition for uint16 'Bundle-Ether'
+                      interface to check for numbers as interface ID ";
+  }
+
+  revision 2019-12-01 {
+    description "Added: cfp-configurations -> stacked-service-enable presence container
+                        along with servicepoint (used for change restriction check).";
+  }
+
+  revision 2019-10-31 {
+    description "Updated: cfp-configurations -> auto-cleanup is now defaulted to false.";
+  }
+
+  revision 2019-10-24 {
+    description "Added device under get modification actions
+              request flat-L2vpn {service} action get-modifications input device";
+  }
+
+  revision 2019-09-11 {
+    description "Added Get modifications under actions
+                 request flat-L2vpn {service} action get-modifications";
+  }
+
+  revision 2019-07-27 {
+    description "
+     Added: custom-template-hook at global and node level under :
+      flat-L2vpn,
+      flat-L2vpn->flat-L2vpn-p2p->local-site,
+      flat-L2vpn->flat-L2vpn-p2p->remote-site,
+      flat-L2vpn->flat-L2vpn-evpn-vpws->local-site and
+      flat-L2vpn->flat-L2vpn-evpn-vpws->remote-site";
+  }
+
+  revision 2019-07-25 {
+    description "
+     Removed: cfp-configurations -> iosxr-cli-ned-id.";
+  }
+
+  revision 2019-05-24 {
+    description "
+     Added: cfp-configurations -> iosxr-nc-ned-id.
+     Added: cfp-configurations -> iosxr-cli-ned-id.";
+  }
+
+  revision 2019-05-13 {
+    description "
+     Removed: capability removed from under dynamic-device-mapping.";
+  }
+
+  revision 2019-05-10 {
+    description "
+     Added: custom redeploy action under flat-L2vpn -> action to redeploy all internal services.
+     Added: redeploy action under flat-L2vpn -> flat-L2vpn-p2p -> local-site -> action.
+     Added: redeploy action under flat-L2vpn -> flat-L2vpn-p2p -> remote-site -> action.
+     Added: redeploy action under flat-L2vpn -> flat-L2vpn-evpn-vpws -> local-site -> action.
+     Added: redeploy action under flat-L2vpn -> flat-L2vpn-evpn-vpws -> remote-site -> action.
+     Added: self-test action under flat-L2vpn.
+     Added: flat-L2vpn -> self-test-delay to delay self-test start after specified value.
+     Added: flat-L2vpn-actions -> cleanup; to cleanup l2vpn service.
+     Added: cfp-configurations -> auto-cleanup; to force delete service for unreachable devices.
+     Added: cfp-configurations -> local-user; NSO user defaulted to admin.
+     Added: flat-L2vpn-plan; represents service state.
+     Added: flat-L2vpn-oper-data; represents self-test results.
+     Modified: New namespace.
+     Modified: dynamic-device-mapping moved under cfp-configurations.";
+  }
+
+  revision 2019-03-20 {
+    description
+    "Modified: Added remote-as-no under e-bgp.";
+  }
+
+  revision 2019-03-19 {
+    description
+    "Modified: sr-te/odn/e-bgp moved up under parent of sr-te
+               pw-class was not required for odn";
+  }
+
+  revision 2019-02-05 {
+    description "Initial revision.";
+  }
+
+  identity operational-status {
+    description
+      "Base identity for the operational status.";
+  }
+
+  identity operational-state-up {
+    base operational-status;
+    description
+      "Operational status UP/Enabled.";
+  }
+
+  identity operational-state-down {
+    base operational-status;
+    description
+      "Operational status DOWN/Disabled.";
+  }
+
+  identity operational-state-unknown {
+    base operational-status;
+    description
+      "Operational status UNKNOWN.";
+  }
+
+  identity operational-state-degraded {
+    base operational-status;
+      description
+        "Service Health is degraded due to one or more parts being monitored
+        has issues.";
+  }
+  identity operational-state-monitor-paused {
+    base operational-status;
+      description
+        "Service Assurance monitoring is paused.";
+  }
+  identity operational-state-monitor-initiated {
+    base operational-status;
+      description
+        "Service Assurance monitoring is being initiated.";
+  }
+  identity operational-state-monitor-failed {
+    base operational-status;
+      description
+        "Service Assurance monitoring encountered failure.";
+  }
+
+  typedef service-name {
+    type string {
+      pattern "[a-zA-Z0-9\\-_]+";
+    }
+  }
+
+  typedef l2-serv-encap-type {
+    type enumeration {
+      enum untagged;
+      enum dot1q;
+    }
+  }
+
+  typedef asn-ip-type {
+    type string {
+      tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+      pattern '(([0-9]+)|((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+        +'\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))):[0-9]+';
+    }
+  }
+
+  typedef as-no-type {
+    type union {
+      type uint32 {
+        tailf:info "<1-4294967295>;;Autonomous system number";
+        range "1..4294967295";
+      }
+      type string {
+        tailf:info "<1.0-XX.YY>;;Autonomous system number";
+        pattern '[0-9]+\.[0-9]+';
+      }
+    }
+  }
+
+  typedef bgp-rt-type {
+    type enumeration {
+      enum import {
+        description "For import";
+      }
+      enum export {
+        description "For export";
+      }
+      enum both {
+        description "For both import and export";
+      }
+    }
+    description "BGP route-target type. Import from BGP YANG";
+  }
+
+  grouping interface-name-grouping {
+    leaf if-type {
+      tailf:info "Interface Type";
+      description "Interface Type";
+      type enumeration {
+        enum Bundle-Ether;
+        enum Ethernet;
+        enum FiftyGigE;
+        enum FortyGigE;
+        enum FourHundredGigE;
+        enum GigabitEthernet;
+        enum HundredGigE;
+        enum TenGigE;
+        enum TwentyFiveGigE;
+        enum TwoHundredGigE;
+      }
+      mandatory true;
+    }
+
+    leaf if-id {
+      tailf:info "Interface Id";
+      description "Interface Id";
+      type string {
+        pattern '[0-9]+(/[0-9]+)*';
+      }
+      mandatory true;
+    }
+  }
+
+  grouping subinterface-rewrite-common-grouping {
+    container ingress {
+      tailf:info "Set the tag rewriting policy for this EFP";
+      description "Set the tag rewriting policy for this EFP";
+      presence "true";
+      choice tag-choice {
+        leaf pop {
+          tailf:info "Remove one or more tags";
+          description "Remove one or more tags";
+          when "../../../if-encap = 'dot1q'";
+          type enumeration {
+            enum "1" {
+              tailf:info "Remove outer tag only";
+            }
+            enum "2" {
+              tailf:info "Remove two outermost tags";
+            }
+          }
+          mandatory true;
+        }
+        leaf push {
+          tailf:info "Push one or more tags";
+          description "Push one or more tags";
+          type empty;
+          mandatory true;
+        }
+        leaf translate {
+          tailf:info "Replace tags with other tags";
+          description "Replace tags with other tags";
+          type enumeration {
+            enum "1-to-1" {
+              tailf:info "Replace the outermost tag with another tag";
+            }
+          }
+          mandatory true;
+        }
+      }
+
+      must "pop!='' or push or translate!=''" {
+        error-message "Please provide at least one of the tag-choices: pop, push or translate.";
+      }
+
+      leaf dot1q {
+        tailf:info "<1-4094> - Push a Dot1Q tag";
+        description "<1-4094> - Push a Dot1Q tag";
+        when "not(../pop)";
+        mandatory true;
+        type uint16 {
+          tailf:info "<1-4094>;;VLAN Id to push";
+          range "1..4094";
+        }
+      }
+
+      leaf mode {
+        type enumeration {
+          enum symmetric {
+          }
+        }
+        tailf:info "All rewrites must be symmetric";
+        description "All rewrites must be symmetric";
+      }
+    }
+  }
+
+  grouping sr-te-pref-path-grp {
+    container preferred-path {
+      tailf:info "Specify SR TE policy for preferred path";
+      description "Specify SR TE policy for preferred path";
+      presence true;
+      // TODO: Circuit Style, ETA: TSDN 5.0
+      // leaf policy-type {
+      //   type enumeration {
+      //     enum policy;
+      //     enum cs-policy;
+      //   }
+      //   default policy;
+      // }
+      leaf policy {
+        tailf:info "Name of SR TE policy.
+                    L2VPN association with SRv6-TE (SR Policy and ODN) is not supported for this release";
+        description "Name of SR TE policy.
+        	         L2VPN association with SRv6-TE (SR Policy and ODN) is not supported for this release";
+        type string {
+          length "1..max";
+        }
+        mandatory true;
+      }
+      leaf fallback {
+        tailf:info "Fallback option for preferred path";
+        description "Fallback option for preferred path";
+        type enumeration {
+          enum disable {
+            tailf:info "Disable fallback for preferred path";
+          }
+        }
+      }
+    }
+  }
+
+  grouping rsvp-tunnel-te-pref-path-grp {
+    container preferred-path {
+      tailf:info "Specify RSVP-TE policy for preferred path";
+      description "Specify RSVP-TE policy for preferred path";
+      presence true;
+      choice tunnel-te-id-source {
+        mandatory true;
+        leaf te-tunnel-id {
+          tailf:info "Specify tunnel number for preferred path <0-65535>";
+          description "Specify tunnel number for preferred path <0-65535>";
+          type uint16;
+        }
+        leaf ietf-te-service {
+          tailf:info "Specify IETF-TE service name from which tunnel-te id will be extracted";
+          description "Specify IETF-TE service name from which tunnel-te id will be extracted";
+          type string {
+            length "1..max";
+          }
+        }
+      }
+      leaf fallback {
+        tailf:info "Fallback option for preferred path";
+        description "Fallback option for preferred path";
+        type enumeration {
+          enum disable {
+            tailf:info "Disable fallback for preferred path";
+          }
+        }
+      }
+    }
+  }
+
+  grouping sr-te-grp {
+    choice type {
+      case odn {
+        container odn {
+          tailf:info "ODN SR policy.
+			          L2VPN association with SRv6-TE (SR Policy and ODN) is not supported for this release";
+          description "ODN SR policy.
+	                   L2VPN association with SRv6-TE (SR Policy and ODN) is not supported for this release";
+          presence true;
+
+          leaf route-policy {
+            tailf:info "Route policy definition";
+            description "Route policy definition";
+            type leafref {
+              path "/cisco-flat-L2vpn-fp:l2vpn-route-policy/cisco-flat-L2vpn-fp:name";
+            }
+            mandatory true;
+          }
+
+          container attach-point {
+            choice parent-rr-route-policy-choice {
+              leaf parent-rr-route-policy {
+                type string {
+                  length "1..max";
+                }
+                tailf:info "Parent RR Route Policy to apply local route policies";
+                description "Parent RR Route Policy to apply local route policies";
+              }
+            }
+          }
+
+          must "not(route-policy) or attach-point/parent-rr-route-policy" {
+            error-message "If route-policy is defined, parent-rr-route-policy-choice must be" +
+                          "selected";
+          }
+        }
+      }
+      case preferred-path {
+        uses sr-te-pref-path-grp;
+      }
+    }
+  }
+
+  grouping ethernet-y-1731-grouping {
+    container ethernet-service-oam {
+      presence "true";
+      description "Container for Ethernet service OAM.";
+      tailf:info "Container for Ethernet service OAM.";
+
+      must "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../pe]/lsa-utils:ned-id,'cisco-ios-cli-'))" {
+        error-message "Y.1731 is not supported for XE devices.";
+      }
+
+      leaf md-name {
+        description "Maintenance domain name";
+        tailf:info "Maintenance domain name";
+        type string;
+        mandatory true;
+      }
+      leaf md-level {
+        description "<0-7>;;Maintenance domain level";
+        tailf:info "<0-7>;;Maintenance domain level";
+        type uint8 {
+          range "0..7";
+        }
+        mandatory true;
+      }
+
+      list y-1731 {
+        description "List for y-1731.";
+        tailf:info "List for y-1731.";
+        key "maid";
+        leaf maid {
+          type string;
+          description "MA ID ";
+          tailf:info "MA ID ";
+        }
+        min-elements 1;
+        max-elements 1;
+        leaf mep-id {
+          type uint16 {
+            range "1..8191";
+          }
+          description "<1-8191>;;Local MEP ID";
+          tailf:info "<1-8191>;;Local MEP ID";
+          mandatory true;
+        }
+        leaf id-type {
+          tailf:info "SMAN ID Type";
+          description "SMAN ID Type";
+          default icc-based;
+          type enumeration {
+            enum icc-based;
+            enum number;
+          }
+          when "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../../../pe]/lsa-utils:ned-id,'cisco-ios-cli-'))";
+        }
+        container sman-id-allocation-data {
+          config false;
+          tailf:cdb-oper {
+            tailf:persistent true;
+          }
+          leaf icc-based-id {
+              tailf:info "icc-based SMAN ID allocated by resource-manager id-allocator";
+              description "icc-based SMAN ID allocated by resource-manager id-allocator";
+              type string;
+          }
+          leaf number-id {
+              tailf:info "number SMAN ID allocated by resource-manager id-allocator";
+              description "number SMAN ID allocated by resource-manager id-allocator";
+              type string;
+          }
+          tailf:info "SMAN ID resource allocations";
+          description "SMAN ID resource allocations";
+        }
+        leaf message-period {
+          description "Defines the interval between OAM messages. The message
+                       period is expressed in 3.3ms|10ms|100ms|1s|10s|1m|10m";
+          tailf:info "Defines the interval between OAM messages. The message
+                      period is expressed in 3.3ms|10ms|100ms|1s|10s|1m|10m";
+          type string {
+            pattern '(3\.3ms|10ms|100ms|1s|10s|1m|10m)';
+          }
+          default '1s';
+        }
+        list y-1731-profile  {
+          description "Flat L2VPN Y-1731 profile.";
+          tailf:info "Flat L2VPN Y-1731 profile.";
+
+          uses y-1731-profile-schedule;
+
+          key name;
+          leaf name {
+            type leafref {
+              path "/cisco-flat-L2vpn-fp:y-1731-profile/cisco-flat-L2vpn-fp:name";
+            }
+            description
+              "References Flat L2VPN y-1731-profile definition";
+            tailf:info
+              "References Flat L2VPN y-1731-profile definition";
+          }
+          // list statistic {
+          //   description
+          //     "Statistic";
+          //   tailf:info
+          //     "Statistic";
+          //   config false;
+          //   tailf:cdb-oper {
+          //     tailf:persistent true;
+          //   }
+          //   key type;
+          //   leaf type {
+          //     type string;
+          //   }
+          //   leaf statistic-id {
+          //     tailf:info "id allocated by resource-manager id-allocator";
+          //     description "id allocated by resource-manager id-allocator";
+          //     type uint32 {
+          //       range "1..2147483647";
+          //     }
+          //   }
+          // }
+        }
+      }
+    }
+  }
+
+  grouping p2p-grouping {
+    uses  interface-name-grouping;
+    leaf if-description {
+      tailf:info "Interface Description";
+      description "Interface Description";
+      type string;
+    }
+
+    leaf if-encap {
+      tailf:info "Interface Encapsulation";
+      description "Interface Encapsulation";
+      type l2-serv-encap-type;
+      mandatory true;
+    }
+
+    leaf vlan-id {
+      tailf:info "<1-4094> - VLAN Id";
+      description "<1-4094> - VLAN Id";
+      when "../if-encap = 'dot1q'";
+      type int32 {
+        range "1..4094";
+      }
+      mandatory true;
+    }
+
+    leaf sub-if-id {
+      tailf:info "Sub Interface Id";
+      description "Sub Interface Id";
+      type int32 ;
+    }
+
+    container rewrite {
+      tailf:info "Tag Rewrite";
+      description "Tag Rewrite";
+      presence "true";
+      when "../sub-if-id or ../vlan-id";
+      uses subinterface-rewrite-common-grouping;
+    }
+
+    leaf mtu {
+      tailf:info "<64-65535> - Set the MTU on an interface";
+      description "<64-65535> - Set the MTU on an interface";
+      type uint16 {
+        tailf:info "<64-65535>;;MTU size in bytes";
+        range "64..65535";
+      }
+    }
+
+    leaf xconnect-group-name {
+      tailf:info "XConnect Group name";
+      description "XConnect Group name";
+      mandatory true;
+      type string {
+        length "1..max";
+      }
+    }
+
+    leaf xconnect-encapsulation {
+      tailf:info "XConnect Encapsulation";
+      description "XConnect Encapsulation";
+      type enumeration {
+        enum mpls;
+      }
+      default mpls;
+    }
+
+    leaf p2p-name {
+      tailf:info "P2P Name";
+      description "P2P Name";
+      mandatory true;
+      type string {
+        length "1..max";
+      }
+    }
+
+    choice policy-type {
+      container sr-te {
+        tailf:info "SR-TE Policy";
+        description "SR-TE Policy";
+        presence "true";
+        uses sr-te-pref-path-grp;
+      }
+
+      container rsvp-te {
+        tailf:info "RSVP-TE Policy";
+        description "RSVP-TE Policy";
+        presence "true";
+        uses rsvp-tunnel-te-pref-path-grp;
+      }
+    }
+
+    leaf control-word {
+      tailf:info "Control Word";
+      description "Control Word";
+      type enumeration {
+        enum yes;
+        enum no;
+      }
+      default no;
+    }
+
+    leaf pw-class {
+      tailf:info "PW Class Name";
+      description "PW Class Name";
+      type string {
+        length "1..max";
+      }
+      mandatory true;
+    }
+
+    uses ethernet-y-1731-grouping;
+  }
+
+  grouping evpn-vpws-grouping {
+    uses interface-name-grouping;
+
+    leaf if-description {
+      tailf:info "Interface Description";
+      description "Interface Description";
+      type string;
+    }
+    leaf if-encap {
+      tailf:info "Interface Encapsulation";
+      description "Interface Encapsulation";
+      type l2-serv-encap-type;
+      mandatory true;
+    }
+
+    container multi-home {
+      presence "true";
+      leaf esi-value {
+        tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        description "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        type string {
+          tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+          pattern '[0-9a-f]{2}(\.[0-9a-f]{2}){8}';
+          pattern '00\.00\.00\.00\.00\.00\.00\.00\.00' {
+            modifier invert-match;
+          }
+        }
+        mandatory true;
+      }
+    }
+
+    leaf vlan-id {
+      tailf:info "<1-4094> - VLAN Id";
+      description "<1-4094> - VLAN Id";
+      when "../if-encap = 'dot1q'";
+      type int32 {
+        range "1..4094";
+      }
+      mandatory true;
+    }
+
+    leaf sub-if-id {
+      tailf:info "Sub Interface Id";
+      description "Sub Interface Id";
+      type int32;
+    }
+
+    container rewrite {
+      tailf:info "Tag Rewrite";
+      description "Tag Rewrite";
+      presence "true";
+      when "../sub-if-id or ../vlan-id";
+      uses subinterface-rewrite-common-grouping;
+    }
+
+    leaf mtu {
+      tailf:info "<64-65535> - Set the MTU on an interface";
+      description "<64-65535> - Set the MTU on an interface";
+      type uint16 {
+        tailf:info "<64-65535>;;MTU size in bytes";
+        range "64..65535";
+      }
+    }
+
+    leaf xconnect-group-name {
+      tailf:info "XConnect Group name";
+      description "XConnect Group name";
+      mandatory true;
+      type string {
+        length "1..max";
+      }
+    }
+
+    leaf p2p-name {
+      tailf:info "P2P name";
+      description "P2P name";
+      mandatory true;
+      type string {
+        length "1..max";
+      }
+    }
+
+
+    container sr-te {
+      tailf:info "SR-TE Policy";
+      description "SR-TE Policy";
+      presence "true";
+      uses sr-te-grp;
+    }
+
+    leaf pw-class {
+      tailf:info "PW Class Name";
+      description "PW Class Name";
+      when "../sr-te/preferred-path/policy";
+      type string {
+        length "1..max";
+      }
+      mandatory true;
+    }
+
+    uses ethernet-y-1731-grouping;
+
+    container srv6 {
+      presence  "true";
+      tailf:info "SRv6 Options";
+      description "SRv6 Options";
+      must "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../pe]/lsa-utils:ned-id,'cisco-ios-cli-'))" {
+        error-message "XE devices do not support SRv6.";
+      }
+      leaf locator {
+        tailf:info "SRv6 locator name (1-58 chars) at individual evi service level,
+                    leave it empty if evi or global level locator is used. Special characters are not allowed.";
+        description "SRv6 locator name (1-58 chars) at individual evi service level,
+                     leave it empty if evi or global level locator is used. Special characters are not allowed.";
+        type string {
+          pattern '[0-9a-zA-Z_]*';
+          length "1..58";
+        }
+      }
+    }
+  }
+
+  grouping evpn-multipoint-grouping {
+    uses interface-name-grouping;
+
+    leaf if-description {
+      tailf:info "Interface Description";
+      description "Interface Description";
+      type string;
+    }
+
+    leaf if-encap {
+      tailf:info "Interface Encapsulation";
+      description "Interface Encapsulation";
+      type l2-serv-encap-type;
+      mandatory true;
+    }
+
+    container multi-home {
+      presence "true";
+      leaf esi-value {
+        tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        description "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+        type string {
+          length "1..max";
+          tailf:info "<0-ff> 9-octet ESI value. 00.00.00.00.00.00.00.00.00 is not allowed";
+          pattern '[0-9a-f]{2}(\.[0-9a-f]{2}){8}';
+          pattern '00\.00\.00\.00\.00\.00\.00\.00\.00' {
+            modifier invert-match;
+          }
+        }
+        mandatory true;
+      }
+    }
+
+    leaf vlan-id {
+      tailf:info "<1-4094> - VLAN Id";
+      description "<1-4094> - VLAN Id";
+      when "../if-encap = 'dot1q'";
+      type int32 {
+        range "1..4094";
+      }
+      mandatory true;
+    }
+
+    leaf sub-if-id {
+      tailf:info "Sub Interface Id";
+      description "Sub Interface Id";
+      type int32;
+    }
+
+    container rewrite {
+      tailf:info "Tag Rewrite";
+      description "Tag Rewrite";
+      presence "true";
+      when "../sub-if-id or ../vlan-id";
+      uses subinterface-rewrite-common-grouping;
+    }
+
+    leaf mtu {
+      tailf:info "<64-65535> - Set the MTU on an interface";
+      description "<64-65535> - Set the MTU on an interface";
+      type uint16 {
+        tailf:info "<64-65535>;;MTU size in bytes";
+        range "64..65535";
+      }
+    }
+
+    leaf leaf {
+      when "../../topology != 'E-LAN'";
+      tailf:info "Leaf Site";
+      description "Leaf Site";
+      type enumeration {
+        enum 'single-homing';
+        enum 'multi-homing';
+      }
+    }
+
+    container advertise-mac {
+      tailf:info "Configure locally-learned MAC advertisement";
+      description "Configure locally-learned MAC advertisement";
+
+      leaf enable {
+        tailf:info "Enable locally-learned MAC advertisement";
+        description "Enable locally-learned MAC advertisement";
+        type boolean;
+        default "true";
+      }
+    }
+
+    leaf control-word-disable {
+      tailf:info "Disabling control-word";
+      description "Disabling control-word";
+      type boolean;
+      default "true";
+    }
+
+    list vpn-target {
+      when "../../topology = 'CUSTOM'";
+      key rt-value;
+      tailf:info "Route Targets";
+      description "Route Targets";
+      leaf rt-type {
+        tailf:info "Route-Target Type";
+        description "Route-Target Type";
+        type bgp-rt-type;
+        mandatory true;
+      }
+      leaf rt-value {
+        tailf:info "Route-Target Value";
+        description "Route-Target Value";
+        type asn-ip-type;
+        tailf:cli-allow-range;
+      }
+    }
+
+    container split-horizon {
+      when "../leaf";
+      tailf:info "Configure split horizon group";
+      description "Configure split horizon group";
+      leaf enable {
+        tailf:info "Enable split horizon";
+        description "Enable split horizon";
+        type boolean;
+        default "true";
+      }
+    }
+
+    container sr-te {
+      tailf:info "SR-TE Policy";
+      description "SR-TE Policy";
+      presence "true";
+
+      choice type {
+        case odn {
+          container odn {
+            tailf:info "ODN SR policy";
+            description "ODN SR policy";
+            presence true;
+
+            leaf route-policy {
+              tailf:info "Route policy definition";
+              description "Route policy definition";
+              type leafref {
+                path "/cisco-flat-L2vpn-fp:l2vpn-route-policy/cisco-flat-L2vpn-fp:name";
+              }
+              mandatory true;
+            }
+            choice attach-or-not {
+              container attach-point {
+                choice parent-rr-route-policy-choice {
+                  leaf parent-rr-route-policy {
+                    type string {
+                      length "1..max";
+                    }
+                    tailf:info "Parent RR Route Policy to apply local route policies";
+                    description "Parent RR Route Policy to apply local route policies";
+                  }
+                }
+              }
+              leaf route-policy-type {
+                type enumeration {
+                  enum "import";
+                  enum "export";
+                  enum "both";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  grouping status-timestamp {
+    leaf status {
+      type identityref {
+        base operational-status;
+      }
+      description
+        "Operations status";
+      tailf:info "Operations status";
+    }
+    leaf timestamp {
+      type yang:date-and-time;
+      description
+        "Indicates the actual date and time when
+         the service actually started (UP) or
+         stopped (DOWN).";
+      tailf:info "Indicates the actual date and time when
+         the service actually started (UP) or
+         stopped (DOWN).";
+    }
+    description
+      "This grouping defines some operational
+       parameters for the service.";
+  }
+
+  grouping service-status {
+    container status {
+      container oper-status {
+        config false;
+        uses status-timestamp;
+        description
+          "Operational service status.";
+        tailf:info "Operational service status.";
+      }
+      description
+        "Service status.";
+      tailf:info "Service status.";
+    }
+    description
+      "Service status grouping. Reused in
+       vpn-node and vpn-network-access.";
+  }
+
+  grouping y-1731-profile-schedule {
+    container schedule {
+      description
+          "Schedule Parameters";
+      tailf:info
+          "Schedule Parameters";
+
+      leaf interval {
+          description
+            "<1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90>;;
+              Interval between operations expressed in minutes. Must be a factor of 1440.
+              Only applicable for Cisco XR devices.";
+          tailf:info
+            "<1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90>;;
+              Interval between operations expressed in minutes. Must be a factor of 1440.
+              Only applicable for Cisco XR devices.";
+          type uint8 {
+            range "1|2|3|4|5|6|8|9|10|12|15|16|18|20|24|30|32|36|40|45|48|60|80|90";
+          }
+      }
+      leaf duration {
+        when "/cisco-flat-L2vpn-fp:y-1731-profile[name=current()/../../name]/probe/measurement-interval != 'once'";
+
+        description
+          "<1-1440>;;Duration of operations expressed in minutes.
+            The 'forever' option will try to schedule infinitely if supported; otherwise,
+            maximum number of allowed minutes will be used";
+        tailf:info
+          "<1-1440>;;Duration of operations expressed in minutes.
+            The 'forever' option will try to schedule infinitely if supported; otherwise,
+            maximum number of allowed minutes will be used";
+        type union {
+          type uint16 {
+            range "1..1440";
+          }
+          type enumeration {
+            enum forever;
+          }
+        }
+      }
+    }
+  }
+
+  list y-1731-profile {
+    description "Flat L2VPN Y-1731 profile.
+                 Can be standard profile or customized profile.";
+    tailf:info "Flat L2VPN Y-1731 profile.
+                Can be standard profile or customized profile.";
+
+    uses y-1731-profile-schedule {
+      refine schedule/interval {
+        default 60;
+      }
+      refine schedule/duration {
+        default 60;
+      }
+    }
+
+    key name;
+    leaf name {
+      type string;
+      description
+        "Unique name for y-1731-profile";
+      tailf:info
+        "Unique name for y-1731-profile";
+    }
+    leaf type {
+      type enumeration {
+        enum 'delay';
+        enum 'loss';
+        enum 'synthetic-loss';
+      }
+      mandatory true;
+      description
+        "Performance monitor types";
+      tailf:info "Performance monitor types";
+    }
+    container probe {
+      description
+        "SLA Profile Probe. Only applicable to Cisco XR devices.";
+      tailf:info
+        "SLA Profile Probe. Only applicable to Cisco XR devices.";
+
+      leaf type {
+        description "Probe Type";
+        tailf:info  "Probe Type";
+        type enumeration {
+          enum burst;
+          enum packet;
+        }
+        default burst;
+
+        must ". = 'burst' or (. = 'packet' and ../../type != 'loss')" {
+          error-message "probe type cannot be set to packet for loss profile";
+          tailf:dependency "../../type";
+        }
+      }
+      container burst {
+        when "../type = 'burst'";
+
+        description "Burst Parameters";
+        tailf:info  "Burst Parameters";
+
+        leaf message-count {
+          description
+            "<2-1200>;;Defines number of OAM messages sent per interval";
+          tailf:info
+            "<2-1200>;;Defines number of OAM messages sent per interval";
+          type uint16 {
+            range "2..1200";
+          }
+          default 60;
+        }
+        leaf message-period {
+          type uint32 {
+            range "50..30000";
+          }
+          default 1000;
+          description
+            "<50-30000>;;Defines the interval between OAM messages. The message
+              period is expressed in milliseconds";
+          tailf:info  "<50-30000>;;Defines the interval between OAM messages. The message
+              period is expressed in milliseconds";
+        }
+        must "(message-period * message-count) <= (../measurement-interval * 1000)" {
+          error-message "The measurement time (message-period * message-count / 1000)"
+                        + " must be less than or equal to the measurement-interval time.";
+        }
+      }
+      leaf measurement-interval {
+        type union {
+          type uint32 {
+            range "1..3600";
+          }
+          type enumeration {
+            enum once;
+          }
+        }
+        default 60;
+        description
+          "<1-3600>;;Specifies the measurement interval for statistics. The
+            measurement interval is expressed in seconds";
+        tailf:info "<1-3600>;;Specifies the measurement interval for statistics. The
+            measurement interval is expressed in seconds";
+        must "(. = 'once' and ../type = 'packet') or (. != 'once')" {
+          error-message "measurement-interval 'once' is only supported with probe type 'packet'";
+          tailf:dependency "../type";
+        }
+        must "not(../../type = 'synthetic-loss' and . = 'once')" {
+          error-message "measurement-interval 'once' not supported with synthetic-loss profile type";
+          tailf:dependency "../../type";
+        }
+      }
+      leaf frame-size {
+        when "../../type != 'loss'";
+        type uint16 {
+          range "1..9000";
+        }
+        default 1000;
+        description
+          "<1-9000>;;Frame size";
+        tailf:info "<1-9000>;;Frame size";
+      }
+      leaf priority {
+        description "<0-7>;;Specify the priority to use when sending OAM messages";
+        tailf:info "<0-7>;;Specify the priority to use when sending OAM messages";
+        type uint8 {
+          range "0..7";
+        }
+      }
+    }
+    container delay-params {
+      when "../type = 'delay'";
+      description
+        "Delay Parameters";
+      tailf:info
+        "Delay Parameters";
+      list statistic {
+        description
+          "Statistic";
+        tailf:info
+          "Statistic";
+        key type;
+        leaf type {
+          description
+            "Statistics Type. Jitter type only applicable for Cisco XR devices.";
+          tailf:info
+            "Statistics Type. Jitter type only applicable for Cisco XR devices.";
+          type enumeration {
+            enum 'delay-two-way';
+            enum 'delay-sd';
+            enum 'delay-ds';
+            enum 'jitter-two-way';
+            enum 'jitter-sd';
+            enum 'jitter-ds';
+          }
+        }
+        // leaf cos {
+        //   description
+        //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+        //   tailf:info
+        //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+        //   type uint8 {
+        //     range "0..7";
+        //   }
+        //   default 0;
+        // }
+      }
+      leaf version {
+        description
+          "Delay Version";
+        tailf:info
+          "Delay Version";
+        type enumeration {
+          enum 0;
+          enum 1;
+        }
+        default 1;
+      }
+      // leaf delay-type {
+      //   description
+      //     "Delay type. Only applicable for Cisco XE devices.";
+      //   tailf:info
+      //     "Delay type. Only applicable for Cisco XE devices.";
+      //   type enumeration {
+      //     enum 'delay';
+      //     enum 'delay-variation';
+      //     enum 'both';
+      //   }
+      //   default "delay";
+      // }
+    }
+    container loss-params {
+      when "../type = 'loss' or ../type = 'synthetic-loss'";
+      description
+        "Loss Parameters";
+      tailf:info
+        "Loss Parameters";
+      list statistic {
+        description
+          "Statistic";
+        tailf:info
+          "Statistic";
+        key type;
+        leaf type {
+          description
+            "Statistics Type";
+          tailf:info
+            "Statistics Type";
+          type enumeration {
+            enum 'loss-sd';
+            enum 'loss-ds';
+          }
+        }
+        // leaf cos {
+        //   description
+        //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+        //   tailf:info
+        //     "<0..7>;;Class of service. Only applicable for Cisco XE devices.";
+        //   type uint8 {
+        //     range "0..7";
+        //   }
+        //   default 0;
+        // }
+      }
+    }
+    container bucket-details {
+      description
+        "Configuration for buckets in which statistics are collected. Only applicable for Cisco XR devices.";
+      leaf bucket-size {
+        description
+          "<1-100>;;Specifies the size of each bucket.
+           The number of probes that each buckets may contain. Only applicable for Cisco XR devices.";
+        tailf:info
+          "<1-100>;;Specifies the size of each bucket.
+           The number of probes that each buckets may contain. Only applicable for Cisco XR devices.";
+        type uint8 {
+          range "1..100";
+        }
+        default 1;
+      }
+      leaf bucket-archive {
+        description "<1-100>;;Number of buckets to store. Only applicable for Cisco XR devices.";
+        tailf:info "<1-100>;;Number of buckets to store. Only applicable for Cisco XR devices.";
+        type uint8 {
+          range "1..100";
+        }
+        default 100;
+      }
+    }
+  }
+  // Global L2VPN Route Policy contains the RP for all colors & rd filtering
+  list l2vpn-route-policy {
+    tailf:info "Route policy definition";
+    description "Route policy definition";
+    tailf:meta-data "TSDN-UI";
+    key name;
+    leaf name {
+       tailf:info "Route-Policy name";
+       description "Route-Policy name";
+       type service-name;
+       tailf:cli-allow-range;
+    }
+    list color {
+      tailf:info "SR policy color";
+      description "SR policy color";
+      key id;
+      leaf id {
+        tailf:info "<1-4294967295> - SR policy color";
+        description "<1-4294967295> - SR policy color";
+        type uint32 {
+          range  "1..4294967295";
+        }
+        tailf:cli-allow-range;
+      }
+
+      container ipv4 {
+        tailf:info "IPv4 ODN SR";
+        description "IPv4 ODN SR";
+        presence "true";
+        leaf-list rd {
+          tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+          description "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+          type asn-ip-type;
+        }
+      }
+
+      container ipv6 {
+        tailf:info "IPv6 ODN SR";
+        description "IPv6 ODN SR";
+        presence "true";
+        leaf-list rd {
+          tailf:info "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+          description "ASN:nn or IPV4-address:nn,VPN Route Distinguisher";
+          type asn-ip-type;
+        }
+      }
+
+      container evpn-route-type {
+        tailf:info "EVPN Route Type";
+        description "EVPN Route Type";
+        presence "true";
+        leaf-list route-type {
+          tailf:info "<0-11> - EVPN Route Type";
+          description "<0-11> - EVPN Route Type";
+          type uint8 {
+            range  "0..11";
+          }
+        }
+      }
+    }
+  }
+
+  list flat-L2vpn {
+    tailf:info "Flat L2VPN Configuration";
+    description "Flat L2VPN Configuration";
+    uses ncs:service-data;
+    ncs:servicepoint "flat-L2vpn-external";
+
+    tailf:validate "flat-L2vpn-validation" {
+      tailf:dependency ".";
+    }
+
+    key "name";
+    leaf name {
+      tailf:info "Unique Service Name for Flat-L2vpn";
+      description "Unique Service Name for Flat-L2vpn";
+      type service-name;
+      tailf:cli-allow-range;
+    }
+
+    leaf service-type {
+      tailf:info "L2VPN Service Type";
+      description "L2VPN Service Type";
+      type enumeration {
+        enum p2p;
+        enum evpn-vpws;
+        enum evpn-multipoint;
+      }
+      mandatory true;
+    }
+
+    uses ct-hook:template-hook;
+    uses tsdn-core-fp-common:service-assurance-grouping {
+      when "/tsdn-core-fp-common:enable-service-assurance = 'true'";
+    }
+    uses service-status;
+
+    container flat-L2vpn-p2p {
+      tailf:info "P2P Static Type";
+      description "P2P Static Type";
+      when "../service-type = 'p2p'";
+
+      leaf pw-id {
+        tailf:info "<1-4294967295>;;Pseudowire Id";
+        description "<1-4294967295>;;Pseudowire Id";
+        type uint32 {
+          range  "1..4294967295";
+        }
+        mandatory true;
+      }
+
+      container local-site {
+        tailf:info "Local Site";
+        description "Local Site";
+        leaf pe {
+          tailf:info "Local Device";
+          description "Local Device";
+          type leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          mandatory true;
+        }
+
+        uses ct-hook:template-hook;
+        uses p2p-grouping;
+        must "((if-type!='Bundle-Ether') or " +
+              "((if-type='Bundle-Ether') and (string(number(if-id))!='NaN'))) or " +
+              " (../../service-type != 'p2p')" {
+          error-message "Id must be a number";
+        }
+        must "((if-type!='Bundle-Ether') or (if-type='Bundle-Ether')
+                    and (string(number(if-id))>'0')
+                    and (string(number(if-id))<'65536'))
+                    or (../../service-type != 'p2p')" {
+          error-message "if-id must be in the range 1-65535";
+        }
+
+        leaf xconnect-local-ip {
+          tailf:info "<A.B.C.D or X:X::X> - XConnect Local IP Address";
+          description "<A.B.C.D or X:X::X> - XConnect Local IP Address";
+          type inet:ip-address;
+        }
+
+        leaf xconnect-remote-ip {
+          tailf:info "<A.B.C.D or X:X::X> - XConnect Remote IP Address";
+          description "<A.B.C.D or X:X::X> - XConnect Remote IP Address";
+          type inet:ip-address;
+        }
+
+        leaf mpls-local-label {
+          tailf:info "<16-1048575> - MPLS Local Label";
+          description "<16-1048575> - MPLS Local Label";
+          type uint32 {
+            range "16..1048575";
+          }
+        }
+        leaf mpls-remote-label {
+          tailf:info "<16-1048575> - MPLS Remote Label";
+          description "<16-1048575> - MPLS Remote Label";
+          type uint32 {
+            range "16..1048575";
+          }
+        }
+        uses site-actions;
+      }
+
+      container remote-site {
+        tailf:info "Remote Site";
+        description "Remote Site";
+        presence "true";
+        leaf pe {
+          tailf:info "Remote Device";
+          description "Remote Device";
+          type leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          mandatory true;
+        }
+        must "pe != ../local-site/pe" {
+          error-message "Local and Remote PEs  must be different";
+        }
+
+        uses ct-hook:template-hook;
+        uses p2p-grouping;
+        must "((if-type!='Bundle-Ether') or " +
+           "((if-type='Bundle-Ether') and (string(number(if-id))!='NaN')))" {
+          error-message "Id must be a number";
+        }
+        must "((if-type!='Bundle-Ether') or (if-type='Bundle-Ether')
+                    and (string(number(if-id))>'0')
+                    and (string(number(if-id))<'65536'))" {
+          error-message "if-id must be in the range 1-65535";
+        }
+        uses site-actions;
+      }
+
+      must "(local-site/sr-te and remote-site/sr-te) or " +
+           "(local-site/rsvp-te and remote-site/rsvp-te) or " +
+           "(not(local-site/sr-te) and not(local-site/rsvp-te)) or " +
+           "(not(remote-site/sr-te) and not(remote-site/rsvp-te))"{
+             error-message "local-site and remote-site must use the same policy";
+           }
+
+      must "(not(local-site/ethernet-service-oam) and not(remote-site/ethernet-service-oam)) or " +
+           "(local-site/ethernet-service-oam/y-1731/id-type = remote-site/ethernet-service-oam/y-1731/id-type) or " +
+           "(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/local-site/pe]/lsa-utils:ned-id,'cisco-ios-cli-')) or " +
+           "(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/remote-site/pe]/lsa-utils:ned-id,'cisco-ios-cli-'))" {
+        error-message "y-1731 (icc-based|number) type must be same for each site";
+      }
+      must "(local-site/ethernet-service-oam and remote-site/ethernet-service-oam) or " +
+           "(not(local-site/ethernet-service-oam) and not(remote-site/ethernet-service-oam))"{
+        error-message "Unable to enable ethernet-service-oam for a single site. " +
+                      "It must either be enabled or disabled for both remote and local sites.";
+      }
+      must "not(local-site/ethernet-service-oam/md-name and remote-site/ethernet-service-oam/md-name) or " +
+           "local-site/ethernet-service-oam/md-name = remote-site/ethernet-service-oam/md-name" {
+        error-message "md-name must be same on both sites";
+        tailf:dependency "local-site/ethernet-service-oam/md-name";
+        tailf:dependency "remote-site/ethernet-service-oam/md-name";
+      }
+      must "not(local-site/ethernet-service-oam/md-level and remote-site/ethernet-service-oam/md-level) or " +
+           "local-site/ethernet-service-oam/md-level = remote-site/ethernet-service-oam/md-level" {
+        error-message "md-level must be same on both sites";
+        tailf:dependency "local-site/ethernet-service-oam/md-level";
+        tailf:dependency "remote-site/ethernet-service-oam/md-level";
+      }
+      must "not(local-site/ethernet-service-oam/y-1731/maid and remote-site/ethernet-service-oam/y-1731/maid) or " +
+           "local-site/ethernet-service-oam/y-1731/maid = remote-site/ethernet-service-oam/y-1731/maid" {
+        error-message "y-1731 maid must be same for on both site";
+        tailf:dependency "local-site/ethernet-service-oam/y-1731/maid";
+        tailf:dependency "remote-site/ethernet-service-oam/y-1731/maid";
+      }
+      must "not(local-site/ethernet-service-oam/y-1731/mep-id and remote-site/ethernet-service-oam/y-1731/mep-id) or " +
+           "local-site/ethernet-service-oam/y-1731/mep-id != remote-site/ethernet-service-oam/y-1731/mep-id" {
+        error-message "y-1731 mep-id must be unique for each site";
+        tailf:dependency "local-site/ethernet-service-oam/y-1731/mep-id";
+        tailf:dependency "remote-site/ethernet-service-oam/y-1731/mep-id";
+      }
+    }
+
+    container flat-L2vpn-evpn-vpws {
+      tailf:info "P2P EVPN VPWS Type";
+      description "P2P EVPN VPWS Type";
+      when "../service-type = 'evpn-vpws'";
+
+      leaf evi-id {
+        tailf:info "<1-65534> - EVI Id";
+        description "<1-65534> - EVI Id";
+        type uint16 {
+          tailf:info "<1-65534>;;Ethernet VPN ID to set";
+          range "1..65534";
+        }
+        mandatory true;
+      }
+      container local-site {
+        tailf:info "Local Site";
+        description "Local Site";
+        leaf pe {
+          tailf:info "Local Site Device";
+          description "Local Site Device";
+          type leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          mandatory true;
+        }
+
+        uses ct-hook:template-hook;
+        uses evpn-vpws-grouping;
+        must "((if-type!='Bundle-Ether') or " +
+              "((if-type='Bundle-Ether') and (string(number(if-id))!='NaN'))) or " +
+              "(../../service-type != 'evpn-vpws')" {
+          error-message "Id must be a number";
+        }
+        must "((if-type!='Bundle-Ether') or (if-type='Bundle-Ether')
+                    and (string(number(if-id))>'0')
+                    and (string(number(if-id))<'65536'))
+                    or (../../service-type != 'evpn-vpws')" {
+          error-message "if-id must be in the range 1-65535";
+        }
+
+        uses site-actions;
+
+        leaf evi-source {
+          tailf:info "<1-16777215> - Local ACI Id";
+          description "<1-16777215> - Local ACI Id";
+          type uint32 {
+            tailf:info "<1-16777215>;;Source ac-id (hex or decimal format)";
+            range "1..16777215";
+          }
+          mandatory true;
+        }
+
+        leaf evi-target {
+          tailf:info "<1-16777215> - Remote ACI Id";
+          description "<1-16777215> - Remote ACI Id";
+          type uint32 {
+            tailf:info "<1-16777215>;;Remote ac-id (hex or decimal format)";
+            range "1..16777215";
+          }
+          mandatory true;
+        }
+
+        must "(sr-te/preferred-path/policy and pw-class) or not(sr-te/preferred-path)" {
+          error-message "Please select sr-te and pw-class";
+        }
+      }
+
+      container remote-site {
+        tailf:info "Remote Site";
+        description "Remote Site";
+        presence "true";
+        leaf pe {
+          tailf:info "Remote Site Device";
+          description "Remote Site Device";
+          type leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          mandatory true;
+        }
+
+        must "pe != ../local-site/pe" {
+            error-message "Local and Remote PEs must be different";
+        }
+
+        uses ct-hook:template-hook;
+        uses evpn-vpws-grouping;
+        must "((if-type!='Bundle-Ether') or " +
+           "((if-type='Bundle-Ether') and (string(number(if-id))!='NaN')))" {
+          error-message "Id must be a number";
+        }
+        must "((if-type!='Bundle-Ether') or (if-type='Bundle-Ether')
+                    and (string(number(if-id))>'0')
+                    and (string(number(if-id))<'65536'))" {
+          error-message "if-id must be in the range 1-65535";
+        }
+
+        uses site-actions;
+
+        must "(sr-te/preferred-path/policy and pw-class) or not(sr-te/preferred-path)" {
+          error-message "Please select sr-te and pw-class";
+        }
+      }
+
+      // must "((not(local-site/sr-te/preferred-path) or local-site/sr-te/preferred-path/policy-type = 'policy') and " +
+      //      "(not(remote-site/sr-te/preferred-path) or remote-site/sr-te/preferred-path/policy-type = 'policy')) or " +
+      //      "((local-site/sr-te/preferred-path/policy = remote-site/sr-te/preferred-path/policy) and " +
+      //      "(local-site/sr-te/preferred-path/policy-type = remote-site/sr-te/preferred-path/policy-type))" {
+      //   error-message "The policy-type must be the same for both the vpn-nodes. If the policy-type is cs-policy, the " +
+      //                 "policy must also be the same for both the vpn-nodes.";
+      // }
+
+      must "(not(local-site/ethernet-service-oam) and not(remote-site/ethernet-service-oam)) or " +
+           "(local-site/ethernet-service-oam/y-1731/id-type = remote-site/ethernet-service-oam/y-1731/id-type) or " +
+           "(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/local-site/pe]/lsa-utils:ned-id,'cisco-ios-cli-')) or " +
+           "(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/remote-site/pe]/lsa-utils:ned-id,'cisco-ios-cli-'))" {
+        error-message "y-1731 (icc-based|number) type must be same for each site";
+      }
+
+      must "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                  [lsa-utils:name=current()/local-site/pe]/lsa-utils:ned-id,
+                  'cisco-ios-cli-')) and not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                  [lsa-utils:name=current()/remote-site/pe]/lsa-utils:ned-id,
+                  'cisco-ios-cli-'))"{
+        error-message "Service Type EVPN-VPWS not supported on IOSXE devices";
+      }
+      must "(local-site/ethernet-service-oam and remote-site/ethernet-service-oam) or " +
+           "(not(local-site/ethernet-service-oam) and not(remote-site/ethernet-service-oam))"{
+        error-message "Unable to enable ethernet-service-oam for a single site. " +
+                      "It must either be enabled or disabled for both remote and local sites.";
+      }
+      must "not(local-site/ethernet-service-oam/md-name and remote-site/ethernet-service-oam/md-name) or " +
+           "local-site/ethernet-service-oam/md-name = remote-site/ethernet-service-oam/md-name" {
+        error-message "md-name must be same on both sites";
+        tailf:dependency "local-site/ethernet-service-oam/md-name";
+        tailf:dependency "remote-site/ethernet-service-oam/md-name";
+      }
+      must "not(local-site/ethernet-service-oam/md-level and remote-site/ethernet-service-oam/md-level) or " +
+           "local-site/ethernet-service-oam/md-level = remote-site/ethernet-service-oam/md-level" {
+        error-message "md-level must be same on both sites";
+        tailf:dependency "local-site/ethernet-service-oam/md-level";
+        tailf:dependency "remote-site/ethernet-service-oam/md-level";
+      }
+      must "not(local-site/ethernet-service-oam/y-1731/maid and remote-site/ethernet-service-oam/y-1731/maid) or " +
+           "local-site/ethernet-service-oam/y-1731/maid = remote-site/ethernet-service-oam/y-1731/maid" {
+        error-message "y-1731 maid must be same for on both site";
+        tailf:dependency "local-site/ethernet-service-oam/y-1731/maid";
+        tailf:dependency "remote-site/ethernet-service-oam/y-1731/maid";
+      }
+      must "not(local-site/ethernet-service-oam/y-1731/mep-id and remote-site/ethernet-service-oam/y-1731/mep-id) or " +
+           "local-site/ethernet-service-oam/y-1731/mep-id != remote-site/ethernet-service-oam/y-1731/mep-id" {
+        error-message "y-1731 mep-id must be unique for each site";
+        tailf:dependency "local-site/ethernet-service-oam/y-1731/mep-id";
+        tailf:dependency "remote-site/ethernet-service-oam/y-1731/mep-id";
+      }
+    }
+
+    container flat-L2vpn-evpn-multipoint {
+      tailf:info "P2P EVPN VPWS Type";
+      description "P2P EVPN VPWS Type";
+      when "../service-type = 'evpn-multipoint'";
+
+      leaf evi-id {
+        tailf:info "<1-65534> - EVI Id";
+        description "<1-65534> - EVI Id";
+        type uint16 {
+          tailf:info "<1-65534>;;Ethernet VPN ID to set";
+          range "1..65534";
+        }
+        mandatory true;
+      }
+
+      leaf topology {
+        tailf:info "L2VPN Topology";
+        description "L2VPN Topology";
+        type enumeration {
+          enum E-LAN;
+          enum E-TREE;
+          enum CUSTOM;
+        }
+        default E-LAN;
+      }
+
+      leaf bridge-group {
+        tailf:info "Bridge group";
+        description "Bridge group";
+        type service-name {
+          length "1..17";
+        }
+        mandatory true;
+      }
+
+      container vpn-target {
+        presence true;
+        when "../topology != 'CUSTOM'";
+        tailf:info "VPN Target";
+        description "VPN Target";
+
+        leaf root-rt-value {
+          tailf:info "Root Route-Target Value";
+          description "Root Route-Target Value";
+          type asn-ip-type;
+          mandatory true;
+        }
+
+        leaf leaf-rt-value {
+          when "../../topology = 'E-TREE'";
+          tailf:info "Leaf Route-Target Value";
+          description "Leaf Route-Target Value";
+          type asn-ip-type;
+          mandatory true;
+        }
+      }
+
+      list site {
+        tailf:info "L2VPN Site";
+        description "L2VPN Site";
+        key "site-name";
+        unique "pe if-type if-id";
+        min-elements 1;
+
+        leaf site-name {
+          tailf:info "Site name";
+          description "Site name";
+          type string;
+          tailf:cli-allow-range;
+        }
+
+        leaf pe {
+          tailf:info "Site Device";
+          description "Site Device";
+          type leafref {
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+          mandatory true;
+        }
+
+        uses evpn-multipoint-grouping;
+        uses ct-hook:template-hook;
+        uses site-actions;
+      }
+    }
+
+    container action {
+      tailf:action self-test {
+        tailf:actionpoint flat-L2vpn-cfs-self-test-actionpoint;
+        input {
+        }
+        output {
+          leaf status {
+            type string;
+          }
+          leaf message {
+            type string;
+          }
+        }
+      }
+    }
+  }
+
+  grouping site-actions {
+    container action {
+      tailf:action error-recovery {
+        tailf:actionpoint cisco-flat-L2vpn-fp-site-error-recovery;
+        tailf:info "Action to recover a service during create/update/delete from a transient failures
+                    like device connection issues once the device is reachable again.
+                    For create/update failures, this action issues a sync on the device
+                    & redeploys the service with reconcile option.
+                    For delete failures, this action issues a sync on the device &
+                    redeploys zombie services.";
+        description "Action to recover a service during create/update/delete from a transient failures
+                    like device connection issues once the device is reachable again.
+                    For create/update failures, this action issues a sync on the device
+                    & redeploys the service with reconcile option.
+                    For delete failures, this action issues a sync on the device &
+                    redeploys zombie services.";
+        input {
+          leaf sync-direction {
+            tailf:info "sync device with sync-from or sync-to";
+            description "sync device with sync-from or sync-to";
+            type enumeration {
+              enum sync-from;
+              enum sync-to;
+            }
+            mandatory true;
+          }
+        }
+        output {
+          leaf success {
+            type boolean;
+            mandatory true;
+          }
+          leaf detail {
+            type string;
+          }
+        }
+        tailf:confirm-text "########################\n" +
+          "#        Warning       #\n" +
+          "########################\n" +
+          "You are about to recover a T-SDN service.\n" +
+          "This will issue a sync on the device.\n" +
+          "Are you sure you want to proceed?" {
+            tailf:confirm-default false;
+        }
+      }
+    }
+  }
+
+  list flat-L2vpn-plan {
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+    key "name";
+    leaf name {
+      type string;
+    }
+    uses ncs:nano-plan-data;
+    uses ncs:nano-plan-history;
+  }
+
+  container cfp-configurations {
+
+    list dynamic-device-mapping {
+      tailf:info "Dynamic Device Mapping";
+      description "Dynamic Device Mapping";
+      key "ned-id";
+      leaf ned-id {
+        tailf:info "Device NED ID, eg ned:netconf";
+        description "Device NED ID, eg ned:netconf";
+        type string;
+        tailf:cli-allow-range;
+      }
+      leaf python-impl-class-name {
+        tailf:info "Device Python implementation class, eg module.class";
+        description "Device Python implementation class, eg module.class";
+        type string;
+        mandatory true;
+      }
+    }
+
+    leaf l2vpn-validation-enabled {
+      tailf:info "If set to true, following validations are done for l2vpn service:
+                  1. All the site interfaces are available on the site.";
+      description "If set to true, following validations are done for l2vpn service:
+                  1. All the site interfaces are available on the site.";
+      type boolean;
+      default true;
+    }
+
+    leaf iosxr-default-ned-id {
+      tailf:info "NED ID of the default IOSXR Device.";
+      description "NED ID of the default IOSXR Device.";
+      tailf:hidden tsdn;
+      type string;
+      default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+    }
+  }
+
+  // these actions are to drive external plan in case of stacked-service
+  container actions {
+    tailf:hidden full;
+    tailf:action l2vpn-internal-plan-change-handler {
+      tailf:actionpoint l2vpn-internal-plan-change-handler;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      }
+    }
+  }
+
+  container flat-L2vpn-actions {
+
+    tailf:action update-internal-cfp-configurations {
+      tailf:hidden tsdn;
+      tailf:actionpoint update-l2vpn-internal-cfp-configurations;
+      tailf:info "Copy over changes in external cfp-configurations to internal cfp-configurations";
+      description "Copy over changes in external cfp-configurations to internal cfp-configurations";
+      input {
+      }
+      output {
+      }
+    }
+
+    tailf:action cleanup {
+      tailf:actionpoint cisco-flat-L2vpn-fp-cleanup;
+      tailf:info "Clean up L2vpn service configuration and operational data";
+      description "Clean up L2vpn service configuration and operational data";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf site {
+          tailf:info "Clean up L2vpn service configuration for given site only";
+          description "Clean up L2vpn service configuration for given site only";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+          }
+        }
+        leaf no-networking {
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+      tailf:confirm-text "########################\n" +
+        "#        Warning       #\n" +
+        "########################\n" +
+        "You are about to forcefully cleanup a T-SDN service.\n" +
+        "This will affect the deploying service and leave network device(s) " +
+        " & NSO out-of-sync (for no-networking=true).\n" +
+        "Are you sure you want to proceed?" {
+          tailf:confirm-default false;
+      }
+    }
+
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-flat-L2vpn-fp-error-recovery;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+        choice site-type {
+          leaf remote-site-only {
+            tailf:info "Clean up L2vpn service configuration for given remote site only";
+            description "Clean up L2vpn service configuration for given remote site only";
+            type leafref {
+              tailf:no-leafref-check;
+              path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+            }
+          }
+          leaf local-site-only {
+            tailf:info "Clean up L2vpn service configuration for given local site only";
+            description "Clean up L2vpn service configuration for given local site only";
+            type leafref {
+              tailf:no-leafref-check;
+              path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+            }
+          }
+          leaf site-only {
+            tailf:info "Clean up L2vpn service configuration for given site only";
+            description "Clean up L2vpn service configuration for given site only";
+            type leafref {
+              tailf:no-leafref-check;
+              path "/flat-L2vpn/flat-L2vpn-evpn-multipoint/site/site-name";
+            }
+          }
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+      tailf:confirm-text "########################\n" +
+        "#        Warning       #\n" +
+        "########################\n" +
+        "You are about to recover a T-SDN service.\n" +
+        "This will issue a sync on the device.\n" +
+        "Are you sure you want to proceed?" {
+          tailf:confirm-default false;
+      }
+    }
+  }
+
+  augment /flat-L2vpn-plan/plan {
+    uses tsdn-core-fp-common:status-code-plan-augmentation;
+  }
+
+  augment /flat-L2vpn-plan/plan-history {
+    uses tsdn-core-fp-common:status-code-plan-augmentation;
+  }
+
+  augment /flat-L2vpn-plan/plan/component {
+    uses tsdn-core-fp-common:status-code-component-augmentation;
+    uses tsdn-core-fp-common:static-config-redeploy-indicator-component-augmentation;
+
+    leaf pe {
+      tailf:hidden full;
+      type string;
+    }
+  }
+
+  augment /flat-L2vpn-plan/plan-history/plan/component {
+    uses tsdn-core-fp-common:status-code-component-augmentation;
+    uses tsdn-core-fp-common:static-config-redeploy-indicator-component-augmentation;
+
+    leaf pe {
+      tailf:hidden full;
+      type string;
+    }
+  }
+}

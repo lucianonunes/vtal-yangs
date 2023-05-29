@@ -1,0 +1,811 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <?macro intf-desc?>
+    <?set IF_DESC=''?>
+    <?save-context service?>
+    <?set-root-node {/devices}?>
+    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/Cisco-IOS-XR-ifmgr-cfg:interface-configurations/interface-configuration[active='act'][interface-name=$IF_NAME]/description}?>
+    <?switch-context service?>
+    <?if {$IF_DESC=''}?>
+      <description>{$DEFAULT_INTF_DESC}</description>
+    <?else?>
+      <description>{$IF_DESC}</description>
+    <?end?>
+  <?endmacro?>
+  <?macro um-intf-desc?>
+    <?set IF_DESC=''?>
+    <?save-context service?>
+    <?set-root-node {/devices}?>
+    <?set IF_DESC={/device[name=$DEVICE_NAME]/config/Cisco-IOS-XR-um-interface-cfg:interfaces/interface[interface-name=$IF_NAME]/description}?>
+    <?switch-context service?>
+    <?if {$IF_DESC=''}?>
+      <description>{$DEFAULT_INTF_DESC}</description>
+    <?else?>
+      <description>{$IF_DESC}</description>
+    <?end?>
+  <?endmacro?>
+  <?macro native-params-statistic-buckets-size-archive?>
+    <buckets-size>
+      <buckets-size>{$BUCKET_SIZE}</buckets-size>
+      <buckets-size-unit>probes-per-bucket</buckets-size-unit>
+    </buckets-size>
+    <buckets-archive>{$BUCKET_ARCHIVE}</buckets-archive>
+  <?endmacro?>
+  <?macro native-delay-params-statistic type statName?>
+    <?if {delay-params/statistic[type='$type']}?>
+      <statistic>
+        <statistic-name>$statName</statistic-name>
+        <enable></enable>
+        <?expand native-params-statistic-buckets-size-archive?>
+      </statistic>
+    <?end?>
+  <?endmacro?>
+  <?macro native-loss-params-statistic type statName?>
+    <?if {loss-params/statistic[type='$type']}?>
+      <statistic>
+        <statistic-name>$statName</statistic-name>
+        <enable></enable>
+        <aggregation>
+          <bins-count>5</bins-count>
+          <bins-width>5</bins-width>
+        </aggregation>
+        <?expand native-params-statistic-buckets-size-archive?>
+      </statistic>
+    <?end?>
+  <?endmacro?>
+  <?macro native-intf-ethernet-features?>
+    <?if-ned-id cisco-iosxr-nc-7.3:cisco-iosxr-nc-7.3
+                cisco-iosxr-nc-7.4:cisco-iosxr-nc-7.4?>
+      <?if {ethernet-service-oam}?>
+        <ethernet-features xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-l2-eth-infra-cfg">
+          <cfm xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ethernet-cfm-cfg">
+            <domains>
+              <?set MD_NAME={ethernet-service-oam/md-name}?>
+              <?foreach {ethernet-service-oam/y-1731}?>
+                <?set MEP_ID={mep-id}?>
+                <?set REMOTE_MEP_ID={remote-mep-id}?>
+                <domain>
+                  <domain>{$MD_NAME}</domain>
+                  <mep when="{$MEP_ID!='' and $REMOTE_MEP_ID!=''}">
+                    <mep-properties>
+                      <service>{$SERVICE_NAME}</service>
+                      <mep-id>{$MEP_ID}</mep-id>
+                    </mep-properties>
+                    <sla-profile-target-mep-ids>
+                      <?foreach {y-1731-profile}?>
+                        <sla-profile-target-mep-id>
+                          <profile>{name}</profile>
+                          <target-mep-id>{$REMOTE_MEP_ID}</target-mep-id>
+                        </sla-profile-target-mep-id>
+                      <?end?>
+                    </sla-profile-target-mep-ids>
+                  </mep>
+                </domain>
+              <?end?>
+            </domains>
+          </cfm>
+        </ethernet-features>
+      <?end?>
+    <?end?>
+  <?endmacro?>
+  <?macro native-intf-config-desc-shut-if-sub-vlan-id?>
+    <?if {sub-if-id or vlan-id}?>
+      <interface-configuration>
+        <active>act</active>
+        <interface-name>{if-type}{if-id}</interface-name>
+        <shutdown tags="delete"/>
+        <?set IF_NAME={if-type}{if-id}?>
+        <?expand intf-desc?>
+      </interface-configuration>
+    <?end?>
+  <?endmacro?>
+  <?macro native-intf-desc-shut-mtu-encap-rewrite-eth-service?>
+    <?expand intf-desc?>
+    <description when="{if-description!=''}">{if-description}</description>
+    <shutdown tags="delete"/>
+    <mtus when="{mtu!='' and if-type!='Loopback'}">
+      <?if {sub-if-id or vlan-id}?>
+        <mtu>
+          <owner>sub_vlan</owner>
+          <mtu>{mtu}</mtu>
+        </mtu>
+      <?else?>
+        <mtu>
+          <owner>{if-type}</owner>
+          <mtu>{mtu}</mtu>
+        </mtu>
+      <?end?>
+    </mtus>
+    <interface-virtual when="{if-type='Loopback'}" />
+    <?if {sub-if-id or vlan-id}?>
+      <interface-mode-non-physical>l2-transport</interface-mode-non-physical>
+      <ethernet-service xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-l2-eth-infra-cfg">
+        <encapsulation when="{if-encap='dot1q'}">
+          <outer-tag-type>match-dot1q</outer-tag-type>
+          <outer-range1-low>{vlan-id}</outer-range1-low>
+        </encapsulation>
+        <encapsulation when="{if-encap='untagged'}">
+          <outer-tag-type>match-untagged</outer-tag-type>
+        </encapsulation>
+        <rewrite when="{rewrite/ingress}">
+          <?if {rewrite/ingress/pop}?>
+            <rewrite-type when="{rewrite/ingress/pop = '1'}">pop1</rewrite-type>
+            <rewrite-type when="{rewrite/ingress/pop = '2'}">pop2</rewrite-type>
+          <?end ?>
+          <?if {rewrite/ingress/push}?>
+            <rewrite-type>push1</rewrite-type>
+            <outer-tag-type>match-dot1q</outer-tag-type>
+            <outer-tag-value>{rewrite/ingress/dot1q}</outer-tag-value>
+          <?end ?>
+          <?if {rewrite/ingress/translate}?>
+            <rewrite-type when="{rewrite/ingress/translate = '1-to-1'}">translate1to1</rewrite-type>
+            <outer-tag-type>match-dot1q</outer-tag-type>
+            <outer-tag-value>{rewrite/ingress/dot1q}</outer-tag-value>
+          <?end ?>
+        </rewrite>
+      </ethernet-service>
+    <?else?>
+    <l2-transport xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-l2vpn-cfg">
+      <enabled/>
+    </l2-transport>
+    <?end ?>
+  <?endmacro?>
+  <?macro native-intf-config?>
+    <interface-configuration>
+      <active>act</active>
+      <interface-name>{$INTERFACE_NAME}</interface-name>
+      <?set IF_NAME={$INTERFACE_NAME}?>
+      <?expand native-intf-desc-shut-mtu-encap-rewrite-eth-service?>
+      <?expand native-intf-ethernet-features?>
+    </interface-configuration>
+    <?expand native-intf-config-desc-shut-if-sub-vlan-id?>
+  <?endmacro?>
+  <?macro native-ethernet-features?>
+    <cfm xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ethernet-cfm-cfg">
+      <domains>
+        <?set MD_NAME={ethernet-service-oam/md-name}?>
+        <?set MD_LEVEL={ethernet-service-oam/md-level}?>
+        <?foreach {ethernet-service-oam/y-1731}?>
+          <?set MAID={maid}?>
+          <?set MEP_ID={mep-id}?>
+          <?set REMOTE_MEP_ID={remote-mep-id}?>
+          <?set MESSAGE_PERIOD={message-period}?>
+          <domain>
+            <domain>{$MD_NAME}</domain>
+            <domain-properties>
+              <level>{$MD_LEVEL}</level>
+              <?if {$MAID='null'}?>
+                <mdid-format>null</mdid-format>
+              <?else?>
+                <mdid-format>string</mdid-format>
+                <mdid-string>{$MAID}</mdid-string>
+              <?end?>
+            </domain-properties>
+            <services>
+              <service>
+                <service>{$SERVICE_NAME}</service>
+                <service-properties>
+                  <service-type>p2p-cross-connect</service-type>
+                  <group-name>{$GROUP_NAME}</group-name>
+                  <switching-name>{$SWITCHING_NAME}</switching-name>
+                  <?if {icc-based}?>
+                    <short-ma-name-format>icc-based</short-ma-name-format>
+                    <short-ma-name-icc>p2p</short-ma-name-icc>
+                    <short-ma-name-umc>{icc-based}</short-ma-name-umc>
+                  <?else?>
+                    <short-ma-name-format>number</short-ma-name-format>
+                    <short-ma-name-number>{number}</short-ma-name-number>
+                  <?end?>
+                </service-properties>
+                <continuity-check-interval>
+                  <ccm-interval>{$MESSAGE_PERIOD}</ccm-interval>
+                </continuity-check-interval>
+                <cross-check>
+                  <cross-check-meps>
+                    <cross-check-mep when="{$REMOTE_MEP_ID!=''}">
+                      <mep-id>{$REMOTE_MEP_ID}</mep-id>
+                    </cross-check-mep>
+                  </cross-check-meps>
+                </cross-check>
+              </service>
+            </services>
+          </domain>
+        <?end?>
+      </domains>
+    </cfm>
+  <?endmacro?>
+  <?macro native-sla-protocols-eth-profiles?>
+    <protocols>
+      <ethernet xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ethernet-cfm-cfg">
+        <?foreach {ethernet-service-oam/y-1731}?>
+          <profiles>
+            <?foreach {y-1731-profile}?>
+              <?set BUCKET_SIZE={bucket-details/bucket-size}?>
+              <?set BUCKET_ARCHIVE={bucket-details/bucket-archive}?>
+              <?if {type='delay'}?>
+                <profile>
+                  <profile-name>{name}</profile-name>
+                  <?if {delay-params/version = '1'}?>
+                    <packet-type>cfm-delay-measurement</packet-type>
+                  <?else?>
+                    <packet-type>cfm-delay-measurement-version-0</packet-type>
+                  <?end?>
+                  <probe>
+                    <send>
+                      <?if {probe/type='burst'}?>
+                        <burst-interval>{probe/measurement-interval}</burst-interval>
+                        <burst-interval-unit>seconds</burst-interval-unit>
+                        <packet-interval>{probe/burst/message-period}</packet-interval>
+                        <packet-interval-unit>milliseconds</packet-interval-unit>
+                        <packet-count>{probe/burst/message-count}</packet-count>
+                      <?else?>
+                        <?if {probe/measurement-interval='once'}?>
+                          <packet-interval-unit>once</packet-interval-unit>
+                        <?else?>
+                          <packet-interval>{probe/measurement-interval}</packet-interval>
+                          <packet-interval-unit>seconds</packet-interval-unit>
+                        <?end?>
+                      <?end?>
+                      <send-type>{probe/type}</send-type>
+                    </send>
+                    <priority>{probe/priority}</priority>
+                    <packet-size-and-padding>
+                      <size>{probe/frame-size}</size>
+                    </packet-size-and-padding>
+                  </probe>
+                  <schedule>
+                    <probe-interval>{schedule/interval}</probe-interval>
+                    <probe-interval-unit>minutes</probe-interval-unit>
+                    <?if {schedule/duration='forever'}?>
+                      <probe-duration>1440</probe-duration>
+                    <?else?>
+                      <probe-duration>{schedule/duration}</probe-duration>
+                    <?end?>
+                    <probe-duration-unit when="{schedule/duration}">minutes</probe-duration-unit>
+                  </schedule>
+                  <statistics>
+                    <?expand native-delay-params-statistic type='delay-two-way' statName='round-trip-delay'?>
+                    <?expand native-delay-params-statistic type='jitter-two-way' statName='round-trip-jitter'?>
+                    <?expand native-delay-params-statistic type='delay-sd' statName='one-way-delay-sd'?>
+                    <?expand native-delay-params-statistic type='delay-ds' statName='one-way-delay-ds'?>
+                    <?expand native-delay-params-statistic type='jitter-sd' statName='one-way-jitter-sd'?>
+                    <?expand native-delay-params-statistic type='jitter-ds' statName='one-way-jitter-ds'?>
+                  </statistics>
+                </profile>
+              <?end?>
+              <?if {type='loss' or type='synthetic-loss'}?>
+                <profile>
+                  <profile-name>{name}</profile-name>
+                  <?if {type='synthetic-loss'}?>
+                    <packet-type>cfm-synthetic-loss-measurement</packet-type>
+                  <?else?>
+                    <packet-type>cfm-loss-measurement</packet-type>
+                  <?end?>
+                  <probe>
+                    <send>
+                      <?if {probe/type='burst'}?>
+                        <burst-interval>{probe/measurement-interval}</burst-interval>
+                        <burst-interval-unit>seconds</burst-interval-unit>
+                        <packet-interval>{probe/burst/message-period}</packet-interval>
+                        <packet-interval-unit>milliseconds</packet-interval-unit>
+                        <packet-count>{probe/burst/message-count}</packet-count>
+                      <?else?>
+                        <?if {probe/measurement-interval='once'}?>
+                          <packet-interval-unit>once</packet-interval-unit>
+                        <?else?>
+                          <packet-interval>{probe/measurement-interval}</packet-interval>
+                          <packet-interval-unit>seconds</packet-interval-unit>
+                        <?end?>
+                      <?end?>
+                      <send-type>{probe/type}</send-type>
+                    </send>
+                    <priority>{probe/priority}</priority>
+                    <packet-size-and-padding when="{probe/frame-size}">
+                      <size>{probe/frame-size}</size>
+                    </packet-size-and-padding>
+                  </probe>
+                  <schedule>
+                    <probe-interval>{schedule/interval}</probe-interval>
+                    <probe-interval-unit>minutes</probe-interval-unit>
+                    <?if {schedule/duration='forever'}?>
+                      <probe-duration>1440</probe-duration>
+                    <?else?>
+                      <probe-duration>{schedule/duration}</probe-duration>
+                    <?end?>
+                    <probe-duration-unit when="{schedule/duration}">minutes</probe-duration-unit>
+                  </schedule>
+                  <statistics>
+                    <?expand native-loss-params-statistic type='loss-sd' statName='one-way-loss-sd'?>
+                    <?expand native-loss-params-statistic type='loss-ds' statName='one-way-loss-ds'?>
+                  </statistics>
+                </profile>
+              <?end?>
+            <?end?>
+          </profiles>
+        <?end?>
+      </ethernet>
+    </protocols>
+  <?endmacro?>
+  <?macro native-evpn-interface?>
+    <evpn-interface>
+      <interface-name>{if-type}{if-id}</interface-name>
+      <ethernet-segment>
+        <enable/>
+          <identifier>
+          <bytes01>{substring(string(multi-home/esi-value), 0, 2)}</bytes01>
+          <bytes23>{substring(string(multi-home/esi-value), 4, 2)}{substring(string(multi-home/esi-value), 7, 2)}</bytes23>
+          <bytes45>{substring(string(multi-home/esi-value), 10, 2)}{substring(string(multi-home/esi-value), 13, 2)}</bytes45>
+          <bytes67>{substring(string(multi-home/esi-value), 16, 2)}{substring(string(multi-home/esi-value), 19, 2)}</bytes67>
+          <bytes89>{substring(string(multi-home/esi-value), 22, 2)}{substring(string(multi-home/esi-value), 25, 2)}</bytes89>
+          <type>type0</type>
+        </identifier>
+      </ethernet-segment>
+    </evpn-interface>
+  <?endmacro?>
+  <?macro um-intf-desc-shut-mtu-l2-rewrite?>
+    <?expand um-intf-desc?>
+    <description when="{if-description!=''}">{if-description}</description>
+    <shutdown tags="delete"/>
+    <mtu when="{mtu!='' and if-type!='Loopback'}">{mtu}</mtu>
+    <?if {sub-if-id or vlan-id}?>
+      <sub-interface-type>
+        <l2transport/>
+      </sub-interface-type>
+      <l2transport-encapsulation xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2-ethernet-cfg" when="{if-encap='dot1q'}">
+        <dot1q>
+          <vlan-id>{vlan-id}</vlan-id>
+        </dot1q>
+      </l2transport-encapsulation>
+      <l2transport-encapsulation xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2-ethernet-cfg" when="{if-encap='untagged'}">
+        <untagged></untagged>
+      </l2transport-encapsulation>
+      <rewrite xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-l2-ethernet-cfg" when="{rewrite/ingress}">
+        <?if {rewrite/ingress/pop}?>
+          <ingress>
+            <tag>
+              <pop>
+                <one when="{rewrite/ingress/pop = '1'}"/>
+                <two when="{rewrite/ingress/pop = '2'}"/>
+              </pop>
+            </tag>
+          </ingress>
+        <?end ?>
+        <?if {rewrite/ingress/push}?>
+          <ingress>
+            <tag>
+              <push>
+                <dot1q>
+                  <vlan-id>{rewrite/ingress/dot1q}</vlan-id>
+                </dot1q>
+              </push>
+            </tag>
+          </ingress>
+        <?end ?>
+        <?if {rewrite/ingress/translate}?>
+          <ingress>
+            <tag>
+              <translate>
+                <one-to-one when="{rewrite/ingress/translate = '1-to-1'}">
+                  <dot1q>
+                    <vlan-id>{rewrite/ingress/dot1q}</vlan-id>
+                  </dot1q>
+                </one-to-one>
+              </translate>
+            </tag>
+          </ingress>
+        <?end ?>
+      </rewrite>
+    <?else?>
+      <l2transport xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-l2transport-cfg"/>
+    <?end ?>
+  <?endmacro?>
+  <?macro um-intf-config-desc-shut-if-sub-vlan-id?>
+    <?if {sub-if-id or vlan-id}?>
+      <interface>
+        <interface-name>{if-type}{if-id}</interface-name>
+        <shutdown tags="delete"/>
+        <?set IF_NAME={if-type}{if-id}?>
+        <?expand um-intf-desc?>
+      </interface>
+    <?end?>
+  <?endmacro?>
+  <?macro um-intf-config?>
+    <interface>
+      <interface-name>{$INTERFACE_NAME}</interface-name>
+      <?set IF_NAME={$INTERFACE_NAME}?>
+      <?expand um-intf-desc-shut-mtu-l2-rewrite?>
+      <?if {ethernet-service-oam}?>
+        <ethernet xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-ethernet-cfm-cfg">
+          <cfm>
+            <mep>
+              <?set MD_NAME={ethernet-service-oam/md-name}?>
+              <?foreach {ethernet-service-oam/y-1731}?>
+                <?set MEP_ID={mep-id}?>
+                <?set REMOTE_MEP_ID={remote-mep-id}?>
+                <domain>
+                  <domain-name>{$MD_NAME}</domain-name>
+                  <?if {$MEP_ID!='' and $REMOTE_MEP_ID!=''}?>
+                    <service>{$SERVICE_NAME}</service>
+                    <mep-id>{$MEP_ID}</mep-id>
+                    <sla>
+                      <operation>
+                        <profile>
+                          <target>
+                            <mep-id>
+                              <?foreach {y-1731-profile}?>
+                                <profile-target-mep-id>
+                                  <profile-name>{name}</profile-name>
+                                  <mep-id>{$REMOTE_MEP_ID}</mep-id>
+                                </profile-target-mep-id>
+                              <?end?>
+                            </mep-id>
+                          </target>
+                        </profile>
+                      </operation>
+                    </sla>
+                  <?end?>
+                </domain>
+              <?end?>
+            </mep>
+          </cfm>
+        </ethernet>
+      <?end?>
+    </interface>
+    <?if {sub-if-id or vlan-id}?>
+      <interface>
+        <interface-name>{if-type}{if-id}</interface-name>
+        <shutdown tags="delete"/>
+        <?set IF_NAME={if-type}{if-id}?>
+        <?set IF_DESC=''?>
+        <?save-context service?>
+        <?set-root-node {/devices}?>
+        <?set IF_DESC={/device[name=$DEVICE_NAME]/config/Cisco-IOS-XR-um-interface-cfg:interfaces/interface[interface-name=$IF_NAME]/description}?>
+        <?switch-context service?>
+        <?if {$IF_DESC=''}?>
+          <description>{$DEFAULT_INTF_DESC}</description>
+        <?else?>
+          <description>{$IF_DESC}</description>
+        <?end?>
+      </interface>
+    <?end?>
+  <?endmacro?>
+  <?macro um-mpls-sr-te-path?>
+    <?if {sr-te/preferred-path/policy}?>
+      <preferred-path>
+        <sr-te>
+          <policy>{$SR_POLICY_NAME}</policy>
+        </sr-te>
+        <fallback when="{sr-te/preferred-path/fallback='disable'}">
+          <disable/>
+        </fallback>
+      </preferred-path>
+    <?end?>
+  <?endmacro?>
+  <?macro um-params-statistic-buckets?>
+    <buckets>
+      <size>{$BUCKET_SIZE}</size>
+      <probes/>
+      <archive>{$BUCKET_ARCHIVE}</archive>
+    </buckets>
+  <?endmacro?>
+  <?macro um-delay-params-statistic type id?>
+    <?if {delay-params/statistic[type='$type']}?>
+      <measure>
+        <type>$id</type>
+        <?expand um-params-statistic-buckets?>
+      </measure>
+    <?end?>
+  <?endmacro?>
+  <?macro um-loss-params-statistic type id?>
+    <?if {loss-params/statistic[type='$type']}?>
+      <measure>
+        <type>$id</type>
+        <aggregate>
+          <bins>5</bins>
+          <width>5</width>
+        </aggregate>
+        <?expand um-params-statistic-buckets?>
+      </measure>
+    <?end?>
+  <?endmacro?>
+  <?macro um-ethernet-service-oam?>
+    <?if {ethernet-service-oam}?>
+      <?set GROUP_NAME={xconnect-group-name}?>
+      <?set SWITCHING_NAME={p2p-name}?>
+      <cfm xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-ethernet-cfm-cfg">
+        <domains>
+          <?set MD_NAME={ethernet-service-oam/md-name}?>
+          <?set MD_LEVEL={ethernet-service-oam/md-level}?>
+          <?foreach {ethernet-service-oam/y-1731}?>
+            <?set MAID={maid}?>
+            <?set MEP_ID={mep-id}?>
+            <?set REMOTE_MEP_ID={remote-mep-id}?>
+            <?set MESSAGE_PERIOD={message-period}?>
+            <domain>
+              <domain-name>{$MD_NAME}</domain-name>
+              <level>{$MD_LEVEL}</level>
+              <id>
+                <?if {$MAID='null'}?>
+                  <null/>
+                <?else?>
+                  <string>{$MAID}</string>
+                <?end?>
+              </id>
+              <services>
+                <service>
+                  <service-name>{$SERVICE_NAME}</service-name>
+                  <xconnect>
+                    <p2p>
+                      <group>{$GROUP_NAME}</group>
+                      <cross-connect-name>{$SWITCHING_NAME}</cross-connect-name>
+                    </p2p>
+                  </xconnect>
+                  <id>
+                    <?if {icc-based}?>
+                      <icc-based>
+                        <icc>p2p</icc>
+                        <umc>{icc-based}</umc>
+                      </icc-based>
+                    <?else?>
+                      <number>{number}</number>
+                    <?end?>
+                  </id>
+                  <continuity-check>
+                    <interval>
+                      <interval-time>{$MESSAGE_PERIOD}</interval-time>
+                    </interval>
+                  </continuity-check>
+                  <mep>
+                    <crosscheck>
+                      <mep-ids>
+                        <mep-id when="{$REMOTE_MEP_ID!=''}">
+                          <mep-id>{$REMOTE_MEP_ID}</mep-id>
+                        </mep-id>
+                      </mep-ids>
+                    </crosscheck>
+                  </mep>
+                </service>
+              </services>
+            </domain>
+          <?end?>
+        </domains>
+      </cfm>
+      <ethernet xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-ethernet-sla-cfg">
+        <sla>
+          <?foreach {ethernet-service-oam/y-1731}?>
+            <profiles>
+              <?foreach {y-1731-profile}?>
+                <?set BUCKET_SIZE={bucket-details/bucket-size}?>
+                <?set BUCKET_ARCHIVE={bucket-details/bucket-archive}?>
+                <?if {type='delay'}?>
+                  <profile>
+                    <profile-name>{name}</profile-name>
+                    <?if {delay-params/version = '1'}?>
+                      <type>cfm-delay-measurement</type>
+                    <?else?>
+                      <type>cfm-delay-measurement-version-0</type>
+                    <?end?>
+                    <probe>
+                      <send>
+                        <?if {probe/type='burst'}?>
+                          <burst>
+                            <every>
+                              <interval>{probe/measurement-interval}</interval>
+                              <seconds/>
+                            </every>
+                            <packet>
+                              <count>{probe/burst/message-count}</count>
+                              <interval-in-milliseconds>{probe/burst/message-period}</interval-in-milliseconds>
+                            </packet>
+                          </burst>
+                        <?else?>
+                          <packet>
+                            <?if {probe/measurement-interval='once'}?>
+                              <once/>
+                            <?else?>
+                              <every>
+                                <interval>{probe/measurement-interval}</interval>
+                                <seconds/>
+                              </every>
+                            <?end?>
+                          </packet>
+                        <?end?>
+                      </send>
+                      <priority>{probe/priority}</priority>
+                      <packet>
+                        <size>{probe/frame-size}</size>
+                      </packet>
+                    </probe>
+                    <schedule>
+                      <every>
+                        <interval-in-minutes>{schedule/interval}</interval-in-minutes>
+                        <for>
+                          <?if {schedule/duration='forever'}?>
+                            <time>1440</time>
+                          <?else?>
+                            <time>{schedule/duration}</time>
+                          <?end?>
+                          <unit when="{schedule/duration}">minutes</unit>
+                        </for>
+                      </every>
+                    </schedule>
+                    <statistics>
+                      <measure>
+                        <?expand um-delay-params-statistic type='delay-two-way' id='round-trip-delay'?>
+                        <?expand um-delay-params-statistic type='jitter-two-way' id='round-trip-jitter'?>
+                        <?expand um-delay-params-statistic type='delay-sd' id='one-way-delay-sd'?>
+                        <?expand um-delay-params-statistic type='delay-ds' id='one-way-delay-ds'?>
+                        <?expand um-delay-params-statistic type='jitter-sd' id='one-way-jitter-sd'?>
+                        <?expand um-delay-params-statistic type='jitter-ds' id='one-way-jitter-ds'?>
+                      </measure>
+                    </statistics>
+                  </profile>
+                <?end?>
+                <?if {type='loss' or type='synthetic-loss'}?>
+                  <profile>
+                    <profile-name>{name}</profile-name>
+                    <?if {type='synthetic-loss'}?>
+                      <type>cfm-synthetic-loss-measurement</type>
+                    <?else?>
+                      <type>cfm-loss-measurement</type>
+                    <?end?>
+                    <probe>
+                      <send>
+                        <?if {probe/type='burst'}?>
+                          <burst>
+                            <every>
+                              <interval>{probe/measurement-interval}</interval>
+                              <seconds/>
+                            </every>
+                            <packet>
+                              <count>{probe/burst/message-count}</count>
+                              <interval-in-milliseconds>{probe/burst/message-period}</interval-in-milliseconds>
+                            </packet>
+                          </burst>
+                        <?else?>
+                          <packet>
+                            <?if {probe/measurement-interval='once'}?>
+                              <once/>
+                            <?else?>
+                              <every>
+                                <interval>{probe/measurement-interval}</interval>
+                                <seconds/>
+                              </every>
+                            <?end?>
+                          </packet>
+                        <?end?>
+                      </send>
+                      <priority>{probe/priority}</priority>
+                      <packet>
+                        <size>{probe/frame-size}</size>
+                      </packet>
+                    </probe>
+                    <schedule>
+                      <every>
+                        <interval-in-minutes>{schedule/interval}</interval-in-minutes>
+                        <for>
+                          <?if {schedule/duration='forever'}?>
+                            <time>1440</time>
+                          <?else?>
+                            <time>{schedule/duration}</time>
+                          <?end?>
+                          <unit when="{schedule/duration}">minutes</unit>
+                        </for>
+                      </every>
+                    </schedule>
+                    <statistics>
+                      <measure>
+                        <?expand um-loss-params-statistic type='loss-sd' id='one-way-loss-sd'?>
+                        <?expand um-loss-params-statistic type='loss-ds' id='one-way-loss-ds'?>
+                      </measure>
+                    </statistics>
+                  </profile>
+                <?end?>
+              <?end?>
+            </profiles>
+          <?end?>
+        </sla>
+      </ethernet>
+    <?end?>
+  <?endmacro?>
+  <?macro um-evpn-interface?>
+    <interface>
+      <interface-name>{if-type}{if-id}</interface-name>
+      <ethernet-segment>
+        <identifier>
+          <type>
+            <zero>
+              <bytes-1>{substring(string(multi-home/esi-value), 0, 2)}</bytes-1>
+              <bytes-23>{substring(string(multi-home/esi-value), 4, 2)}{substring(string(multi-home/esi-value), 7, 2)}</bytes-23>
+              <bytes-45>{substring(string(multi-home/esi-value), 10, 2)}{substring(string(multi-home/esi-value), 13, 2)}</bytes-45>
+              <bytes-67>{substring(string(multi-home/esi-value), 16, 2)}{substring(string(multi-home/esi-value), 19, 2)}</bytes-67>
+              <bytes-89>{substring(string(multi-home/esi-value), 22, 2)}{substring(string(multi-home/esi-value), 25, 2)}</bytes-89>
+            </zero>
+          </type>
+        </identifier>
+      </ethernet-segment>
+    </interface>
+  <?endmacro?>
+  <?macro cli-intf-description-shut?>
+    <?if {$IF_DESC=''}?>
+      <description>{$DEFAULT_INTF_DESC}</description>
+    <?else?>
+      <description>{$IF_DESC}</description>
+    <?end?>
+    <description when="{if-description!=''}">{if-description}</description>
+    <shutdown tags="delete"/>
+  <?endmacro?>
+  <?macro cli-intf-instance-eth-rewrite?>
+    <ethernet/>
+    <?if {(ethernet-service-oam)}?>
+      <?set MD_NAME={ethernet-service-oam/md-name}?>
+      <ethernet-evc-name>evc_{$SERVICE_NAME}</ethernet-evc-name>
+      <?foreach {ethernet-service-oam/y-1731}?>
+        <?set MEP_ID={mep-id}?>
+        <cfm>
+          <mep>
+            <domain>{$MD_NAME}</domain>
+            <mpid>{$MEP_ID}</mpid>
+          </mep>
+        </cfm>
+      <?end?>
+    <?end?>
+    <rewrite when="{rewrite/ingress}">
+      <ingress>
+        <tag when="{rewrite/ingress/pop}">
+          <pop>{rewrite/ingress/pop}</pop>
+          <mode>{rewrite/ingress/mode}</mode>
+        </tag>
+        <tag when="{rewrite/ingress/push}">
+          <push>dot1q</push>
+          <vlan-id>{$IF_SUB_ID}</vlan-id>
+          <mode>{rewrite/ingress/mode}</mode>
+        </tag>
+        <tag when="{rewrite/ingress/translate}">
+          <translate>{rewrite/ingress/translate}</translate>
+          <dot1q>{rewrite/ingress/dot1q}</dot1q>
+          <mode>{rewrite/ingress/mode}</mode>
+        </tag>
+      </ingress>
+    </rewrite>
+  <?endmacro?>
+  <?macro cli-ip-eth-delay mpid?>
+    <domain>{$MD_NAME}</domain>
+    <evc>evc_{$SERVICE_NAME}</evc>
+    <cos>{cos}</cos>
+    <mpid>$mpid</mpid>
+  <?endmacro?>
+  <?macro cli-ip-eth-delay-source mpid?>
+    <?expand cli-ip-eth-delay mpid=$mpid?>
+    <source>
+      <mpid>{$MEP_ID}</mpid>
+    </source>
+  <?endmacro?>
+  <?macro cli-ip-distribution-delay numOfBins boundary?>
+    <one-way>
+      <number-of-bins>$numOfBins</number-of-bins>
+      <boundary>$boundary</boundary>
+    </one-way>
+    <?if {type='delay-two-way'}?>
+      <two-way>
+        <number-of-bins>$numOfBins</number-of-bins>
+        <boundary>$boundary</boundary>
+      </two-way>
+    <?end?>
+  <?endmacro?>
+  <?macro cli-ip-eth-loss?>
+    <domain>{$MD_NAME}</domain>
+    <evc>evc_{$SERVICE_NAME}</evc>
+    <cos>{cos}</cos>
+    <?if {type='loss-sd'}?>
+      <mpid>{$REMOTE_MEP_ID}</mpid>
+      <source>
+        <mpid>{$MEP_ID}</mpid>
+      </source>
+    <?else?>
+      <mpid>{$MEP_ID}</mpid>
+      <source>
+        <mpid>{$REMOTE_MEP_ID}</mpid>
+      </source>
+    <?end?>
+  <?endmacro?>
+</config-template>

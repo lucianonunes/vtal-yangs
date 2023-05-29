@@ -1,0 +1,18 @@
+cisco-flat-L3vpn-fp-internal (v2.0) [November 16, 2020]
+=======================================================
+  A. Added validate callpoint to service.
+    tailf:validate "flat-L3vpn-internal-validation" {
+      tailf:dependency ".";
+    }
+
+cisco-flat-L3vpn-fp (v2.0) [October 09, 2020]
+===============================================
+  A. Add import route-policy under sr-te
+
+cisco-flat-L3vpn-fp (v2.0) [August 05, 2020]
+===============================================
+  A. Major redesign to support LSA/non-LSA style deployment (no payload changes)
+
+cisco-flat-L3vpn-fp-internal (v1.1.0) [July 24, 2020]
+=================================================
+  A. Initial Revision

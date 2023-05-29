@@ -1,0 +1,72 @@
+module core-fp-common-template-mapper {
+  namespace "http://com/cisco/cfp-common-temp-mapper";
+  prefix cfp-common-temp-mapper;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  grouping service-semplate-mapper-grp {
+    list service-template-mapper {
+      tailf:info "Captures templates that override service templates";
+      key service-template;
+      leaf service-template {
+        tailf:info "Service template name";
+        type string;
+      }
+      leaf override-template {
+        tailf:info "Override template name";
+        type string;
+      }
+    }
+  }
+
+  container override-template {
+    description "Template overriding settings";
+    tailf:info "Template overriding settings";
+    leaf ignore-override-settings {
+      tailf:info "When set to true, will turn off template override settings globally";
+      type boolean;
+      default false;
+    }
+
+    uses service-semplate-mapper-grp;
+
+    list per-provider {
+      tailf:info "Provider level template override";
+      key provider;
+
+      leaf provider {
+        tailf:info "Provider Name";
+        type string;
+      }
+      leaf ignore-override-settings {
+        tailf:info "When set to true, will turn off template override settings at provider";
+        type boolean;
+        default false;
+      }
+      uses service-semplate-mapper-grp;
+      list per-tenant {
+        tailf:info "Tenant level template override";
+        key tenant;
+
+        leaf tenant {
+          tailf:info "Tenant Name";
+          type string;
+        }
+        leaf ignore-override-settings {
+          tailf:info "When set to true, will turn off template override setting at tenant";
+          type boolean;
+          default false;
+        }
+        uses service-semplate-mapper-grp;
+      }
+    }
+  }
+}

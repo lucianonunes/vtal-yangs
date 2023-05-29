@@ -1,0 +1,140 @@
+/*
+ ***************************************************
+ * Copyright (c) 2020 Cisco Systems, Inc.
+ * All rights reserved.
+ ***************************************************
+ */
+module custom-template-info {
+  namespace "http://cisco.com/yang/nso/common/custom-template-info";
+  prefix ct-info;
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-kicker {
+    prefix kicker;
+  }
+
+  organization "Cisco Systems";
+  description "Custom Template information model.";
+
+  revision 2020-07-10 {
+    description "custom-template-events notification and ct-actions are added for sending the
+      notification from rfs-nodes and updating cfs-nodes custom-template-info package
+      using action handler in LSA structure";
+  }
+
+  revision 2018-05-02 {
+    description "Initial revision.";
+  }
+
+  grouping ct-template {
+    leaf template-name {
+      tailf:info "Template name";
+      description "Template name";
+      type string {
+        pattern "(ct-.*)|(CT-.*)" {
+          error-message "Custom template name must start with ct- or CT-";
+        }
+      }
+    }
+    leaf type {
+      tailf:info "Template type";
+      description "Template type";
+      type enumeration {
+        enum FEATURE;
+        enum DEVICE;
+      }
+    }
+    leaf device-variable {
+      when "../type='FEATURE'";
+      tailf:info "Device variable name in feature template";
+      description "Device variable name in feature template";
+      type enumeration {
+        enum CONTROLLER_NAME;
+        enum DEVICE;
+        enum DEVICE_NAME;
+      }
+    }
+  }
+
+  list custom-template-info {
+    tailf:hidden "debug";
+    description "Custom Template information data";
+    tailf:info "Custom Template information data";
+    key template-name;
+
+    uses ct-template;
+
+    leaf-list variables {
+      tailf:info "Template variables";
+      description "Template variables";
+      type string;
+    }
+
+    leaf rfs-node {
+      tailf:info "stores rfs-node name on CFS from which this ct-info came from";
+      description "stores rfs-node name on CFS from which this ct-info came from";
+      type string;
+    }
+  }
+
+  leaf ct-event-stream-enabled {
+    tailf:info "If this flag is set to true, The RFS-node will send the notification on
+                custom-template-events stream on any change in custom-template-info,
+                This flag should not be set to true on CFS nodes.";
+    description "If this flag is set to true, The RFS-node will send the notification on
+                custom-template-events stream on any change in custom-template-info,
+                This flag should not be set to true on CFS nodes.";
+    type boolean;
+    default false;
+  }
+
+  notification custom-template-events {
+    description "Notification for custom-template-events";
+    list custom-template-info {
+      uses ct-template;
+
+      list variable {
+        tailf:info "Template variables";
+        description "Template variables";
+        leaf name {
+          tailf:info "variable name";
+          description "variable name";
+          type string;
+        }
+      }
+
+      leaf operation {
+        type enumeration {
+          enum created {
+            tailf:code-name "template_created";
+          }
+          enum modified {
+            tailf:code-name "template_modified";
+          }
+          enum deleted {
+            tailf:code-name "template_deleted";
+          }
+        }
+      }
+    }
+  }
+
+  container ct-actions {
+    tailf:hidden "debug";
+    tailf:action ct-change-netconf-notification-handler {
+      tailf:info "CFS level action to tap into RFS custom change custom-template-events &
+                                                            update custom-template-info";
+      description "CFS level action to tap into RFS custom change custom-template-events &
+                                                            update custom-template-info";
+      tailf:actionpoint ct-change-netconf-notification-handler;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      }
+    }
+  }
+}

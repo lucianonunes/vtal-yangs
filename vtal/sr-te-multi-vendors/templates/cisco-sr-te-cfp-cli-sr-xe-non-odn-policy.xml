@@ -1,0 +1,144 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+        <segment-routing xmlns="urn:ios">
+          <traffic-eng>
+            <?foreach {explicit/sid-list}?>
+              <segment-list when="{explicit}">
+                <name>
+                  <name>{name}</name>
+                  <index when="{/segment-list/index}">
+                    <id>{index}</id>
+                    <mpls>
+                      <label>{label}</label>
+                    </mpls>
+                  </index>
+                </name>
+              </segment-list>
+            <?end?>
+            <policy>
+              <name>{name}</name>
+              <autoroute when="{auto-route}">
+                <metric when="{auto-route/auto-route-metric}">
+                  <constant when="{auto-route/auto-route-metric/metric-constant-value}">
+                    {auto-route/auto-route-metric/metric-constant-value}
+                  </constant>
+                  <relative when="{auto-route/auto-route-metric/metric-relative-value}">
+                    {auto-route/auto-route-metric/metric-relative-value}
+                  </relative>
+                </metric>
+                <include when="{not(auto-route/include-prefixes)}">
+                  <all/>
+                </include>
+              </autoroute> 
+              <color>
+                <id>{color}</id>
+                <end-point>{$ENDPOINT}</end-point>
+              </color>
+              <binding-sid>
+                <mpls>{binding-sid}</mpls>
+              </binding-sid>
+              <candidate-paths >
+                <preference  foreach="{/path}">
+                  <id>{preference}</id>
+                  <constraints when="{dynamic/constraints}">
+                    <association-group when="{dynamic/constraints/disjoint-path}">
+                      <disjointness>
+                        <type>{dynamic/constraints/disjoint-path/type}</type>
+                      </disjointness>
+                      <identifier>{dynamic/constraints/disjoint-path/group-id}</identifier>
+                      <source>{dynamic/constraints/disjoint-path/source}</source>
+                    </association-group>
+                    <segments>
+                      <dataplane>
+                        <mpls/>
+                      </dataplane>
+                      <algorithm>{dynamic/constraints/segments/sid-algorithm}</algorithm>
+                    </segments>
+                    <bandwidth when="{/bandwidth}">{/bandwidth}</bandwidth>         
+                    <affinity when="{dynamic/constraints/affinity}" foreach="{dynamic/constraints/affinity/rule}">
+                      <?set ACTION={current()}?>
+                      <?if {$ACTION='include-all'}?>
+                        <?expand segment-routing-dynamic-constraints-affinity-attr-list id=include-all?>
+                      <?end?>
+                      <?if {$ACTION='include-any'}?>
+                        <?expand segment-routing-dynamic-constraints-affinity-attr-list id=include-any?>
+                      <?end?>
+                      <?if {$ACTION='exclude-any'}?>
+                        <?expand segment-routing-dynamic-constraints-affinity-attr-list id=exclude-any?>
+                      <?end?>
+                    </affinity>
+                  </constraints>
+                  <constraints when="{explicit/constraints}">
+                    <segments>
+                      <dataplane>
+                        <mpls/>
+                      </dataplane>
+                      <algorithm>{explicit/constraints/segments/sid-algorithm}</algorithm>
+                    </segments>
+                    <association-group when="{explicit/constraints/disjoint-path}">
+                      <disjointness>
+                        <type>{explicit/constraints/disjoint-path/type}</type>
+                      </disjointness>
+                      <identifier>{explicit/constraints/disjoint-path/group-id}</identifier>
+                      <source>{explicit/constraints/disjoint-path/source}</source>
+                    </association-group>
+                    <bandwidth when="{/bandwidth}">{/bandwidth}</bandwidth>         
+                    <affinity when="{explicit/constraints/affinity}" foreach="{explicit/constraints/affinity/rule}">
+                      <?set ACTION={current()}?>
+                      <?if {$ACTION='include-all'}?>
+                        <?expand segment-routing-dynamic-constraints-affinity-attr-list id=include-all?>
+                      <?end?>
+                      <?if {$ACTION='include-any'}?>
+                        <?expand segment-routing-dynamic-constraints-affinity-attr-list id=include-any?>
+                      <?end?>
+                      <?if {$ACTION='exclude-any'}?>
+                        <?expand segment-routing-dynamic-constraints-affinity-attr-list id=exclude-any?>
+                      <?end?>
+                    </affinity>
+                  </constraints>
+                  <explicit when="{explicit}">
+                    <?foreach {explicit/sid-list}?>
+                      <?set REAL_NAME={name}?>
+                      <?set REAL_NAME_PREFIX='-discovered-'?>
+                      <?if {contains(string(name), $REAL_NAME_PREFIX)}?>
+                        <?set REAL_NAME={substring-after(string(name), $REAL_NAME_PREFIX)}?>
+                      <?end?>
+                      <segment-list>
+                        <name>{$REAL_NAME}</name>
+                      </segment-list>
+                    <?end?>
+                  </explicit>
+                  <dynamic  when="{dynamic}">
+                    <pcep when="{dynamic/pce}"></pcep>
+                    <?set METRIC_TYPE={dynamic/metric-type}?>
+                    <metric>
+                      <sid-limit>{dynamic/constraints/sid-limit}</sid-limit>
+                      <?if {$METRIC_TYPE = 'latency'}?>
+                        <type>delay</type>
+                      <?else?>
+                        <type when="{$METRIC_TYPE}">{$METRIC_TYPE}</type>
+                      <?end?>
+                      <?if {dynamic/metric-margin/absolute}?>
+                        <margin>
+                          <absolute>{dynamic/metric-margin/absolute}</absolute>
+                        </margin>
+                      <?end?> 
+                      <?if {dynamic/metric-margin/relative}?>
+                        <margin>
+                          <relative>{dynamic/metric-margin/relative}</relative>
+                        </margin>
+                      <?end?> 
+                    </metric>
+                  </dynamic>
+                </preference>
+              </candidate-paths>
+            </policy>
+          </traffic-eng>
+        </segment-routing>
+      </config>
+    </device>
+  </devices>
+</config-template>

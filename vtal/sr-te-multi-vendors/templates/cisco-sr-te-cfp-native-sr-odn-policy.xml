@@ -1,0 +1,66 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <config>
+        <sr xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-segment-routing-ms-cfg">
+          <enable />
+          <traffic-engineering xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-xtc-agent-cfg">
+            <on-demand-colors>
+              <on-demand-color tags="merge">
+                <color>{/color}</color>
+                <maximum-sid-depth>{maximum-sid-depth}</maximum-sid-depth>
+                <on-demand-color-dyn-mpls when="{dynamic}">
+                  <on-demand-color-dyn-mpls-metric>
+                    <metric-type when="{dynamic/metric-type}">{dynamic/metric-type}</metric-type>
+                    <?if {dynamic/metric-margin/absolute}?>
+                      <metric-margin>
+                        <value-type>absolute</value-type>
+                        <absolute-value>{dynamic/metric-margin/absolute}</absolute-value>
+                      </metric-margin>
+                    <?end?>
+                    <?if {dynamic/metric-margin/relative}?>
+                      <metric-margin>
+                        <value-type>relative</value-type>
+                        <relative-value>{dynamic/metric-margin/relative}</relative-value>
+                      </metric-margin>
+                    <?end?>
+                  </on-demand-color-dyn-mpls-metric>
+                  <on-demand-color-dyn-mpls-flex-algorithm when="{dynamic/flex-alg}">{dynamic/flex-alg}</on-demand-color-dyn-mpls-flex-algorithm>
+                  <disjoint-path when="{dynamic/disjoint-path}">
+                    <group-id>{dynamic/disjoint-path/group-id}</group-id>
+                    <disjointness-type>{dynamic/disjoint-path/type}</disjointness-type>
+                    <sub-id>{dynamic/disjoint-path/sub-id}</sub-id>
+                  </disjoint-path>
+                  <on-demand-color-dyn-mpls-pce when="{dynamic/pce}">
+                  </on-demand-color-dyn-mpls-pce>
+                  <affinity-rules when="{dynamic/affinity}" foreach="{dynamic/affinity/rule" >
+                    <?set ACTION=affinity-{action}?>
+                    <?foreach {color}?>
+                      <?expand traffic-eng-dynamic-contraints-affinity-rule?>
+                    <?end?>
+                  </affinity-rules>
+                </on-demand-color-dyn-mpls>
+                <bandwidth when="{bandwidth}">{bandwidth}</bandwidth>
+                <srv6 when="{/srv6}">
+                  <locator when="{/srv6/locator}">
+                    <locator-name>{/srv6/locator/locator-name}</locator-name>
+                    <behavior>{/srv6/locator/behavior}</behavior>
+                    <binding-sid-type>{/srv6/locator/binding-sid-type}</binding-sid-type>
+                 </locator>
+                </srv6>
+                <?if {source-address}?>
+                  <?if {contains(string(source-address), '.')}?>
+                    <?expand traffic-eng-source-addr ipType='end-point-type-ipv4' address={source-address}?>
+                  <?else?>
+                    <?expand traffic-eng-source-addr ipType='end-point-type-ipv6' address={source-address}?>
+                  <?end?>
+                <?end?>
+              </on-demand-color>
+            </on-demand-colors>
+          </traffic-engineering>
+        </sr>
+      </config>
+    </device>
+  </devices>
+</config-template>

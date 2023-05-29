@@ -1,0 +1,960 @@
+module cisco-tsdn-core-fp-common {
+
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-core-fp-common";
+  prefix cisco-tsdn-core-fp-common;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-kicker {
+    prefix kicker;
+  }
+  import ietf-yang-types {
+    prefix yang;
+  }
+
+  description "Common Module for all TSDN packages";
+
+  revision 2022-06-13 {
+    description
+      "Modified: description and tailf:info for profile-name and rule-name";
+  }
+
+  revision 2022-02-15 {
+    description
+      "Added: EVPN Multipoint Support
+       Added: list rfs-flat-L2vpn-site-plan";
+  }
+
+  revision 2022-02-04 {
+    description
+      "Added: preservation added under service-assurance";
+  }
+
+  revision 2021-09-22 {
+	    description
+	      "Added: regular expression validation added for service-assurance profile-name and rule-name";
+	  }
+
+  revision 2021-09-20 {
+    description
+      "Added: zombie-cleanup action under tsdn-common-actions";
+  }
+
+  revision 2021-07-30 {
+    description
+      "Added: static-config-redeploy-indicator-component-augmentation grouping";
+  }
+
+  revision 2021-06-16 {
+  	description "Added : description added to aa-monitoring-state enum. Updated description for
+  	                     profile-name and rule-name";
+  }
+
+  revision 2021-05-19 {
+    description "Removed: leaf local-user.";
+  }
+
+  revision 2021-05-11 {
+    description "Added: leaf enable-service-assurance.";
+  }
+
+  revision 2021-05-10 {
+    description "Added: tailf:hidden full was added to container commit-queue-recovery-data";
+  }
+
+  revision 2021-05-07 {
+    description "Added: grouping status-code-plan-augmetation and status-code-component-augmentation.";
+  }
+
+  revision 2021-04-09 {
+    description "Added: grouping service-assurance-grouping.";
+  }
+
+  revision 2021-04-06 {
+    description "Removed: enum sr-settings and sr-pce from action tsdn-common-actions -> sync-rfs-plan
+                          input leaf service-type.";
+  }
+
+  revision 2021-03-12 {
+    description "Added: action-application-timeout to make NSO application timeout for
+                        actions configurable.";
+  }
+
+  revision 2020-11-20 {
+    description "Added: cleanup-in-progress-for list to keep track of service paths which have an
+                        active cleanup occurring";
+  }
+
+  revision 2020-11-09 {
+    description "Added leaf sync-direction under device-poller-configurations";
+  }
+
+  revision 2020-06-23 {
+    description
+      "Initial revision.";
+  }
+
+  list cleanup-in-progress-for {
+    tailf:info "List of service path for which cleanup is currently active";
+    description "List of service path for which cleanup is currently active";
+    tailf:hidden tsdn;
+    key path;
+    leaf path {
+      tailf:info "Service Path";
+      description "Service Path";
+      type string;
+    }
+  }
+
+  // This will create subscribers on given path and
+  // trigger netconf-notification on kicker-events stream for any change under that path.
+  list rfs-monitor-path {
+    tailf:info "List of xpath to generate 'kicker-events' notification for plan RFS updates.";
+    description "List of xpath to generate 'kicker-events' notification for plan RFS updates.";
+    uses ncs:service-data;
+    ncs:servicepoint "rfs-monitor-path-servicepoint";
+    key path;
+    leaf path {
+      tailf:info "RFS monitor paths";
+      type tailf:node-instance-identifier;
+    }
+  }
+
+  container tsdn-common-actions {
+    tailf:action rfs-plan-change-netconf-notification-handler {
+      tailf:info "CFS level action to tap into RFS plan change kicker-events
+                                          & redeploy corresponding services";
+      description "CFS level action to tap into RFS plan change kicker-events
+                                          & redeploy corresponding services";
+      tailf:hidden full;
+      tailf:actionpoint rfs-plan-change-netconf-notification-handler;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      }
+    }
+
+    tailf:action sync-rfs-plan {
+      tailf:info "Action to manually sync RFS service plan onto CFS.";
+      description "Action to manually sync RFS service plan onto CFS.";
+      tailf:actionpoint sync-rfs-plan;
+      input {
+        leaf service {
+          tailf:info "Device for which RFS plan should be sync'd";
+          description "Device for which RFS plan should be sync'd";
+          type string;
+          mandatory true;
+        }
+        leaf device {
+          tailf:info "Device for which RFS plan should be sync'd";
+          description "Device for which RFS plan should be sync'd";
+          type string;
+          mandatory true;
+        }
+        leaf service-type {
+          type enumeration {
+            enum sr-policy;
+            enum sr-odn;
+            enum flat-l3vpn;
+            enum flat-l2vpn;
+            enum rsvp-te;
+          }
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+    tailf:action zombie-cleanup {
+      tailf:info "Action to cleanup orphaned zombie";
+      description "Action to cleanup orphaned zombie";
+      tailf:actionpoint cisco-tsdn-core-fp-common-zombie-cleanup;
+      tailf:hidden tsdn;
+      input {
+        leaf zombie-path {
+          tailf:info "Zombie service path";
+          description "Zombie service path";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:zombies/ncs:service/ncs:service-path";
+          }
+          mandatory true;
+        }
+        leaf force {
+          tailf:info "Force flag to cleanup zombie without checks";
+          description "Force flag to cleanup zombie without checks";
+          type boolean;
+          default false;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+      tailf:confirm-text "########################\n" +
+        "#        Warning       #\n" +
+        "########################\n" +
+        "You are about to forcefully cleanup a zombie which may result in undetermined behavior.\n" +
+        "Are you sure you want to proceed?" {
+          tailf:confirm-default false;
+      }
+    }
+  }
+
+  leaf action-application-timeout {
+    tailf:info "This value is used to configure NSO application timeout for CFP actions.";
+    description "This value is used to configure NSO application timeout for CFP actions.";
+    type uint64;
+    default "7200";
+  }
+
+  container commit-queue-recovery-data {
+    tailf:info "CQ error recovery data for a failed commit-queue";
+    description "CQ error recovery data for a failed commit-queue";
+    tailf:hidden full;
+    leaf auto-cleanup {
+      tailf:info "When a device is down and this flag is set to true,
+                  on deletion of device from the service, all data pertaining to this device
+                  will be removed automatically using no-networking.
+                  This means user has to take care of device config cleanup on the device.
+                  If it is set to false, user will need to manually run cleanup action
+                  to remove this device from the service.";
+      description "When a device is down and this flag is set to true,
+                  on deletion of device from the service, all data pertaining to this device
+                  will be removed automatically using no-networking.
+                  This means user has to take care of device config cleanup on the device.
+                  If it is set to false, user will need to manually run cleanup action
+                  to remove this device from the service.";
+      type boolean;
+      default false;
+    }
+
+    leaf enable-polling-recovery {
+      tailf:info "If set to true, this flag tells CFP to monitor a connection failed device &
+                  issue recovery mechanism once the device is back up.";
+      description "If set to true, this flag tells CFP to monitor a connection failed device &
+                  issue recovery mechanism once the device is back up.";
+      type boolean;
+      default false;
+    }
+    list failed-device {
+      tailf:info "CQ failed devices with transient errors";
+      description "CQ failed devices with transient errors";
+
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key name;
+
+      leaf name {
+        tailf:info "CQ failed device name";
+        description "CQ failed devices name";
+        type string;
+      }
+
+      list impacted-service-path {
+        tailf:info "CQ failed device's impacted services";
+        description "CQ failed device's impacted services";
+        key service;
+        leaf service {
+          tailf:info "Impacted service path";
+          description "Impacted service path";
+          type string;
+        }
+
+        // this is needed only for delete case where a zombie has to be load-config & commit.
+        leaf failed-commit-queue-id {
+          tailf:info "CQ ID for the transient error";
+          description "CQ ID for the transient error";
+          type string;
+        }
+
+        leaf poller-recovery-result {
+          tailf:info "Represents recovery result after poller tries to recover
+                                        this service once device is back up.";
+          description "Represents recovery result after poller tries to recover
+                                        this service once device is back up.";
+          type string;
+        }
+      }
+    }
+
+    list current-device-poller {
+      tailf:info "List of devices on which poller is currently running";
+      description "List of devices on which poller is currently running";
+      tailf:hidden tsdn;
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key name;
+      leaf name {
+        type string;
+      }
+    }
+
+    container device-poller-configurations {
+      leaf poll-wait-time {
+        tailf:info "Wait time between each polling request towards device in seconds";
+        description "Wait time between each polling request towards device in seconds";
+        type uint32 {
+          range "20 .. max";
+        }
+        default 30;
+      }
+      leaf poll-time {
+        tailf:info "Amount of time for which device should be polled for connection - in minutes";
+        description "Amount of time for which device should be polled for connection - in minutes";
+        type uint32 {
+          range "5 .. max";
+        }
+        default 30;
+      }
+      leaf poll-time-multiplier {
+        tailf:info "Multiplies this number with poll-time to calculate total poll-time";
+        description "Multiplies this number with poll-time to calculate total poll-time";
+        type uint32 {
+          range "1 .. max";
+        }
+        default 1;
+      }
+      leaf sync-direction {
+        tailf:info "sync device with sync-from or sync-to";
+        description "sync device with sync-from or sync-to";
+        type enumeration {
+          enum sync-from;
+          enum sync-to;
+        }
+        default sync-from;
+      }
+    }
+
+    tailf:action trigger-device-poller {
+      tailf:info "Action to trigger poller on a device if there is no existing poller running";
+      description "Action to trigger poller on a device if there is no existing poller running";
+      tailf:actionpoint trigger-device-poller;
+      input {
+        leaf device {
+          tailf:info "Device to trigger poller on";
+          description "Device to trigger poller on";
+          mandatory true;
+          type string;
+          tailf:non-strict-leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    tailf:action purge-failed-device {
+      tailf:info "Action to purge commit-queue error failed device
+                  or remove services from failed list";
+      description "Action to purge commit-queue error failed device
+                  or remove services from failed list";
+      tailf:actionpoint purge-failed-device;
+      input {
+        leaf device {
+          tailf:info "Device to purge poller on";
+          description "Device to purge poller on";
+          mandatory true;
+          type string;
+          tailf:non-strict-leafref {
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+        }
+        list impacted-service-path {
+          tailf:info "CQ failed device's impacted services";
+          description "CQ failed device's impacted services";
+          key service;
+          leaf service {
+            tailf:info "Impacted service path";
+            description "Impacted service path";
+            type string;
+          }
+        }
+        leaf force {
+          tailf:info "If this flag is set, CFP forcefully removes failed-device entry for
+                                   selected device irrespective of impacted service paths.";
+          description "If this flag is set, CFP forcefully removes failed-device entry for
+                                   selected device irrespective of impacted service paths.";
+          type empty;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+  }
+
+  /*
+  * Local Plan Copy related models for every service
+  */
+
+
+  list rfs-odn-template-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+    key "name head-end";
+
+    leaf name {
+      type string;
+    }
+
+    leaf head-end {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-policy-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+    key "name head-end";
+
+    leaf name {
+      type string;
+    }
+
+    leaf head-end {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-flat-L3vpn-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+    key "name endpoint";
+
+    leaf name {
+      type string;
+    }
+
+    leaf endpoint {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-rsvp-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+
+    key "name";
+
+    leaf name {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-pce-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+    key "name node-name";
+
+    leaf name {
+      type string;
+    }
+
+    leaf node-name {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-setting-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+
+    key "name node-name";
+
+    leaf name {
+      type string;
+    }
+
+    leaf node-name {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-flat-L2vpn-local-site-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+
+    key "name pe";
+    leaf name {
+      type string;
+    }
+    leaf pe {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-flat-L2vpn-remote-site-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+
+    key "name pe";
+    leaf name {
+      type string;
+    }
+    leaf pe {
+      type string;
+    }
+
+    uses rfs-plan-grouping;
+  }
+
+  list rfs-flat-L2vpn-site-plan {
+    tailf:hidden tsdn;
+    tailf:info "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    description "This structure is used to store copy of
+                RFS/Internal service plan for LSA mode.";
+    config false;
+    tailf:cdb-oper {
+      tailf:persistent true;
+    }
+
+    key "name site-name";
+    leaf name {
+      type string;
+    }
+    leaf site-name {
+      type string;
+    }
+    leaf pe {
+      type string;
+    }
+    uses rfs-plan-grouping;
+  }
+
+  /*
+  * Local Plan Copy related models - not for northbound user.
+  * These models are needed & groupings from NSO cannot be used because it requires RFS nano plan
+  * prefixes to be present which will not be the case in LSA.
+  */
+
+  grouping rfs-plan-grouping {
+    uses nano-plan-data {
+      augment "plan" {
+        leaf zombie-exists {
+          tailf:info "Check if zombie exists for RFS service, mark this true.";
+          description "Check if zombie exists for RFS service, mark this true.";
+          type boolean;
+          default false;
+        }
+      }
+    }
+  }
+
+  typedef plan-state-action-status-t {
+    type enumeration {
+      enum not-reached;
+      enum create-reached;
+      enum delete-reached;
+      enum failed {
+        tailf:code-name "rfs_plan_action_failed";
+      }
+      enum create-init;
+      enum delete-init;
+    }
+  }
+
+  typedef plan-state-status-t {
+    type enumeration {
+      enum not-reached;
+      enum reached;
+      enum failed {
+        tailf:code-name "rfs_plan_state_failed";
+      }
+    }
+  }
+
+  grouping nano-plan-data {
+    description
+      "This grouping is required for nano services. It replaces the
+       plan-data grouping. This grouping contains an executable plan
+       that has additional state data which is internally used to
+       control service execution.";
+    uses nano-plan;
+  }
+
+  grouping nano-plan {
+    container plan {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      uses nano-plan-components;
+      container commit-queue {
+        presence "The service is being committed through the commit queue.";
+        list queue-item {
+          key id;
+          leaf id {
+            type uint64;
+            description
+              "If the queue item in the commit queue refers to this service
+               this is the queue number.";
+          }
+        }
+      }
+      leaf failed {
+        type empty;
+      }
+      container error-info {
+        presence "Additional info if plan has failed";
+        leaf message {
+          type string;
+          description
+            "An explanatory message for the failing plan.";
+        }
+        leaf log-entry {
+          type string;
+          description
+            "Reference to a service log entry with additional information.";
+        }
+      }
+    }
+  }
+
+  grouping nano-plan-components {
+    description
+      "This grouping contains a list of components that reflects the
+       different steps or stages that a nano service comprises.";
+    list component {
+      ordered-by user;
+      key "type name";
+      description
+        "A component has a type and a list of states.  It is required
+         that the first plan component is of type ncs:self.  It is
+         also required that the first state of a component is ncs:init
+         and the last state is ncs:ready.  A service can in addition
+         to the 'self' component have any number of components. These
+         additional components will have types that are defined by
+         user specified YANG identities.";
+
+      uses plan-component-body {
+        augment "state" {
+          leaf post-action-status {
+            type plan-state-action-status-t;
+            description
+              "This leaf is initially set to 'not-reached'.
+
+               If a post-action was specified, and returned
+               successfully, this leaf will be set to 'create-reached'
+               if the component is not back-tracking, and
+               'delete-reached' if it is back-tracking.
+
+               If the post-action did not return successfully, this
+               leaf is set to 'failed'.";
+          }
+        }
+      }
+      leaf back-track {
+        type boolean;
+        default false;
+      }
+    }
+  }
+
+  grouping plan-component-body {
+    leaf name {
+      type string;
+    }
+    leaf type {
+      description
+        "The plan component type is defined by an YANG identity.
+         It is used to identify the characteristics of a certain component.
+         Therefore, if two components in the same service are of the same
+         type they should be identical with respect to number, type and order
+         of their contained states.";
+
+      type string;
+      mandatory true;
+    }
+    list state {
+      description
+        "A plan state represents a certain step or stage that a service needs
+         to execute and/or reach. It is identified as an YANG identity.
+         There are two predefined states ncs:init and ncs:ready which is the
+         first respectively last state of a plan component.";
+
+      ordered-by user;
+      key name;
+      leaf name {
+        tailf:alt-name state;
+        type string;
+      }
+      leaf status {
+        description
+          "A plan state is always in one of three states 'not-reached' when
+           the state has not been executed, 'reached' when the state has been
+           executed and 'failed' it the state execution failed.";
+
+        type plan-state-status-t;
+      }
+      leaf when {
+        type yang:date-and-time;
+        when '../status != "not-reached"';
+        description
+          "The time this state was successfully reached or failed.";
+      }
+      leaf service-reference {
+        description
+          "If this component reflects the state of some other data, e.g
+           an instantiated RFS, an instantiated CFS or something else, this
+           optional field can be set to point to that instance";
+        type instance-identifier {
+          require-instance false;
+        }
+        tailf:display-column-name "ref";
+      }
+    }
+  }
+
+  /* Service Assurance related models */
+
+  leaf enable-service-assurance {
+    tailf:hidden full;
+    description
+      "Will be set to true if 'cisco-aa-service-assurance' package is installed which
+       will then unhide the service assurance related configs.";
+    type boolean;
+    default false;
+  }
+
+  typedef aa-monitoring-state {
+    type enumeration {
+      enum "disable" {
+        value 1;
+        description "Stop monitoring and clear all assurance related historical data";
+      }
+      enum "enable" {
+        value 2;
+        description "Enable monitoring of Service health status";
+      }
+      enum "pause" {
+        value 3;
+        description
+          "Pause monitoring. This stops monitoring but retains all assurance related historical
+          data for subsequent inspection";
+      }
+    }
+  }
+
+  typedef historical-data-options {
+	type enumeration {
+	  enum "remove" {
+	    value 1;
+	    description "Remove all assurance related historical data after stop monitoring";
+	  }
+	  enum "preserve" {
+	    value 2;
+	    description "Preserve all assurance related historical data after stop monitoring";
+	  }
+	}
+  }
+
+  grouping service-assurance-grouping {
+    container service-assurance {
+      tailf:info "Service Assurance configuration";
+      description "Service Assurance configuration";
+      presence "true";
+      leaf monitoring-state {
+        type aa-monitoring-state;
+        default "disable";
+        description "To enable, disable or pause the service assurance monitoring";
+        tailf:info "To enable, disable or pause the service assurance monitoring";
+      }
+      leaf preservation {
+          type historical-data-options;
+          default "remove";
+          description "Preserve/Remove all assurance related historical data after stop monitoring";
+          tailf:info "Preserve/Remove all assurance related historical data after stop monitoring";
+      }
+      leaf profile-name {
+        type string {
+          pattern '[a-zA-Z0-9.\-_]{1,48}\s(custom|system)';
+        }
+        mandatory true;
+        description "Please input profile name in following format: '<profile-name> (custom|system)'
+                     The possible profile names for system are: Gold_L2VPN_ConfigProfile, Gold_L3VPN_ConfigProfile, Silver_L2VPN_ConfigProfile, Silver_L3VPN_ConfigProfile.";
+        tailf:info "Please input profile name in following format: '<profile-name> (custom|system)'
+                    The possible profile names for system are: Gold_L2VPN_ConfigProfile, Gold_L3VPN_ConfigProfile, Silver_L2VPN_ConfigProfile, Silver_L3VPN_ConfigProfile.";
+      }
+      leaf rule-name {
+        type string {
+          pattern '[a-zA-Z0-9.\-_]{1,48}\s(custom|system)';
+        }
+        mandatory true;
+        description "Please input rule name in following format: '<rule-name> (custom|system)'
+                     The possible rule names for system are: Rule-L2VPN-NM, Rule-L2VPN-NM-Basic, Rule-L2VPN-NM-P2P, Rule-L2VPN-NM-P2P-Basic, Rule-L3VPN-NM, Rule-L3VPN-NM-Basic.";
+        tailf:info "Please input rule name in following format: '<rule-name> (custom|system)'
+                    The possible rule names for system are: Rule-L2VPN-NM, Rule-L2VPN-NM-Basic, Rule-L2VPN-NM-P2P, Rule-L2VPN-NM-P2P-Basic, Rule-L3VPN-NM, Rule-L3VPN-NM-Basic.";
+      }
+    }
+  }
+
+  grouping status-code-plan-augmentation {
+    list status-code-detail {
+      tailf:info "Status Codes";
+      description "Status Codes";
+      key "type name";
+      leaf type {
+        type ncs:plan-component-type-t;
+      }
+      leaf name {
+        type string;
+      }
+      leaf code {
+        type string;
+      }
+      list context {
+        key context-name;
+        leaf context-name {
+          type string;
+        }
+        leaf context-msg {
+          type string;
+        }
+      }
+      leaf severity {
+        type enumeration {
+          enum INFO;
+          enum WARNING;
+          enum ERROR;
+          enum FATAL;
+          enum NONE;
+        }
+      }
+      leaf recommended-action {
+        tailf:info "Recommended action to recover in case of error";
+        description "Recommended action to recover in case of error";
+        type string;
+      }
+      leaf impacted-device {
+        tailf:info "Hostname of device for corresponding component in NSO";
+        description "Hostname of device for corresponding component in NSO";
+        type string;
+      }
+    }
+  }
+
+  grouping status-code-component-augmentation {
+    leaf status-code {
+      type string;
+    }
+  }
+
+  grouping static-config-redeploy-indicator-component-augmentation {
+    leaf static-config-redeploy-indicator {
+      tailf:info "Static config to indicate component update from internal to NB services";
+      description "Static config to indicate component update from internal to NB services";
+      tailf:hidden full;
+      type string;
+    }
+  }
+}

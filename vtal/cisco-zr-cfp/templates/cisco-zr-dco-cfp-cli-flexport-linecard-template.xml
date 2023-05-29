@@ -1,0 +1,41 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <?if {$PORT_MODE = 'NCS'}?>
+          <hw-module xmlns="http://tail-f.com/ned/cisco-ios-xr">
+            <port-range>
+              <start>{$P}</start>
+              <end>{$P_SEC}</end>
+              <instance>{$I}</instance>
+              <location>{$R}/{$S}/CPU0</location>
+              <mode>{$SPEED}</mode>
+            </port-range>
+          </hw-module>
+        <?elif {$PORT_MODE = 'A9903-20HG-PEC'}?>
+          <hw-module xmlns="http://tail-f.com/ned/cisco-ios-xr">
+            <location>
+              <location-bay-breakout-list>
+                <id>{$R}/{$S}/CPU0</id>
+                <bay>1</bay>
+                <port>{$P}</port>
+                <breakout>{$SPEED}</breakout>
+              </location-bay-breakout-list>
+            </location>
+          </hw-module>
+        <?elif {$PORT_MODE = 'A9K'}?>
+          <hw-module xmlns="http://tail-f.com/ned/cisco-ios-xr">
+            <location>
+              <location-breakout-list>
+                <id>{$R}/{$S}/CPU0</id>
+                <port>{$P}</port>
+                <breakout>{$SPEED}</breakout>
+              </location-breakout-list>
+            </location>
+          </hw-module>
+        <?end?>
+      </config>
+    </device>
+  </devices>
+</config>

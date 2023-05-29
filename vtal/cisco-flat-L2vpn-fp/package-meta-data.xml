@@ -1,0 +1,38 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>cisco-flat-L2vpn-fp</name>
+  <package-version>4.1.0</package-version>
+  <description>NSO T-SDN Flat L2VPN FP</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <python-package>
+    <vm-name>cisco-flat-L2vpn-fp</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>custom-template-utils</name>
+  </required-package>
+
+  <required-package>
+    <name>core-fp-common</name>
+  </required-package>
+
+  <required-package>
+    <name>cisco-tsdn-core-fp-common</name>
+  </required-package>
+
+  <required-package>
+    <name>resource-manager</name>
+  </required-package>
+
+  <required-package>
+    <name>lsa-utils</name>
+  </required-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>cisco_flat_L2vpn_fp.main.Main</python-class-name>
+    </application>
+  </component>
+
+</ncs-package>

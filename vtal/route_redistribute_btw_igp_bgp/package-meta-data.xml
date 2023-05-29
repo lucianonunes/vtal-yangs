@@ -1,0 +1,10 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>route_redistribute_btw_igp_bgp</name>
+  <package-version>1.0</package-version>
+  <description>Template-based route_redistribute_btw_igp_bgp resource facing service</description>
+  <ncs-min-version>5.7</ncs-min-version>
+
+  <!-- It's possible to add more components to the -->
+  <!-- same package, multiple services, data providers etc -->
+
+</ncs-package>

@@ -1,0 +1,58 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0"
+                 servicepoint="enable-interfaces">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <!--
+          Select the devices from some data structure in the service
+          model. In this skeleton the devices are specified in a leaf-list.
+          Select all devices in that leaf-list:
+      -->
+      <name>{/device}</name>
+                 <config>
+                   <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+
+                     <FiftyGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FiftyGigE')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </FiftyGigE>
+
+                     <FortyGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FortyGigE')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </FortyGigE>
+
+                     <FourHundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FourHundredGigE')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </FourHundredGigE>
+
+                     <GigabitEthernet when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'GigabitEthernet')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </GigabitEthernet>
+
+                     <HundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'HundredGigE')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </HundredGigE>
+
+                     <TenGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TenGigE')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </TenGigE>
+
+                     <TwentyFiveGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TwentyFiveGigE')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </TwentyFiveGigE>
+
+                     <TwoHundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TwoHundredGigE')}">
+                       <id>{/interface_port_number}</id>
+                       <shutdown tags="delete"/>
+                     </TwoHundredGigE>
+
+                   </interface>
+                 </config>
+    </device>
+  </devices>
+</config-template>

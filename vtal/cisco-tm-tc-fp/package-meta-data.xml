@@ -1,0 +1,22 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>cisco-tm-tc-fp</name>
+  <package-version>4.4.0-116</package-version>
+  <description>TM-TC</description>
+  <ncs-min-version>5.7</ncs-min-version>
+
+  <python-package>
+    <vm-name>cisco-tm-tc-fp</vm-name>
+  </python-package>
+
+  <required-package>
+    <name>custom-template-utils</name>
+  </required-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>cisco_tm_tc_fp.main.Main</python-class-name>
+    </application>
+  </component>
+
+</ncs-package>

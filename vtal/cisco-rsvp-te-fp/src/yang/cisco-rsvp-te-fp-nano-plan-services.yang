@@ -1,0 +1,89 @@
+module cisco-rsvp-te-fp-nano-plan-services {
+  yang-version 1.1;
+
+  namespace "http://cisco.com/ns/nso/fp/cisco-tsdn-rsvp-te-fp-nano-plan-services";
+  prefix cisco-rsvp-te-fp-nano-plan-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-rsvp-te-fp {prefix cisco-rsvp-te-fp; }
+
+  revision 2020-06-10 {
+    description "Initial version";
+  }
+
+  identity head-end {
+    base ncs:plan-component-type;
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline tunnel-te-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // this checks if there are errors in another components, show it in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-rsvp-te-fp-nano-plan-services:head-end" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          // create a kicker on explicit-path
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "cisco-rsvp-te-fp-nano-plan-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state as failed in case device transaction is invalidated
+          // this is needed due to CQ, where in device's last-transaction-id is set to INVALIDATED
+          // in case of CQ failures. During redeploy's we do not want the service to go to 'reached'
+          // state unless the device transaction is fixed.
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree rsvp-te-servicepoint {
+    ncs:plan-outline-ref "cisco-rsvp-te-fp-nano-plan-services:tunnel-te-nano-plan";
+    ncs:plan-location "/cisco-rsvp-te-fp:rsvp-te/cisco-rsvp-te-fp:tunnel-te-plan";
+
+    ncs:selector {
+      ncs:variable "ID" {
+        ncs:value-expr "id";
+      }
+      ncs:variable "HEADEND" {
+        ncs:value-expr "head-end";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:selector {
+        ncs:variable "HEADEND" {
+          ncs:value-expr "head-end";
+        }
+        ncs:create-component "$HEADEND" {
+          ncs:component-type-ref "cisco-rsvp-te-fp-nano-plan-services:head-end";
+        }
+      }
+    }
+  }
+}

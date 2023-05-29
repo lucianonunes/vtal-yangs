@@ -1,0 +1,552 @@
+module cisco-tm-tc-fp-internal {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tm-tc-fp-internal";
+  prefix cisco-tm-tc-fp-internal;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import ietf-yang-types {
+    prefix yang;
+  }
+
+  import custom-template-hook {
+    prefix ct-hook;
+  }
+
+  revision 2020-01-27 {
+    description "Initial Revision";
+  }
+
+  typedef Service-name-type {
+    type string {
+      pattern "[a-zA-Z0-9\\-_]+";
+    }
+  }
+
+  typedef Id-type {
+    type string {
+      pattern '[\w\-\.:,_@#%$\+=\|;]+';
+    }
+  }
+
+  typedef Mdt-dscp-value-type {
+    type enumeration {
+      enum default {
+        value 0;
+        tailf:info "Applicable to DSCP: bits 000000";
+      }
+      enum cs1 {
+        value 8;
+        tailf:info "Applicable to DSCP: bits 001000";
+      }
+      enum af11 {
+        value 10;
+        tailf:info "Applicable to DSCP: bits 001010";
+      }
+      enum af12 {
+        value 12;
+        tailf:info "Applicable to DSCP: bits 001100";
+      }
+      enum af13 {
+        value 14;
+        tailf:info "Applicable to DSCP: bits 001110";
+      }
+      enum cs2 {
+        value 16;
+        tailf:info "Applicable to DSCP: bits 010000";
+      }
+      enum af21 {
+        value 18;
+        tailf:info "Applicable to DSCP: bits 010010";
+      }
+      enum af22 {
+        value 20;
+        tailf:info "Applicable to DSCP: bits 010100";
+      }
+      enum af23 {
+        value 22;
+        tailf:info "Applicable to DSCP: bits 010110";
+      }
+      enum cs3 {
+        value 24;
+        tailf:info "Applicable to DSCP: bits 011000";
+      }
+      enum af31 {
+        value 26;
+        tailf:info "Applicable to DSCP: bits 011010";
+      }
+      enum af32 {
+        value 28;
+        tailf:info "Applicable to DSCP: bits 011100";
+      }
+      enum af33 {
+        value 30;
+        tailf:info "Applicable to DSCP: bits 011110";
+      }
+      enum cs4 {
+        value 32;
+        tailf:info "Applicable to DSCP: bits 100000";
+      }
+      enum af41 {
+        value 34;
+        tailf:info "Applicable to DSCP: bits 100010";
+      }
+      enum af42 {
+        value 36;
+        tailf:info "Applicable to DSCP: bits 100100";
+      }
+      enum af43 {
+        value 38;
+        tailf:info "Applicable to DSCP: bits 100110";
+      }
+      enum cs5 {
+        value 40;
+        tailf:info "Applicable to DSCP: bits 101000";
+      }
+      enum ef {
+        value 46;
+        tailf:info "Applicable to DSCP: bits 101110";
+      }
+      enum cs6 {
+        value 48;
+        tailf:info "Applicable to DSCP: bits 110000";
+      }
+      enum cs7 {
+        value 56;
+        tailf:info "Applicable to DSCP: bits 111000";
+      }
+    }
+    tailf:info "Mdt dscp value";
+  }
+
+  grouping interface-name-grp {
+    leaf if-type {
+      tailf:info "Interface Type";
+      type enumeration {
+        enum Loopback;
+        enum GigabitEthernet;
+        enum TenGigE;
+        enum TwentyFiveGigE;
+        enum FortyGigE;
+        enum FiftyGigE;
+        enum HundredGigE;
+        enum TwoHundredGigE;
+        enum FourHundredGigE;
+        enum Bundle-Ether;
+      }
+      mandatory true;
+    }
+
+    leaf if-id {
+      tailf:info "Interface Id";
+      type string {
+        pattern '[0-9]+(/[0-9]+)*';
+      }
+      mandatory true;
+    }
+  }
+
+  grouping telemetry-encoding-grp {
+    leaf encoding {
+      tailf:info "Encoding used to transmit telemetry data to the collector";
+      type enumeration {
+        enum gpb;
+        enum self-describing-gpb;
+        enum json;
+      }
+    }
+  }
+
+  grouping telemetry-protocol-grp {
+    container protocol {
+      tailf:info "Transport Protocol used to transmit telemetry data to the collector";
+      presence "true";
+
+      choice protocol-choice {
+        mandatory true;
+        container tcp {
+          tailf:info "tcp";
+          presence "true";
+        }
+
+        container udp {
+          tailf:info "udp";
+          presence "true";
+
+          leaf packetsize {
+            tailf:info "udp packetsize";
+            type uint32 {
+              range "484..65507";
+            }
+            default "1472";
+          }
+        }
+
+        container grpc {
+          tailf:info "grpc";
+          presence "true";
+
+          leaf no-tls {
+            tailf:info "No tls";
+            type empty;
+          }
+          leaf tls-hostname {
+            tailf:info "tls hostname";
+            type string;
+          }
+        }
+      }
+    }
+  }
+
+  grouping telemetry-definition-grp {
+    container telemetry-model-driven {
+      tailf:info "Model Driven Telemetry definition configuration";
+      presence "true";
+
+      list destination-group {
+        tailf:info "Destination Group configuration";
+        key "id";
+        leaf id {
+          tailf:info "Destination Id";
+          type Id-type;
+        }
+
+        leaf vrf {
+          tailf:info "VRF for the destination";
+          type string {
+            length "1..32";
+          }
+        }
+
+        list ipv4-destination {
+          tailf:info "IPv4 destination";
+          key "address port";
+          leaf address {
+            tailf:info "A.B.C.D;;Destination ipv4 address";
+            type inet:ipv4-address-no-zone;
+          }
+          leaf port {
+            tailf:info "<1-65535>;;Port Number";
+            type uint16 {
+              range "1..65535";
+            }
+          }
+
+          uses telemetry-encoding-grp;
+          uses telemetry-protocol-grp;
+        }
+
+        list ipv6-destination {
+          tailf:info "IPv6 destination";
+          key "address port";
+          leaf address {
+            tailf:info "X:X::X;;Destination ipv6 address";
+            type inet:ipv6-address-no-zone;
+          }
+          leaf port {
+            tailf:info "<1-65535>;;Port number";
+            type uint16 {
+              range "1..65535";
+            }
+          }
+
+          uses telemetry-encoding-grp;
+          uses telemetry-protocol-grp;
+        }
+      }
+
+      list sensor-group {
+        tailf:info "Sensor Group configuration";
+        key id;
+        leaf id {
+          tailf:info "Sensor Group Id";
+          type Id-type;
+        }
+
+        list sensor-path {
+          tailf:info "Sensor Path";
+          key path;
+          leaf path {
+            tailf:info "Path";
+            type string;
+          }
+        }
+      }
+    }
+  }
+
+  grouping telemetry-subscription-grp {
+    container telemetry-model-driven-subscription {
+      tailf:info "Model Driven Telemetry subscription configuration";
+      presence "true";
+
+      list subscription {
+        tailf:info "Streaming Telemetry Subscription";
+        key "id";
+        leaf id {
+          tailf:info "Subscription Id";
+          type Id-type;
+        }
+
+        list sensor-group {
+          tailf:info "Association of one or more Sensor Groups with a Subscription";
+          key id;
+          leaf id {
+            tailf:info "Sensor Group Id";
+            type leafref {
+              path "../../../../telemetry-model-driven/sensor-group/id";
+            }
+          }
+
+          leaf sample-interval {
+            tailf:info "Sample interval in milliseconds";
+            type uint32 {
+              range "0..4294967295";
+            }
+            units "millisecond";
+            default 300000;
+          }
+        }
+
+        list destination-group {
+          tailf:info "Association of one or more Destination Groups with a Subscription";
+          key id;
+          leaf id {
+            tailf:info "Destination Group Id";
+            type leafref {
+              path "../../../../telemetry-model-driven/destination-group/id";
+            }
+          }
+        }
+
+        leaf source-qos-marking {
+          tailf:info "Outgoing DSCP value";
+          type Mdt-dscp-value-type;
+        }
+
+        container source-interface {
+          tailf:info "Source interface to use for streaming telemetry information";
+          presence "true";
+          uses interface-name-grp;
+          must "((if-type!='Loopback' and if-type!='Bundle-Ether') or " +
+               " ((if-type='Loopback' or if-type='Bundle-Ether')
+               and (string(number(if-id))!='NaN')))" {
+            error-message "Id must be a number";
+          }
+        }
+      }
+
+      leaf include-empty-value {
+        tailf:info "Include fields with empty values in output";
+        type empty;
+      }
+
+      leaf strict-timer {
+        tailf:info "Enable strict timer for all subscriptions, default is relative timer";
+        type empty;
+      }
+    }
+  }
+
+  grouping traffic-collector-grp {
+    container traffic-collector {
+      tailf:info "Traffic Collector configuration";
+      presence "true";
+
+      container statistics {
+        tailf:info "Configure statistics related parameters";
+        presence "true";
+
+        leaf history-size {
+          tailf:info "<1-10>;;Configure statistics history size";
+          type uint32 {
+            range "1..10";
+          }
+          default 5;
+        }
+        leaf collection-interval {
+          tailf:info "Configure statistics collection interval in minutes";
+          type enumeration {
+            enum 1-minute;
+            enum 2-minutes;
+            enum 3-minutes;
+            enum 4-minutes;
+            enum 5-minutes;
+            enum 6-minutes;
+            enum 10-minutes;
+            enum 12-minutes;
+            enum 15-minutes;
+            enum 20-minutes;
+            enum 30-minutes;
+            enum 60-minutes;
+          }
+          default '1-minute';
+        }
+        leaf history-timeout {
+          tailf:info "<0-720>;;Configure statistics history timeout interval";
+          type uint32 {
+            range "0..720";
+          }
+          default 48;
+        }
+      }
+    }
+  }
+
+  list tm-tc {
+    tailf:hidden tm-tc;
+    tailf:info "Telemetry & Traffic Collector Internal Service";
+    uses ncs:service-data;
+    ncs:servicepoint "tm-tc-internal-servicepoint";
+
+    key "name node-name";
+    leaf name {
+      tailf:info "Service Name";
+      type string;
+    }
+
+    leaf node-name {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+
+    // Global configuration which apply to all the nodes
+    uses traffic-collector-grp;
+    uses ct-hook:template-hook;
+
+    list node {
+      tailf:info "Node routers";
+      max-elements 1;
+      key name;
+      leaf name {
+        type leafref {
+          path "/ncs:devices/ncs:device/ncs:name";
+        }
+      }
+
+      // Local configuration
+      uses telemetry-subscription-grp;
+      uses telemetry-definition-grp;
+      uses traffic-collector-grp {
+        augment traffic-collector {
+          list external-interface {
+            tailf:info "Configure an external interface";
+            key "if-type if-id";
+            uses interface-name-grp;
+            must "((if-type!='Loopback' and if-type!='BVI' and if-type!='Bundle-Ether') or " +
+                 " ((if-type='Loopback' or if-type='BVI' or if-type='Bundle-Ether')
+                 and (string(number(if-id))!='NaN')))" {
+              error-message "Id must be a number";
+            }
+          }
+        }
+      }
+
+      uses ct-hook:template-hook;
+
+      leaf redeploy-flag {
+        tailf:hidden tm-tc;
+        tailf:info "Custom redeploy flag that redeploys lower level services if changed.";
+        description "Custom redeploy flag that redeploys lower level services if changed.";
+        type string;
+      }
+    }
+
+    leaf redeploy-flag {
+      tailf:hidden tm-tc;
+      tailf:info "Custom redeploy flag that redeploys lower level services if changed.";
+      description "Custom redeploy flag that redeploys lower level services if changed.";
+      type string;
+    }
+  }
+
+  container tm-tc-internal {
+    tailf:hidden tm-tc;
+
+    list tm-tc-plan {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name node-name";
+      leaf name {
+        type string;
+      }
+
+      leaf node-name {
+        type string;
+      }
+
+      uses ncs:nano-plan-data;
+      uses ncs:nano-plan-history;
+    }
+
+    list tm-tc-oper-data {
+      config false;
+      tailf:cdb-oper {
+        tailf:persistent true;
+      }
+      key "name node-name";
+
+      leaf name {
+        type string;
+      }
+
+      leaf node-name {
+        type string;
+      }
+
+      leaf status {
+        type enumeration {
+          enum "success";
+          enum "failed";
+        }
+      }
+
+      leaf status-type {
+        type enumeration {
+          enum "service-commit";
+        }
+      }
+
+      leaf status-message {
+        type string;
+      }
+
+      leaf time {
+        type yang:date-and-time;
+      }
+
+      tailf:action purge {
+        tailf:actionpoint tm-tc-purge-actionpoint;
+        input {
+        }
+        output {
+        }
+      }
+    }
+
+  }
+
+  container action {
+    tailf:hidden tm-tc;
+    tailf:action no-op {
+      tailf:actionpoint tm-tc-no-op-actionpoint;
+      input {
+      }
+      output {
+      }
+    }
+  }
+}

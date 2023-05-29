@@ -1,0 +1,50 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <status-code-cfp xmlns="http://com/cisco/cfp-common-status-codes">
+    <name>IETF-L3NM</name>
+  </status-code-cfp>
+  <status-codes xmlns="http://com/cisco/cfp-common-status-codes">
+    <core-function-pack>
+      <name>IETF-L3NM</name>
+      <status-code-enum-path>cisco-tsdn-core-fp-common/python/cisco_tsdn_core_fp_common/status_codes/ietf_l3vpn_nm_status_codes</status-code-enum-path>
+      <status-code>
+        <code>503</code>
+        <reason>Cleanup failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>416</code>
+        <reason>Route-distinguisher is mandatory when configuring L3VPN service on a XE device</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Flag global-rd-enabled does not affect XE devices.Please add route-distinguisher to the service before pushing the config on the device</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>504</code>
+        <reason>Service Recovery failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>501</code>
+        <reason>Self test failed</reason>
+        <category>custom-action</category>
+        <severity>ERROR</severity>
+      </status-code>
+      <status-code>
+        <code>400</code>
+        <reason>Status code mapping has not been loaded for function pack during install</reason>
+        <category>user</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Bootstrap status code mapping</recommended-actions>
+      </status-code>
+      <status-code>
+        <code>404</code>
+        <reason>The value for the input element is not supported</reason>
+        <category>validation</category>
+        <severity>ERROR</severity>
+        <recommended-actions>Verify that input element's value is supported in the payload</recommended-actions>
+      </status-code>
+    </core-function-pack>
+  </status-codes>
+</config>

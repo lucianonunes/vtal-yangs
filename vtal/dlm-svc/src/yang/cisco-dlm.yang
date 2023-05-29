@@ -1,0 +1,49 @@
+module cisco-dlm {
+  namespace "http://cisco.com/ns/yang/dlm";
+  prefix dlm;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  organization "Cisco Systems, Inc.";
+
+  container cisco-dlm {
+     list crosswork-vm {
+       uses ncs:service-data;
+       ncs:servicepoint dlm-port-config;
+       key uuid;
+       leaf uuid {
+         type string;
+       }
+
+       leaf key {
+         type tailf:aes-cfb-128-encrypted-string;
+       }
+       
+       leaf username {
+         type string;
+       }
+
+       leaf password {
+         type tailf:aes-cfb-128-encrypted-string; 
+       }
+     }
+     container cisco-dlm-session-clean {
+       presence "exist";
+       uses ncs:service-data;
+       ncs:servicepoint dlm-sessions;
+       leaf clean {
+          type string;
+       }
+     }
+  }
+}

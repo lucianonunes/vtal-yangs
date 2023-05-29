@@ -1,0 +1,25 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{router}</name>
+      <config>
+        <controller xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <Optics>
+            <id>{line-port}</id>
+            <description when="{circuit-id}">{circuit-id}</description>
+            <transmit-power>{transmit-power}</transmit-power>
+            <fec>{$FEC}</fec>
+            <dwdm-carrier>
+              <grid>{$GRID_TYPE}</grid>
+              <frequency>{frequency}</frequency>
+            </dwdm-carrier>
+            <breakout when="{$BREAKOUT!=''}">{$BREAKOUT}</breakout>
+            <speed when="{$SPEED_PID!=''}">{bandwidth}g</speed>
+            <DAC-Rate>{$DAC}</DAC-Rate>
+            <shutdown tags="delete"/>
+          </Optics>
+        </controller>
+      </config>
+    </device>
+  </devices>
+</config>

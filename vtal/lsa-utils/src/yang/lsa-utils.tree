@@ -1,0 +1,18 @@
+module: lsa-utils
+  +--rw lsa
+     +--rw role?   enumeration
+
+  augment /ncs:devices:
+    +--rw lsa
+       +--rw dispatch-map
+          +--rw device* [name]
+             +--rw name           string
+             +--rw ned-id?        string
+             +--rw remote-node?   -> /ncs:devices/device/name
+
+  notifications:
+    +---n dispatch-map-update
+       +--ro device* [name]
+          +--ro name         string
+          +--ro ned-id?      string
+          +--ro operation?   enumeration

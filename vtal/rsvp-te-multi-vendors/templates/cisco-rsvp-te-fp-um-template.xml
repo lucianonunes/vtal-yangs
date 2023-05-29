@@ -1,0 +1,173 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{head-end}</name>
+      <config>
+        <explicit-path xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-explicit-paths-cfg">
+          <?foreach {path-option}?>
+            <?if {explicit/identifier or explicit/name}?>
+              <?save-context PATH?>
+              <?if {explicit/name}?>
+              <?set-context-node {deref(explicit/name)/..}?>
+                <names>
+                  <name>
+                    <name-name>{id}</name-name>
+                    <indexes>
+                      <index foreach="{index}">
+                        <index-number>{index-id}</index-number>
+                        <?if {label}?>
+                          <next-label>{label}</next-label>
+                        <?else?>
+                          <next-address>
+                            <strict when="{hop-type='strict'}">
+                              <ipv4>
+                                <unicast>
+                                  <address when="{ipv4}">{ipv4/unicast}</address>
+                                  <ifindex>0</ifindex>
+                                </unicast>
+                              </ipv4>
+                            </strict>
+                            <loose when="{hop-type='loose'}">
+                              <ipv4>
+                                <unicast>
+                                  <address when="{ipv4}">{ipv4/unicast}</address>
+                                  <ifindex>0</ifindex>
+                                </unicast>
+                              </ipv4>
+                            </loose>
+                          </next-address>
+                        <?end?>
+                      </index>
+                    </indexes>
+                  </name>
+                </names>
+              <?else?>
+                <?set-context-node {deref(explicit/name)/..}?>
+                <identifiers>
+                  <identifier>
+                    <identifier-id>{id}</identifier-id>
+                    <indexes>
+                      <index foreach="{index}">
+                        <index-number>{index-id}</index-number>
+                        <?if {label}?>
+                          <next-label>{label}</next-label>
+                        <?else?>
+                          <next-address>
+                            <strict when="{hop-type='strict'}">
+                              <ipv4>
+                                <unicast>
+                                  <address when="{ipv4}">{ipv4/unicast}</address>
+                                  <ifindex>0</ifindex>
+                                </unicast>
+                              </ipv4>
+                            </strict>
+                            <loose when="{hop-type='loose'}">
+                              <ipv4>
+                                <unicast>
+                                  <address when="{ipv4}">{ipv4/unicast}</address>
+                                  <ifindex>0</ifindex>
+                                </unicast>
+                              </ipv4>
+                            </loose>
+                          </next-address>
+                        <?end?>
+                      </index>
+                    </indexes>
+                  </identifier>
+                </identifiers>
+              <?end?>
+            <?end?>
+          <?end?>
+        </explicit-path>
+        <interfaces xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-interface-cfg">
+          <interface>
+            <interface-name>tunnel-te{id}</interface-name>
+            <description>{description}</description>
+            <ipv4>
+              <addresses xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-if-ip-address-cfg">
+                <unnumbered>Loopback{$LOOPBACK}</unnumbered>
+              </addresses>
+            </ipv4>
+            <priority xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg">
+              <setup-priority>{setup-priority}</setup-priority>
+              <hold-priority>{hold-priority}</hold-priority>
+            </priority>
+            <destination xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg">{destination}</destination>
+            <signalled-name xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg">{signalled-name}</signalled-name>
+            <signalled-bandwidth xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg" when="{signalled-bandwidth}">
+              <?if {signalled-bandwidth/sub-pool}?>
+                <sub-pool/>
+              <?else?>
+                <class-type>0</class-type>
+              <?end?>
+              <bandwidth>{signalled-bandwidth/bandwidth}</bandwidth>
+            </signalled-bandwidth>
+            <path-selection xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg">
+              <metric when="{path-selection/metric}">
+                <igp when="{path-selection/metric='igp'}"/>
+                <te when="{path-selection/metric='te'}"/>
+                <delay when="{path-selection/metric='delay'}"/>
+              </metric>
+              <hop-limit when="{path-selection/hop-limit}">{path-selection/hop-limit}</hop-limit>
+              <delay-limit when="{path-selection/delay-limit}">{path-selection/delay-limit}</delay-limit>
+              <cost-limit when="{path-selection/cost-limit}">{path-selection/cost-limit}</cost-limit>
+            </path-selection>
+            <path-options xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg" foreach="{path-option}">
+              <?if {dynamic}?>
+                <path-option>
+                  <preference>{preference-priority}</preference>
+                  <dynamic/>
+                </path-option>
+              <?end?>
+              <?if {explicit}?>
+                <path-option>
+                  <preference>{preference-priority}</preference>
+                  <explicit>
+                    <?if {explicit/name}?>
+                      <name>{explicit/name}</name>
+                    <?else?>
+                      <identifier>{explicit/identifier}</identifier>
+                    <?end?>
+                    <verbatim when="{explicit/verbatim}"/>
+                  </explicit>
+                </path-option>
+              <?end?>
+            </path-options>
+            <pce xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg" when="{pce}">
+              <delegation when="{pce/delegation}"/>
+            </pce>
+            <?if {traffic-steering}?>
+              <autoroute xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg" when="{pce/delegation}">
+                <announce when="{traffic-steering/autoroute/announce}">
+                  <metric when="{traffic-steering/autoroute/announce/metric}">
+                    <?if {traffic-steering/autoroute/announce/metric/absolute} ?>
+                      <absolute>{traffic-steering/autoroute/announce/metric/absolute}</absolute>
+                    <?end?>
+                    <?if {traffic-steering/autoroute/announce/metric/relative}?>
+                      <relative>{traffic-steering/autoroute/announce/metric/relative}</relative>
+                    <?end?>
+                    <?if {traffic-steering/autoroute/announce/metric/constant}?>
+                      <constant-metric>{traffic-steering/autoroute/announce/metric/constant}</constant-metric>
+                    <?end?>
+                  </metric>
+                  <exclude-traffic when="{not(pce/delegation)}">
+                    <segment-routing/>
+                  </exclude-traffic>
+                </announce>
+                <destinations foreach="{traffic-steering/autoroute/destination}">
+                  <destination>
+                    <address>{address}</address>
+                  </destination>
+                </destinations>
+              </autoroute>
+              <forwarding-adjacency xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-um-mpls-te-cfg" when="{traffic-steering/forwarding-adjacency}">
+                <holdtime>{traffic-steering/forwarding-adjacency/holdtime}</holdtime>
+                <include-ipv6 when="{traffic-steering/forwarding-adjacency/include-ipv6}"/>
+              </forwarding-adjacency>
+            <?end?>
+          </interface>
+        </interfaces>
+      </config>
+    </device>
+  </devices>
+</config>

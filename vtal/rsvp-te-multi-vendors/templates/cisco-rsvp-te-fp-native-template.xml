@@ -1,0 +1,168 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{head-end}</name>
+      <config>
+        <ip-explicit-paths xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ip-iep-cfg">
+          <paths>
+            <?foreach {path-option}?>
+              <?if {explicit/identifier or explicit/name}?>
+                <?save-context PATH?>
+                  <?if {explicit/name}?>
+                  <?set-context-node {deref(explicit/name)/..}?>
+                  <path>
+                    <type>name</type>
+                    <name>
+                      <name>{id}</name>
+                      <hops>
+                        <hop foreach="{index}">
+                          <index-number>{index-id}</index-number>
+                          <?if {label}?>
+                            <hop-type>next-label</hop-type>
+                            <mpls-label>{label}</mpls-label>
+                          <?else?>
+                            <hop-type>next-{hop-type}</hop-type>
+                            <ip-address when="{ipv4}">{ipv4/unicast}</ip-address>
+                            <!-- TODO: Figure out the value for if-index and num-type-->
+                            <if-index>{index-id}</if-index>
+                            <num-type>numbered</num-type>
+                          <?end?>
+                        </hop>
+                      </hops>
+                    </name>
+                  </path>
+                <?else?>
+                  <?set-context-node {deref(explicit/identifier)/..}?>
+                  <path>
+                    <type>identifier</type>
+                    <identifier>
+                      <id>{id}</id>
+                      <hops>
+                        <hop foreach="{index}">
+                          <index-number>{index-id}</index-number>
+                          <?if {label}?>
+                            <hop-type>next-label</hop-type>
+                            <mpls-label>{label}</mpls-label>
+                          <?else?>
+                            <hop-type>next-{hop-type}</hop-type>
+                            <ip-address when="{ipv4}">{ipv4/unicast}</ip-address>
+                            <!-- TODO: Figure out the value for if-index and num-type-->
+                            <if-index>{index-id}</if-index>
+                            <num-type>numbered</num-type>
+                          <?end?>
+                        </hop>
+                      </hops>
+                    </identifier>
+                  </path>
+                <?end?>
+                <?switch-context PATH?>
+              <?end?>
+            <?end?>
+          </paths>
+        </ip-explicit-paths>
+        <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+          <interface-configuration>
+            <active>act</active>
+            <interface-name>tunnel-te{id}</interface-name>
+            <interface-virtual/>
+            <description>{description}</description>
+            <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg">
+              <addresses>
+                <unnumbered>Loopback{$LOOPBACK}</unnumbered>
+              </addresses>
+            </ipv4-network>
+            <tunnel-te-attributes xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-mpls-te-cfg">
+              <priority>
+                <setup-priority>{setup-priority}</setup-priority>
+                <hold-priority>{hold-priority}</hold-priority>
+              </priority>
+            <destination>{destination}</destination>
+              <signalled-name>{signalled-name}</signalled-name>
+              <bandwidth when="{signalled-bandwidth}">
+                <!-- TODO: Figure out the value for dste-type-->
+                <dste-type>pre-standard-dste</dste-type>
+                <?if {signalled-bandwidth/sub-pool}?>
+                  <class-or-pool-type>1</class-or-pool-type>
+                <?else?>
+                  <class-or-pool-type>0</class-or-pool-type>
+                <?end?>
+                <bandwidth>{signalled-bandwidth/bandwidth}</bandwidth>
+              </bandwidth>
+              <path-selection-metric when="{path-selection/metric}">{path-selection/metric/metric-type}</path-selection-metric>
+              <tunnel-path-selection when="{path-selection}">
+                <path-selection-hop-limit when="{path-selection/hop-limit}">{path-selection/hop-limit}</path-selection-hop-limit>
+                <path-selection-delay-limit when="{path-selection/delay-limit}">{path-selection/delay-limit}</path-selection-delay-limit>
+                <path-selection-cost-limit when="{path-selection/cost-limit}">{path-selection/cost-limit}</path-selection-cost-limit>
+              </tunnel-path-selection>
+              <path-option-protects>
+                <path-option-protect>
+                  <protection>active</protection>
+                  <path-options foreach="{path-option}">
+                    <?if {dynamic}?>
+                      <path-option>
+                        <preference-level>{preference-priority}</preference-level>
+                        <path-type>dynamic</path-type>
+                      </path-option>
+                    <?end?>
+                    <?if {explicit}?>
+                      <path-option>
+                        <preference-level>{preference-priority}</preference-level>
+                        <?if {explicit/name}?>
+                          <path-type>explicit-name</path-type>
+                          <path-name>{explicit/name}</path-name>
+                        <?else?>
+                         <path-type>explicit-identifier</path-type>
+                         <path-id>{explicit/identifier}</path-id>
+                        <?end?>
+                        <verbatim> when="{explicit/verbatim}"</verbatim>
+                      </path-option>
+                    <?end?>
+                  </path-options>
+                </path-option-protect>
+              </path-option-protects>
+              <pce when="{pce}">
+                <delegation when="{pce/delegation}">
+                  <enable/>
+                </delegation>
+              </pce>
+              <?if {traffic-steering}?>
+                <autoroute when="{traffic-steering/autoroute}">
+                  <autoroute-announce when="{traffic-steering/autoroute/announce}">
+                    <enable/>
+                    <metric when="{traffic-steering/autoroute/announce/metric}">
+                    <?if {traffic-steering/autoroute/announce/metric/absolute} ?>
+                        <metric-type>absolute</metric-type>
+                        <absolute-metric>{traffic-steering/autoroute/announce/metric/absolute}</absolute-metric>
+                    <?end?>
+                    <?if {traffic-steering/autoroute/announce/metric/relative}?>
+                        <metric-type>relative</metric-type>
+                        <relative-metric>{traffic-steering/autoroute/announce/metric/relative}</relative-metric>
+                    <?end?>
+                    <?if {traffic-steering/autoroute/announce/metric/constant}?>
+                      <metric-type>constant</metric-type>
+                      <constant-metric>{traffic-steering/autoroute/announce/metric/constant}</constant-metric>
+                    <?end?>
+                    </metric>
+                    <exclude-traffic when="{not(pce/delegation)}">
+                      <segment-routing/>
+                    </exclude-traffic>
+                  </autoroute-announce>
+                  <destinations foreach="{traffic-steering/autoroute/destination}">
+                    <destination>
+                      <destination-address>{address}</destination-address>
+                    </destination>
+                  </destinations>
+                </autoroute>
+                <forwarding-adjacency when="{traffic-steering/forwarding-adjacency}">
+                  <enable/>
+                  <hold-time>{traffic-steering/forwarding-adjacency/holdtime}</hold-time>
+                  <include-ipv6 when="{traffic-steering/forwarding-adjacency/include-ipv6}"/>
+                </forwarding-adjacency>
+              <?end?>
+            </tunnel-te-attributes>
+          </interface-configuration>
+        </interface-configurations>
+      </config>
+    </device>
+  </devices>
+</config>

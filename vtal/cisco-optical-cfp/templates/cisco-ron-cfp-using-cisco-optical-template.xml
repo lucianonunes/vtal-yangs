@@ -1,0 +1,65 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <context xmlns="urn:onf:otcc:yang:tapi-common">
+    <connectivity-context xmlns="urn:onf:otcc:yang:tapi-connectivity">
+      <connectivity-service>
+        <uuid>{$CS_UUID}</uuid>
+        <controller>{$CONTROLLER}</controller>
+        <name>
+          <value-name>SERVICE_NAME</value-name>
+          <value>{$SERVICE_NAME}</value>
+        </name>
+        <!--<name when="{circuit-id}">
+          <value-name>CIRCUIT_ID</value-name>
+          <value>{circuit-id}</value>
+        </name>-->
+        <administrative-state>{$SERVICE_STATE}</administrative-state>
+        <end-point>
+          <local-id>{$ENDPOINT1}</local-id>
+          <service-interface-point>
+            <service-interface-point-uuid>{$SIP_UUID1}</service-interface-point-uuid>
+          </service-interface-point>
+          <administrative-state>{$ENDPOINT_STATE1}</administrative-state>
+          <otsia-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media">
+            <otsi-config>
+              <local-id>{$ENDPOINT1}</local-id>
+              <central-frequency when="{$CENTRAL_FREQUENCY!=''}">
+                <central-frequency>{$CENTRAL_FREQUENCY}</central-frequency>
+              </central-frequency>
+              <application-identifier>
+                <application-identifier-type>{$AP_ID_TYPE1}</application-identifier-type>
+                <application-code>{$AP_CODE1}</application-code>
+              </application-identifier>
+            </otsi-config>
+          </otsia-connectivity-service-end-point-spec>
+        </end-point>
+        <end-point>
+          <local-id>{$ENDPOINT2}</local-id>
+          <service-interface-point>
+            <service-interface-point-uuid>{$SIP_UUID2}</service-interface-point-uuid>
+          </service-interface-point>
+          <administrative-state>{$ENDPOINT_STATE2}</administrative-state>
+          <otsia-connectivity-service-end-point-spec xmlns="urn:onf:otcc:yang:tapi-photonic-media">
+            <otsi-config>
+              <local-id>{$ENDPOINT2}</local-id>
+              <central-frequency when="{$CENTRAL_FREQUENCY!=''}">
+                <central-frequency>{$CENTRAL_FREQUENCY}</central-frequency>
+              </central-frequency>
+              <application-identifier>
+                <application-identifier-type>{$AP_ID_TYPE2}</application-identifier-type>
+                <application-code>{$AP_CODE2}</application-code>
+              </application-identifier>
+            </otsi-config>
+          </otsia-connectivity-service-end-point-spec>
+        </end-point>
+        <custom-template foreach="{ols-domain/custom-template}">
+          <name>{name}</name>
+          <?copy-tree {.}?>
+          <variable>
+            <name>CS_UUID</name>
+            <value>{$CS_UUID}</value>
+          </variable>
+        </custom-template>
+      </connectivity-service>
+    </connectivity-context>
+  </context>
+</config>

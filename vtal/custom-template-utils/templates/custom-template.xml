@@ -1,0 +1,21 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <custom-template xmlns="http://cisco.com/yang/nso/common/custom-template">
+    <name>{$TEMPLATE}</name>
+    <device>{$DEVICE}</device>
+    <owner>{$OWNER}</owner>
+
+    <variable when="{string-length($VARIABLE)&gt;0}">
+      <name>{$VARIABLE}</name>
+      <value>{$VALUE}</value>
+    </variable>
+
+    <iteration when="{string-length($ITERATION)&gt;0}">
+      <number>{$ITERATION}</number>
+      <variable>
+        <name>{$VARIABLE}</name>
+        <value>{$VALUE}</value>
+      </variable>
+    </iteration>
+    <ctx-path when="{$CTX_PATH != ''}">{$CTX_PATH}</ctx-path>
+  </custom-template>
+</config-template>

@@ -1,0 +1,92 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{head-end}</name>
+      <config>
+        <?foreach {path-option}?>
+          <?if {explicit/name}?>
+            <?save-context PATH?>
+            <ip xmlns="urn:ios">
+              <?set-context-node {deref(explicit/name)/..}?>
+              <explicit-path>
+                <name>
+                  <name>{id}</name>
+                  <mode>enable</mode>
+                  <index foreach="{index}">
+                    <id>{index-id}</id>
+                    <?if {hop-type="loose"}?>
+                      <next-address-loose>
+                        <next-address>
+                          <loose>{ipv4/unicast}</loose>
+                        </next-address>
+                      </next-address-loose>
+                    <?else?>
+                      <next-address>{ipv4/unicast}</next-address>
+                    <?end?>
+                  </index>
+                </name>
+              </explicit-path>
+            </ip>
+            <?switch-context PATH?>
+          <?end?>
+        <?end?>
+        <interface xmlns="urn:ios">
+          <Tunnel>
+            <name>{id}</name>
+            <description>{description}</description>
+            <ip>
+              <unnumbered>
+                <Loopback>{$LOOPBACK}</Loopback>
+              </unnumbered>
+            </ip>
+            <tunnel>
+              <destination>{destination}</destination>
+              <mode>
+                <mpls>
+                  <traffic-eng/>
+                </mpls>
+              </mode>
+              <mpls>
+                <traffic-eng>
+                  <name>{signalled-name}</name>
+                  <bandwidth when="{signalled-bandwidth}">
+                    <requirement>{signalled-bandwidth/bandwidth}</requirement>
+                  </bandwidth>
+                  <autoroute when="{traffic-steering/autoroute}">
+                    <announce when="{traffic-steering/autoroute/announce}"/>
+                    <destination when="{traffic-steering/autoroute/destination}"/>
+                    <metric when="{traffic-steering/autoroute/announce/metric}">
+                      <value>{traffic-steering/autoroute/announce/metric/constant}</value>
+                      <absolute>{traffic-steering/autoroute/announce/metric/absolute}</absolute>
+                      <relative>{traffic-steering/autoroute/announce/metric/relative}</relative>
+                    </metric>
+                  </autoroute>
+                  <forwarding-adjacency when="{traffic-steering/forwarding-adjacency}">
+                    <holdtime>{traffic-steering/forwarding-adjacency/holdtime}</holdtime>
+                  </forwarding-adjacency>
+                  <priority>
+                    <setup-priority>{setup-priority}</setup-priority>
+                    <hold-priority>{hold-priority}</hold-priority>
+                  </priority>
+                  <?foreach {path-option}?>
+                    <path-option>
+                      <id>{preference-priority}</id>
+                      <explicit when="{explicit/name}">
+                        <name>{explicit/name}</name>
+                      </explicit>
+                      <dynamic when="{dynamic}"></dynamic>
+                      <pce when="{dynamic/pce}"></pce>
+                    </path-option>
+                  <?end?>
+                  <path-selection>
+                    <metric>{path-selection/metric/metric-type}</metric>
+                  </path-selection>
+                </traffic-eng>
+              </mpls>
+            </tunnel>
+          </Tunnel>
+        </interface>
+      </config>
+    </device>
+  </devices>
+</config>

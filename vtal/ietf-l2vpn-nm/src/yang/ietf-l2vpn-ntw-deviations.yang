@@ -1,0 +1,481 @@
+module ietf-l2vpn-ntw-deviations {
+
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-l2vpn-ntw-deviations";
+  prefix l2vpn-ntw-deviations;
+
+  import ietf-vpn-common { prefix vpn-common; }
+  import tailf-common { prefix tailf; }
+  import ietf-l2vpn-ntw { prefix l2vpn-ntw; }
+  import lsa-utils { prefix lsa-utils; }
+  import tailf-ncs { prefix ncs; }
+
+  description "IETF L2VPN NTW Cisco NSO Deviations";
+
+ revision 2022-06-06 {
+    description
+      "Added: deviation for l2vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes -> vpn-node -> signaling-options
+            -> evpn-bgp -> vpn-target -> route-targets -> route-target";
+  }
+
+ revision 2022-05-25 {
+    description
+      "Added : deviation mandatory true for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes -> vpn-node -> vpn-network-accesses -> vpn-network-access -> connection -> encapsulation-type";
+  }
+
+  revision 2022-05-06 {
+    description
+      "Added : deviation mandatory true for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes -> vpn-node -> vpn-network-accesses -> vpn-network-access -> connection -> dot1q-interface -> dot1q -> c-vlan-id
+       Added : deviation mandatory true for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes -> vpn-node -> vpn-network-accesses -> vpn-network-access -> connection -> dot1q-interface -> dot1q -> physical-inf
+       Added : deviation mandatory true for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes -> vpn-node -> vpn-network-accesses -> vpn-network-access -> connection -> untagged-interface -> untagged -> physical-inf";
+  }
+
+  revision 2022-02-15 {
+    description
+      "Added: EVPN Multipoint Support
+       Added: import ietf-vpn-common
+       Added: deviation must condition for l2vpn-ntw -> vpn-service -> vpn-service -> svc-topo
+       Added: deviation must condition for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes
+       Removed: deviation add min-element/max-element for l2vpn-ntw -> vpn-service -> vpn-service
+                -> vpn-nodes -> vpn-node
+       Added: deviation replace type for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes
+              -> vpn-node -> node-role
+       Added: deviation delete default for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes
+              -> vpn-node -> node-role
+       Added: enum evpn-pbb for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes -> vpn-node
+              -> signaling-options -> evpn-bgp -> type
+       Added: deviation must condition for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes
+              -> vpn-node -> signaling-options -> evpn-bgp
+       Added: deviation replace type for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes
+              -> vpn-node -> signaling-options -> evpn-bgp -> vpn-policies -> import-policy
+       Added: deviation replace type for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes
+              -> vpn-node -> signaling-options -> evpn-bgp -> vpn-policies -> export-policy
+       Added: deviation must condition for l2vpn-ntw -> vpn-service -> vpn-service -> vpn-nodes
+              -> vpn-node -> vpn-network-accesses
+       Removed: max-elements for deviation add under l2vpn-ntw -> vpn-service -> vpn-service
+                -> vpn-nodes -> vpn-node -> vpn-network-accesses -> vpn-network-access";
+  }
+
+  revision 2022-01-11 {
+    description "Added: missing tailf-ncs import statement for lsa-utils reference";
+  }
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified: Read dispatch-map using lsa-utils";
+  }
+
+  revision 2021-11-09 {
+    description
+      "Added: deviation for :
+              te-tunnel-list/ietf-te-service length 1..max ,
+              odn/attach-point/parent-rr-route-policy length 1..max ,
+              vpn-network-access/ethernet-service-oam/y-1731/maid length 1..max";
+  }
+
+  revision 2021-09-28 {
+    description
+       "Added: deviation must conditions for vpn-network-accesses -> vpn-network-access -> ethernet-service-oam";
+  }
+
+  revision 2021-09-17 {
+    description "Added deviation for vpn-service -> vpn-service -> vpn-nodes -> vpn-node -> te-service-mapping -> te-mapping -> sr-policy -> policy length 1..max";
+  }
+
+  revision 2021-08-31 {
+    description
+      "Added: deviation must conditions for vpn-services -> vpn-service -> vpn-svc-type and IOSXE device check for EVPN-VPWS
+       Added: deviation for connection -> untagged-interface -> untagged -> physical-inf
+              and connection -> dot1q-interface -> dot1q -> physical-inf string pattern";
+  }
+
+  revision 2021-07-08 {
+    description "Added deviation for vpn-service -> vpn-id length 1..32";
+  }
+
+  revision 2021-06-22 {
+    description
+      "Added: deviation must conditions for vpn-network-accesses -> vpn-network-access -> ethernet-service-oam
+              have same maid, md-name and md-level on all vpn-nodes and unique mep-id on each vpn-node
+       Added: deviation for vpn-network-accesses -> vpn-network-access -> ethernet-service-oam -> md-level
+              to be mandatory";
+  }
+
+  revision 2021-06-02 {
+    description
+      "Added: deviation must condition for vpn-service";
+  }
+
+  revision 2021-06-01 {
+    description
+      "Added: deviation for vpn-network-accesses -> vpn-network-access -> ethernet-service-oam";
+  }
+
+  revision 2021-04-27 {
+      description "Added deviation for vpn-service->vpn-id to filter invalid id";
+  }
+
+  revision 2021-03-25 {
+      description "Added deviation to ethernet-service-oam/y-1731 related elements";
+  }
+
+  revision 2021-03-18 {
+      description "Updated deviation for vpn-network-access and added min-elements as 1";
+  }
+
+  revision 2020-11-16 {
+      description "Added deviation for l2-access-type for untagged-interface";
+  }
+
+  revision 2020-10-19 {
+      description "Added restriction of min-elements 2 on vpn-node,
+      Added type deviation for Interface-mtu,
+      Added must condition on c-vlan-id - can be set when encapsulation-type is 'vpn-common:dot1q' and c-vlan-id is required when encapsulation-type is 'vpn-common:dot1q'";
+  }
+
+  revision 2020-10-13 {
+      description "Added replace deviation for type of l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type node";
+  }
+
+  revision 2020-09-11 {
+      description "Initial revision.";
+  }
+
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-id" {
+    deviate replace {
+      type string {
+        pattern "[a-zA-Z0-9\\-_]+";
+        length "1..32";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service" {
+    deviate add {
+      must "count(l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/md-name)=2 or "+
+           "count(l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/md-name)=0" {
+        error-message "Unable to enable ethernet-service-oam for a single node. " +
+                      "It must either be enabled or disabled for both nodes.";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:svc-topo" {
+    deviate add {
+      must "../l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node[1]/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb'" {
+        error-message "Only configurable with signaling-option 'evpn-pbb'";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes" {
+    deviate add {
+      must "(not(l2vpn-ntw:vpn-node[1]/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb') and count(l2vpn-ntw:vpn-node) = 2)
+            or
+            l2vpn-ntw:vpn-node[1]/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb'" {
+        error-message "2 vpn-nodes can be configured unless if 'evpn-pbb' is used in which case a minimum of 1 vpn-node must be configured";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-node-id" {
+    deviate replace {
+      type leafref {
+        path "/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device/lsa-utils:name";
+      }
+    }
+	deviate add {
+      must "../../../l2vpn-ntw:vpn-svc-type='vpn-common:t-ldp' or (../../../l2vpn-ntw:vpn-svc-type='vpn-common:evpn-bgp' and not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device
+                  [lsa-utils:name=current()]/lsa-utils:ned-id,
+                  'cisco-ios-cli-')))"{
+        error-message "Service Type EVPN-VPWS not supported on IOSXE devices'";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:ne-id" {
+    deviate replace {
+      type leafref {
+        path "../l2vpn-ntw:vpn-node-id";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:node-role" {
+    deviate replace {
+      type enumeration {
+        enum 'spoke-single-homing';
+        enum 'spoke-multi-homing';
+      }
+    }
+    deviate delete {
+      default "vpn-common:any-to-any-role";
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options" {
+    deviate add {
+      max-elements 1;
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:t-ldp-pwe/l2vpn-ntw:ac-pw-list" {
+    deviate add {
+      max-elements 1;
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:type" {
+    deviate replace {
+      type enumeration {
+        enum vpn-common:t-ldp;
+        enum vpn-common:evpn-bgp;
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type" {
+    deviate replace {
+      type enumeration {
+        enum evpn-vpws;
+        enum evpn-pbb;
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp" {
+    deviate add {
+      must "../../../../l2vpn-ntw:svc-topo = 'vpn-common:custom' or count(l2vpn-ntw:vpn-target) = 0" {
+        error-message "Specific vpn-targets may only be defined if 'svc-topo' = 'custom";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:vpn-policies" {
+    deviate add {
+      must "(not(l2vpn-ntw:import-policy) and not(l2vpn-ntw:export-policy)) or not(../../../l2vpn-ntw:te-service-mapping/l2vpn-ntw:te-mapping/l2vpn-ntw:odn/l2vpn-ntw:attach-point/l2vpn-ntw:parent-rr-route-policy)" {
+        error-message "Cannot import/export policy if parent-rr-route-policy is defined";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:vpn-policies/l2vpn-ntw:import-policy" {
+    deviate replace {
+      type leafref {
+        path "../../../../l2vpn-ntw:te-service-mapping/l2vpn-ntw:te-mapping/l2vpn-ntw:odn/l2vpn-ntw:route-policy";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:vpn-policies/l2vpn-ntw:export-policy" {
+    deviate replace {
+      type leafref {
+        path "../../../../l2vpn-ntw:te-service-mapping/l2vpn-ntw:te-mapping/l2vpn-ntw:odn/l2vpn-ntw:route-policy";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:te-service-mapping/l2vpn-ntw:te-mapping/l2vpn-ntw:te/l2vpn-ntw:sr-policy/l2vpn-ntw:sr-policy/l2vpn-ntw:policy" {
+    deviate replace {
+      type string {
+        length "1..max";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:te-service-mapping/l2vpn-ntw:te-mapping/l2vpn-ntw:te/l2vpn-ntw:te-tunnel-list/l2vpn-ntw:te-tunnel-list/l2vpn-ntw:tunnel-te-id-source/l2vpn-ntw:ietf-te-service/l2vpn-ntw:ietf-te-service" {
+    deviate replace {
+      type string {
+        length "1..max";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:te-service-mapping/l2vpn-ntw:te-mapping/l2vpn-ntw:te/l2vpn-ntw:odn/l2vpn-ntw:odn/l2vpn-ntw:attach-point/l2vpn-ntw:parent-rr-route-policy-choice/l2vpn-ntw:parent-rr-route-policy/l2vpn-ntw:parent-rr-route-policy" {
+    deviate replace {
+      type string {
+        length "1..max";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-svc-type" {
+    deviate replace {
+      type enumeration {
+        enum vpn-common:t-ldp;
+        enum vpn-common:evpn-bgp;
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses" {
+    deviate add {
+      must "../l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:type = 'evpn-pbb' or count(l2vpn-ntw:vpn-network-access) = 1" {
+        error-message "Only a single vpn-network-access may be defined when not using 'evpn-pbb'";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access" {
+    deviate add {
+      min-elements 1;
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:connection/l2vpn-ntw:encapsulation-type" {
+    deviate replace {
+      type enumeration {
+        enum vpn-common:dot1q;
+        enum vpn-common:untagged-int;
+      }
+    }
+    deviate add {
+      mandatory true;
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:connection/l2vpn-ntw:dot1q-interface/l2vpn-ntw:l2-access-type" {
+    deviate replace {
+      type enumeration {
+        enum vpn-common:dot1q;
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:Interface-mtu" {
+    deviate replace {
+      type uint16 {
+        range "64..65535";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:connection/l2vpn-ntw:dot1q-interface/l2vpn-ntw:dot1q/l2vpn-ntw:c-vlan-id" {
+    deviate add {
+      must "../../../l2vpn-ntw:encapsulation-type='vpn-common:dot1q'"{
+        error-message "c-vlan-id can only be set when encapsulation-type is 'vpn-common:dot1q'";
+      }
+      mandatory true;
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:connection/l2vpn-ntw:dot1q-interface/l2vpn-ntw:dot1q" {
+    deviate add {
+      must "../../l2vpn-ntw:encapsulation-type='vpn-common:dot1q' and l2vpn-ntw:c-vlan-id"{
+        error-message "c-vlan-id is required when encapsulation-type is 'vpn-common:dot1q'";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:connection/l2vpn-ntw:untagged-interface/l2vpn-ntw:l2-access-type" {
+    deviate replace {
+      type enumeration {
+        enum vpn-common:untagged-int;
+      }
+    }
+  }
+
+  // ====================== y-1731-profile-identifier ======================
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam" {
+    deviate add {
+      must "not(./md-name or ./md-level or ./y-1731) or (./md-name and ./y-1731 and ./md-level)" {
+        error-message "md-name, md-level and y-1731 are required when configuring ethernet service OAM";
+      }
+    }
+    deviate add {
+      must "not(./md-name) or (./md-name and not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../../../ne-id]/lsa-utils:ned-id,'cisco-ios-cli-')))" {
+        error-message "Y.1731 not supported for XE devices.";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:md-level" {
+    deviate replace {
+      type uint8 {
+        range "0..7";
+      }
+    }
+    deviate add {
+      must "not(../../../../../../l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access[l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:md-level!=current()])" {
+        error-message "md-level must be same among all vpn-nodes";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:md-name" {
+    deviate add {
+      must "not(../../../../../../l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access[l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:md-name!=current()])" {
+        error-message "md-name must be same among all vpn-nodes";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731/l2vpn-ntw:mep-id" {
+    deviate replace {
+      type uint16 {
+        range "1..8191";
+      }
+    }
+    deviate add {
+      mandatory true;
+      must "count(../../../../../../../l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731[l2vpn-ntw:mep-id=current()])=1" {
+        error-message "mep-id must be unique among all vpn-nodes";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731/l2vpn-ntw:maid" {
+    deviate replace {
+      type string {
+        length "1..max";
+      }
+    }
+    deviate add {
+      must "not(../../../../../../../l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731[l2vpn-ntw:maid!=current()])" {
+        error-message "maid must be same among all vpn-nodes";
+      }
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731" {
+    deviate add {
+      max-elements 1;
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:ethernet-service-oam/l2vpn-ntw:y-1731/l2vpn-ntw:message-period" {
+    deviate replace {
+      type string {
+        pattern '(3\.3ms|10ms|100ms|1s|10s|1m|10m)';
+      }
+    }
+    deviate add {
+      default '1s';
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:connection/l2vpn-ntw:dot1q-interface/l2vpn-ntw:dot1q/l2vpn-ntw:physical-inf" {
+    deviate replace {
+      type string {
+        pattern "(Bundle-Ether|FiftyGigE|FortyGigE|FourHundredGigE|HundredGigE|TenGigE|TwentyFiveGigE|TwoHundredGigE|GigabitEthernet|Ethernet)[0-9]+(/[0-9]+)*";
+      }
+    }
+    deviate add {
+      mandatory true;
+    }
+  }
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:vpn-network-accesses/l2vpn-ntw:vpn-network-access/l2vpn-ntw:connection/l2vpn-ntw:untagged-interface/l2vpn-ntw:untagged/l2vpn-ntw:physical-inf" {
+    deviate replace {
+      type string {
+        pattern "(Bundle-Ether|FiftyGigE|FortyGigE|FourHundredGigE|HundredGigE|TenGigE|TwentyFiveGigE|TwoHundredGigE|GigabitEthernet|Ethernet)[0-9]+(/[0-9]+)*";
+      }
+    }
+    deviate add {
+      mandatory true;
+    }
+  }
+  // L2VPN does not support assigned number field being optional. So we had to remove optional number field
+  deviation "/l2vpn-ntw:l2vpn-ntw/l2vpn-ntw:vpn-services/l2vpn-ntw:vpn-service/l2vpn-ntw:vpn-nodes/l2vpn-ntw:vpn-node/l2vpn-ntw:signaling-options/l2vpn-ntw:evpn-bgp/l2vpn-ntw:vpn-target/l2vpn-ntw:route-targets/l2vpn-ntw:route-target" {
+  deviate replace {
+    type string {
+      pattern
+        '(0:(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+      +     '6[0-4][0-9]{3}|'
+      +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|'
+      +     '42949672[0-8][0-9]|'
+      +     '4294967[01][0-9]{2}|429496[0-6][0-9]{3}|'
+      +     '42949[0-5][0-9]{4}|'
+      +     '4294[0-8][0-9]{5}|429[0-3][0-9]{6}|'
+      +     '42[0-8][0-9]{7}|4[01][0-9]{8}|'
+      +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|'
+      + '(1:((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|'
+      +     '25[0-5])\.){3}([0-9]|[1-9][0-9]|'
+      +     '1[0-9]{2}|2[0-4][0-9]|25[0-5])):(6553[0-5]|'
+      +     '655[0-2][0-9]|'
+      +     '65[0-4][0-9]{2}|6[0-4][0-9]{3}|'
+      +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|'
+      + '(2:(429496729[0-5]|42949672[0-8][0-9]|'
+      +     '4294967[01][0-9]{2}|'
+      +     '429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|'
+      +     '4294[0-8][0-9]{5}|'
+      +     '429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|'
+      +     '[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):'
+      +     '(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|'
+      +     '6[0-4][0-9]{3}|'
+      +     '[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))';
+      tailf:info "0:2-octet-asn:4-octet-number
+                  1:4-octet-ipv4addr:2-octet-number
+                  2:4-octet-asn:2-octet-number";
+    }
+  }
+}
+
+}

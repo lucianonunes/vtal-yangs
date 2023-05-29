@@ -1,0 +1,90 @@
+core-fp-common 1.30.0
+======================================
+   TSDN-1177: Added check in exception for zombie path exists in invoke_backtrack_actions
+
+core-fp-common 1.29.0
+======================================
+   CFPRON-265: Fix the issue that in NSO 5.7, force-back-track action can't be invoked on deleted service's plan component
+
+core-fp-common 1.28.0
+======================================
+   CFPRON-260: Support for NSO 5.7
+
+core-fp-common 1.27.0
+======================================
+   TSDN-1079: Dispatch map with identical device names is overwritten without error
+
+core-fp-common 1.26.0
+======================================
+   TSDN-1026: Add cleanup_status_code to cleanup_utils.py
+
+core-fp-common 1.25.0
+=======================================
+   TSDN-936: core-fp-common flake8 compliance
+   TSDN-970: Python 3 f-strings migration for all the string format's in common packages.
+
+core-fp-common 1.24.0
+=======================================
+   TSDN-941: Modified action timeout for rfs-dispatch-map-netconf-notification-handler and sync-dispatch-map
+             to 7200s to handle scale case
+
+core-fp-common 1.23.0
+=======================================
+   TSDN-744: Removed log_utils.py
+             Added instrumentation.py with decorator to instrument a generic Function for ENTRY and EXIT logs.
+
+core-fp-common 1.22.0
+=======================================
+   TSDN-923: Fixed race condition in removing plan paths during cleanup
+
+core-fp-common 1.21.0
+=======================================
+   TSDN-906: Added log_level_debug argument for the log_utils.py methods which is false by default
+
+core-fp-common 1.20.0
+=======================================
+   TSDN-744: Modified from sending a service point as an argument while creating the instance to
+             as an argument to methods of log_utils.py
+
+core-fp-common 1.19.0
+=======================================
+   TSDN-744: Modified input element of nano_cb_entry() method from service object to service name.
+
+core-fp-common 1.18.0
+=======================================
+   TSDN-744: Added get_service_operation method and corrected error log message
+
+core-fp-common 1.17.0
+=======================================
+   CFPACI-1069: Added ncs version check to more than 5.3 to use no-lsa in force-back-track action.
+
+core-fp-common 1.16.0
+=======================================
+   TSDN-744: Added log standardization util module (log_utils.py)
+
+core-fp-common 1.15.0
+=======================================
+   TSDN-759: Added none check for remove_plan_paths.
+
+core-fp-common 1.14.0
+=======================================
+   SAE-1684:Update core-fp-common package build process
+
+core-fp-common 1.13.0
+=======================================
+   CSCvw72463:added tailf:info to display description on NSO cli
+
+core-fp-common 1.12.0
+=======================================
+   TSDN-355: LSA Cleanup with no-networking
+
+core-fp-common 1.11.0
+=======================================
+   TSDN-664: CSCvx65629 : Clean up action does not send any notification - tested with L3nm
+
+   SAE-1685: Fix Sonar Issues
+
+
+core-fp-common 1.10.0
+=======================================
+  TSDN-543: Adding ned-id in dispatch maps

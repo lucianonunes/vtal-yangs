@@ -1,0 +1,75 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+    <device>
+      <name>{$HEAD_END}</name>
+      <?save-context service?>
+      <?set-root-node {/devices}?>
+      <?switch-context service?>
+      <config>
+        <segment-routing xmlns="http://tail-f.com/ned/cisco-ios-xr">
+          <traffic-eng>
+            <on-demand>
+              <color>
+                <id>{/color}</id>
+                <maximum-sid-depth>{/maximum-sid-depth}</maximum-sid-depth>
+                <bandwidth when="{bandwidth}">{bandwidth}</bandwidth>
+                <dynamic when="{dynamic}">
+                  <pcep when="{dynamic/pce}" />
+                  <metric>
+                    <type when="{dynamic/metric-type}">{dynamic/metric-type}</type>
+                    <?if {dynamic/metric-margin/absolute}?>
+                      <margin>
+                        <absolute>{dynamic/metric-margin/absolute}</absolute>
+                      </margin>
+                    <?end?>
+                    <?if {dynamic/metric-margin/relative}?>
+                      <margin>
+                        <relative>{dynamic/metric-margin/relative}</relative>
+                      </margin>
+                    <?end?>
+                  </metric>
+                  <disjoint-path when="{dynamic/disjoint-path}">
+                    <group-id>{dynamic/disjoint-path/group-id}</group-id>
+                    <type>{dynamic/disjoint-path/type}</type>
+                    <sub-id>{dynamic/disjoint-path/sub-id}</sub-id>
+                  </disjoint-path>
+                  <sid-algorithm when="{dynamic/flex-alg}">{dynamic/flex-alg}</sid-algorithm>
+                  <affinity when="{dynamic/affinity}" foreach="{dynamic/affinity/rule}">
+                    <name>{action}</name>
+                    <name-list foreach="{color}">
+                      <color>{current()}</color>
+                      <name/>
+                    </name-list>
+                  </affinity>
+                </dynamic>
+                <srv6 when="{srv6}">
+                  <locator when="{srv6/locator}">
+                    <name>{srv6/locator/locator-name}</name>
+                    <binding-sid when="{srv6/locator/binding-sid-type='srv6-dynamic' and srv6/locator/behavior='ub6-insert-reduced'}">
+                      <dynamic>
+                        <behavior>
+                          <ub6-insert-reduced/>
+                        </behavior>
+                      </dynamic>
+                    </binding-sid>
+                  </locator>
+                </srv6>
+                <?if {source-address}?>
+                  <?if {contains(string(source-address), '.')}?>
+                    <source-address>
+                      <ipv4>{source-address}</ipv4>
+                    </source-address>
+                  <?else?>
+                    <source-address>
+                      <ipv6>{source-address}</ipv6>
+                    </source-address>
+                  <?end?>
+                <?end?>
+              </color>
+            </on-demand>
+          </traffic-eng>
+        </segment-routing>
+      </config>
+    </device>
+  </devices>
+</config>

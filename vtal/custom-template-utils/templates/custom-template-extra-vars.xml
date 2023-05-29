@@ -1,0 +1,12 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <custom-template xmlns="http://cisco.com/yang/nso/common/custom-template">
+    <name>{$TEMPLATE}</name>
+    <device>{$DEVICE}</device>
+    <owner>{$OWNER}</owner>
+
+    <extra-var>
+      <name>{$EXTRA_VAR_NAME}</name>
+      <value>{$EXTRA_VAR_VALUE}</value>
+    </extra-var>
+  </custom-template>
+</config-template>

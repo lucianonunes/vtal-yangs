@@ -1,0 +1,90 @@
+<project name="package" basedir="." default="all">
+  <record name="build.log" loglevel="verbose" action="start" />
+  <property environment="env"/>
+  <property name="build.dir" value="build"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <property name="src.dir" value="src"/>
+  <property name="rsc.dir" value="src/resources"/>
+  <property name="sharedjar.dir" value="../../shared-jar"/>
+  <property name="privatejar.dir" value="../../private-jar"/>
+  <property name="thirdparty.dir" value="../../thirdparty"/>
+  <property name="doc.dir" value="${build.dir}/javadoc"/>
+  <property name="ncs.dir" value="${env.NCS_DIR}/java/jar"/>
+  <property name="ncs.topdir" value="${env.NCS_DIR}"/>
+  <property name="package" value="dlm"/>
+
+  <path id = "dlm-libs">
+    <path refid="core-libs" />
+    <path refid="thirdparty-libs" />
+  </path>
+
+  <path id="core-libs">
+    <fileset dir="${ncs.dir}">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${sharedjar.dir}" erroronmissingdir="false" >
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${privatejar.dir}" erroronmissingdir="false">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="thirdparty-libs">
+    <fileset dir="${thirdparty.dir}" erroronmissingdir="false" >
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="all" depends="package" />
+
+
+  <target name="package" depends="compile">
+    <jar destfile="${sharedjar.dir}/${package}-ns.jar"
+         basedir="${classes.dir}"
+         includes="**/*.class"/>
+    <jar destfile="${privatejar.dir}/${package}.jar"
+         basedir="${classes.dir}"
+         excludes="**/namespaces/*.class"
+         includes="**/*.class"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete file="${sharedjar.dir}/${package}-ns.jar"/>
+    <delete file="${privatejar.dir}/${package}.jar"/>
+  </target>
+
+  <target name="compile" >
+    <!-- Copy external libraries to shared-jar -->
+    <copy todir="${sharedjar.dir}">
+      <fileset dir="${thirdparty.dir}">
+        <include name="*.jar"/>
+      </fileset>
+    </copy>
+
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${src.dir}"
+           destdir="${classes.dir}"
+           debug="on"
+           includeantruntime="false"
+           debuglevel="lines,vars,source"  >
+
+      <compilerarg value="-Xlint:unchecked"/>
+      <compilerarg value="-Xlint:deprecation"/>
+      <classpath refid="thirdparty-libs" />
+    </javac>
+
+
+  </target>
+
+  <!--Used with test-compile ant target, removes the existing test-classes-->
+  <target name="clean-resources">
+    <delete dir="${test.classes.dir}"/>
+  </target>
+
+  <target name="echo">
+    <echoproperties/>
+  </target>
+
+</project>

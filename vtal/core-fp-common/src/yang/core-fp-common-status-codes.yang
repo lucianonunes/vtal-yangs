@@ -1,0 +1,132 @@
+module core-fp-common-status-codes {
+  namespace "http://com/cisco/cfp-common-status-codes";
+  prefix cfp-common-status-codes;
+
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  identity severity-type-base {
+    description "status code severity base type";
+  }
+
+  identity INFO {
+    description "INFO severity type";
+    base severity-type-base;
+  }
+
+  identity WARNING {
+    description "WARNING severity type";
+    base severity-type-base;
+  }
+
+  identity ERROR {
+    description "ERROR severity type";
+    base severity-type-base;
+  }
+
+  identity FATAL {
+    description "FATAL severity type";
+    base severity-type-base;
+  }
+  
+  typedef severity-type {
+    description "status code severity type";
+    type identityref {
+      base severity-type-base;
+    }
+  }
+
+  list status-code-cfp {
+    tailf:info "List of core function packs";
+    tailf:hidden "debug";
+    key name;
+    leaf name {
+      tailf:info "Name of core function pack";
+      type string {
+        pattern "[\\S]+" {
+          error-message "Invalid core function pack name. Blank space not allowed.";
+        }
+      }
+    }
+  }
+
+  container status-codes {
+    tailf:info "Status codes";
+
+    list core-function-pack {
+      when "count(../../status-code-cfp) > 0";
+      tailf:info "List of core function packs";
+
+      tailf:validate "status-code-validation" {
+        tailf:dependency ".";
+      }
+      tailf:validate "status-code-validation-py" {
+        tailf:dependency ".";
+      }
+
+      key name;
+      leaf name {
+        tailf:info "select a value from status-code-cfp";
+        type leafref {
+          path "../../../status-code-cfp/name";
+        }
+      }
+      leaf status-code-enum-path {
+        tailf:info "Fully classified enum path containing all status code names in core function pack.";
+        tailf:hidden "debug";
+        type string {
+          tailf:info "example: com.cisco.cfp.statuscodes.CfpStatusCodes";
+          pattern "[\\S]+" {
+            error-message "Invalid enum path. Blank space not allowed.";
+          }
+        }
+        mandatory true;
+      }
+
+      list status-code {
+        when "../status-code-enum-path!=''";
+        tailf:info "List of status codes in a core function pack";
+        key code;
+        leaf code {
+          tailf:info "Status code";
+          type string {
+            pattern "[\\S]+" {
+              error-message "Invalid status code. Blank space not allowed.";
+            }
+          }
+        }
+        leaf reason {
+          tailf:info "Reason of status code";
+          type string;
+          mandatory true;
+        }
+        leaf category {
+          tailf:info "Category of status code";
+          type string {
+            pattern "[\\S]+" {
+              error-message "Invalid category. Blank space not allowed.";
+            }
+          }
+          default "UNDEFINED";
+        }
+        leaf severity {
+          tailf:info "Severity of status code";
+          type severity-type;
+          default cfp-common-status-codes:ERROR;
+        }
+        leaf recommended-actions {
+          tailf:info "Recommended actions to recover in case of error";
+          type string;
+        }
+      }
+    }
+    
+    must "(not(core-function-pack) and not(../status-code-cfp)) or count(../status-code-cfp)=count(core-function-pack)" {
+      error-message "status-codes/core-function-pack can not be deleted";
+    }
+  }
+}

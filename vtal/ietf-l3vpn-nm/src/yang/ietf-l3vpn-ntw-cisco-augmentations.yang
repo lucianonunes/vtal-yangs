@@ -1,0 +1,129 @@
+module ietf-l3vpn-ntw-cisco-augmentations {
+
+  yang-version 1.1;
+  namespace "http://cisco.com/ns/nso/fp/examples/ietf-l3vpn-ntw-cisco-augmentations";
+  prefix l3vpn-ntw-augmentations;
+
+  import ietf-l3vpn-ntw { prefix l3vpn-ntw; }
+  import lsa-utils { prefix lsa-utils; }
+  import cisco-tsdn-core-fp-common { prefix tsdn-core-fp-common; }
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+  import ietf-l3vpn-svc {
+    prefix l3vpn-svc;
+    reference
+      "RFC 8299: YANG Data Model for L3VPN Service Delivery";
+  }
+
+  description "IETF L3VPN NTW Cisco NSO Augmentations";
+
+  revision 2021-12-03 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified: Read dispatch-map using lsa-utils";
+  }
+
+  revision 2021-11-09 {
+    description
+      "Added: container srv6 under l3vpn-ntw -> vpn-services -> vpn-service -> ie-profiles -> ie-profile
+       Added: container srv6 under l3vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes -> vpn-node";
+  }
+
+  revision 2021-09-30 {
+    description
+      "Added: container srv6 under l3vpn-ntw -> vpn-services -> vpn-service -> vpn-nodes
+              -> vpn-node -> vpn-network-accesses -> vpn-network-access -> routing-protocols
+              -> routing-protocol -> bgp";
+  }
+
+  revision 2021-05-11 {
+      description "Initial revision.";
+  }
+
+  grouping srv6-grouping {
+    container srv6 {
+      presence true;
+
+      tailf:info "Associate SRv6 Policy";
+      description "Associate SRv6 Policy";
+
+      list address-family {
+        min-elements 1;
+
+        key name;
+        leaf name {
+          tailf:info
+            "Address Family";
+          description
+            "Address Family";
+          type l3vpn-svc:address-family;
+        }
+        leaf locator-name {
+          tailf:info
+            "SRv6 locator name, should match locators configured at a node-global level on each router";
+          description
+            "SRv6 locator name, should match locators configured at a node-global level on each router";
+          type string {
+            length 1..64;
+          }
+        }
+      }
+    }
+  }
+
+  augment "/l3vpn-ntw:l3vpn-ntw/l3vpn-ntw:vpn-services/l3vpn-ntw:vpn-service" {
+    uses tsdn-core-fp-common:service-assurance-grouping {
+      when "/tsdn-core-fp-common:enable-service-assurance = 'true'";
+    }
+  }
+  augment "/l3vpn-ntw:l3vpn-ntw/l3vpn-ntw:vpn-services/l3vpn-ntw:vpn-service/l3vpn-ntw:vpn-nodes"
+        + "/l3vpn-ntw:vpn-node/l3vpn-ntw:vpn-network-accesses/l3vpn-ntw:vpn-network-access"
+        + "/l3vpn-ntw:routing-protocols/l3vpn-ntw:routing-protocol/l3vpn-ntw:bgp" {
+    container srv6 {
+      presence true;
+
+      tailf:info "Associate SRv6 Policy (Deprecated, configure SRv6 at ie-profile level or vpn-node level)";
+      description "Associate SRv6 Policy (Deprecated, configure SRv6 at ie-profile level or vpn-node level)";
+
+      must "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../../../../../../l3vpn-ntw:ne-id]/lsa-utils:ned-id, 'cisco-ios-cli-'))" {
+        error-message "SRv6 not supported on XE devices";
+      }
+
+      list address-family {
+        min-elements 1;
+
+        key name;
+        leaf name {
+          tailf:info
+            "BGP activated address-family.";
+          description
+            "BGP activated address-family.";
+          type leafref {
+            path "../../../l3vpn-ntw:address-family";
+          }
+        }
+        leaf locator-name {
+          tailf:info
+            "SRv6 locator name, should match locators configured at a node-global level on each router";
+          description
+            "SRv6 locator name, should match locators configured at a node-global level on each router";
+          type string {
+            length 1..64;
+          }
+        }
+      }
+    }
+  }
+  augment "/l3vpn-ntw:l3vpn-ntw/l3vpn-ntw:vpn-services/l3vpn-ntw:vpn-service/l3vpn-ntw:ie-profiles/l3vpn-ntw:ie-profile" {
+    uses srv6-grouping;
+  }
+  augment "/l3vpn-ntw:l3vpn-ntw/l3vpn-ntw:vpn-services/l3vpn-ntw:vpn-service/l3vpn-ntw:vpn-nodes/l3vpn-ntw:vpn-node" {
+    uses srv6-grouping {
+      refine srv6 {
+        must "not(contains(/ncs:devices/lsa-utils:lsa/lsa-utils:dispatch-map/lsa-utils:device[lsa-utils:name=current()/../l3vpn-ntw:ne-id]/lsa-utils:ned-id, 'cisco-ios-cli-'))" {
+          error-message "SRv6 not supported on XE devices";
+        }
+      }
+    }
+  }
+}

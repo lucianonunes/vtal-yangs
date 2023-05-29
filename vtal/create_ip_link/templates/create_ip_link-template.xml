@@ -1,0 +1,185 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0"
+                 servicepoint="create_ip_link">
+  <devices xmlns="http://tail-f.com/ns/ncs">
+
+               <device>
+                 <name>{/device_A}</name>
+                 <config>
+                   <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     
+                     <FiftyGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FiftyGigE')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </FiftyGigE>
+
+                     <FortyGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FortyGigE')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </FortyGigE>
+
+                     <FourHundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FourHundredGigE')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </FourHundredGigE>
+
+                     <GigabitEthernet when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'GigabitEthernet')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </GigabitEthernet>
+
+                     <HundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'HundredGigE')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </HundredGigE>
+
+                     <TenGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TenGigE')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </TenGigE>
+
+                     <TwentyFiveGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TwentyFiveGigE')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </TwentyFiveGigE>
+
+                     <TwoHundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TwoHundredGigE')}">
+                       <id>{/interface_A}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_A}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </TwoHundredGigE>
+
+                   
+                   </interface>
+                 </config>
+               </device>
+               
+               <device>
+                 <name>{/device_Z}</name>
+                 <config>
+                   <interface xmlns="http://tail-f.com/ned/cisco-ios-xr">
+                     
+                     <FiftyGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FiftyGigE')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </FiftyGigE>
+
+                     <FortyGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FortyGigE')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </FortyGigE>
+
+                     <FourHundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'FourHundredGigE')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </FourHundredGigE>
+
+                     <GigabitEthernet when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'GigabitEthernet')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </GigabitEthernet>
+
+                     <HundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'HundredGigE')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </HundredGigE>
+
+                     <TenGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TenGigE')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </TenGigE>
+
+                     <TwentyFiveGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TwentyFiveGigE')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </TwentyFiveGigE>
+
+                     <TwoHundredGigE when="{starts-with(PHYSICAL_INTERFACE_TYPE, 'TwoHundredGigE')}">
+                       <id>{/interface_Z}</id>
+                       <ipv4>
+                         <address>
+                           <ip>{/ipv4_Z}</ip>
+                           <mask>{/mask}</mask>
+                         </address>
+                       </ipv4>
+                     </TwoHundredGigE>
+                     
+                   </interface>
+                 </config>
+               </device>
+
+  </devices>
+</config-template>

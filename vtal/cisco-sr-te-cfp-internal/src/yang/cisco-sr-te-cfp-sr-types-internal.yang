@@ -1,0 +1,32 @@
+module cisco-sr-te-cfp-sr-types-internal {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-types-internal";
+  prefix cisco-sr-te-cfp-sr-types-internal;
+
+  description "SR function pack types internal";
+
+  revision 2020-06-23 {
+    description "Initial revision. Separated from original cisco-sr-te-cfp package.";
+  }
+
+  revision 2019-02-05 {
+    description "Initial revision.";
+  }
+  typedef label {
+    type uint64 {
+      range "16..1048575";
+    }
+    description "LSP label";
+  }
+
+  typedef service-name {
+    type string {
+      pattern "[a-zA-Z0-9\\-_]+";
+    }
+  }
+
+  typedef Cisco-ios-xr-string {
+    type string {
+      pattern '[\w\-\.:,_@#%$\+=\|;]+';
+    }
+  }
+}

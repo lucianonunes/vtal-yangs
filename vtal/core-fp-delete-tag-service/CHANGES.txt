@@ -1,0 +1,12 @@
+core-fp-delete-tag-service 1.0.5
+=======================================
+  TSDN-970: Python 3 f-strings migration for all the string format's in common packages.
+  TSDN-939: core-fp-delete-tag-service flake8 compliance
+
+core-fp-delete-tag-service 1.0.4
+=======================================
+  TSDN-899:   Update build method for remote packages
+
+core-fp-delete-tag-service 1.0.2
+=======================================
+  TSDN-543: Initial Release

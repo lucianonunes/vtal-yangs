@@ -1,0 +1,5 @@
+<config xmlns="http://tail-f.com/ns/config/1.0">
+  <cfp-configurations xmlns="http://cisco.com/ns/nso/fp/cisco-tsdn-rsvp-te">
+    <?copy-tree {.}?>
+  </cfp-configurations>
+</config>

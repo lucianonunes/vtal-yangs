@@ -1,0 +1,140 @@
+module cisco-tm-tc-fp-nano-plan-services {
+  namespace "http://cisco.com/ns/nso/fp/examples/cisco-tm-tc-fp-nano-plan-services";
+  prefix cisco-tm-tc-fp-nano-plan-services;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import tailf-common {
+    prefix tailf;
+  }
+
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  import cisco-tm-tc-fp {
+    prefix cisco-tm-tc-fp;
+  }
+
+  import cisco-tm-tc-fp-internal {
+    prefix cisco-tm-tc-fp-internal;
+  }
+
+  description "Models for telemetry external nano plan";
+
+  revision 2020-01-27 {
+    description "Initial Revision";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  identity node {
+    base ncs:plan-component-type;
+  }
+
+  ncs:plan-outline tm-tc-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          // Used for stacked service activation
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          ncs:pre-condition {
+            ncs:monitor "$PLAN" {
+              // All other components have reached ready or have failed
+              ncs:trigger-expr
+                "not(component[type != 'ncs:self']/state[name = 'ncs:ready']/status != 'reached') "
+                + "or component[type != 'ncs:self']/state/status = 'failed' ";
+            }
+          }
+          // this checks if there are errors in another components, show it in plan
+          ncs:nano-callback;
+        }
+      }
+    }
+
+    ncs:component-type "cisco-tm-tc-fp-nano-plan-services:node" {
+      ncs:state "ncs:init" {
+        ncs:create {
+          // create a kicker on tm-tc-oper-data.
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          ncs:pre-condition {
+            ncs:monitor "/cisco-tm-tc-fp-internal:tm-tc-internal" {
+              ncs:trigger-expr "not(tm-tc-plan[name=$NAME][node-name=$NODE])";
+            }
+          }
+        }
+      }
+
+      ncs:state "cisco-tm-tc-fp-nano-plan-services:config-apply" {
+        ncs:create {
+          // Reached when tm-tc-oper-data is success.
+          // Failed if service commit fails
+          ncs:pre-condition {
+            ncs:monitor "/cisco-tm-tc-fp-internal:tm-tc-internal/"
+                      + "cisco-tm-tc-fp-internal:tm-tc-oper-data[name=$NAME][node-name=$NODE]" {
+              ncs:trigger-expr "(status = 'success' or status = 'failed')";
+            }
+          }
+          // Check if oper-data is service commit error, mark this failed
+          ncs:nano-callback;
+        }
+        ncs:delete {
+          ncs:pre-condition {
+            ncs:monitor "/cisco-tm-tc-fp-internal:tm-tc-internal" {
+              ncs:trigger-expr "not(tm-tc-plan[name=$NAME][node-name=$NODE])"
+                    + "or (tm-tc-oper-data[name=$NAME][node-name=$NODE]/status = 'failed')";
+            }
+          }
+          // Check if oper-data is service commit error, mark this deletion failed
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state reached or failed based on internal plan.
+          // Check if internal service has CQ ID or plan failed mark it reached/failed/not-reached
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree tm-tc-external-servicepoint {
+    ncs:plan-outline-ref "cisco-tm-tc-fp-nano-plan-services:tm-tc-nano-plan";
+    ncs:plan-location "/cisco-tm-tc-fp:tm-tc-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+
+      ncs:multiplier {
+        ncs:foreach "node" {
+          ncs:variable "NODE" {
+            ncs:value-expr "name";
+          }
+          ncs:create-component "$NODE" {
+            ncs:component-type-ref "cisco-tm-tc-fp-nano-plan-services:node";
+          }
+        }
+      }
+    }
+  }
+}
+

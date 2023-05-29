@@ -1,0 +1,32 @@
+<ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
+  <name>ietf-l3vpn-nm</name>
+  <package-version>4.1.0</package-version>
+  <description>NSO T-SDN L3NM FP</description>
+  <ncs-min-version>5.4.1</ncs-min-version>
+
+  <python-package>
+    <vm-name>ietf-l3vpn-nm</vm-name>
+  </python-package>
+  <required-package>
+    <name>cisco-flat-L3vpn-fp</name>
+  </required-package>
+  <required-package>
+    <name>custom-template-utils</name>
+  </required-package>
+  <required-package>
+    <name>core-fp-common</name>
+  </required-package>
+  <required-package>
+    <name>cisco-tsdn-core-fp-common</name>
+  </required-package>
+  <required-package>
+    <name>lsa-utils</name>
+  </required-package>
+
+  <component>
+    <name>main</name>
+    <application>
+      <python-class-name>ietf_l3vpn_nm.main.Main</python-class-name>
+    </application>
+  </component>
+</ncs-package>

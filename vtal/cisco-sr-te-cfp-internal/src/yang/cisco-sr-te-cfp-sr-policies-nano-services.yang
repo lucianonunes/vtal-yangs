@@ -1,0 +1,86 @@
+module cisco-sr-te-cfp-sr-policies-nano-services {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-sr-policies-nano-services";
+  prefix cisco-sr-te-cfp-sr-policies-nano-services;
+
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  import cisco-sr-te-cfp-internal { prefix cisco-sr-te-cfp-internal; }
+  import cisco-sr-te-cfp-sr-policies-internal {prefix cisco-sr-te-cfp-sr-policies-internal; }
+
+  description "Models for SR Policy nano services.";
+
+  revision 2020-07-13 {
+    description "Separated from cisco-sr-te-cfp to internal package.";
+  }
+
+  revision 2020-03-16 {
+    description
+      "Modified: Removed self-test related states.";
+  }
+
+  revision 2020-02-04 {
+    description "
+      Updated:  ncs:state -> ncs:delete -> ncs:post-action-node (schedule-self-test)
+                is now a simple no-op. Removed redundant removal of self-test oper-data purge &
+                creation from delete callback." ;
+  }
+
+  revision 2020-01-22 {
+    description "
+      Updated: status-type also as key for policy-oper-data in
+      ncs:self -> ncs:init -> ncs:delete -> ncs:pre-condition
+               -> ncs:monitor -> ncs:trigger-expr and
+      ncs:state -> ncs:delete -> ncs:post-action-node (schedule-self-test)
+      " ;
+  }
+
+  revision 2019-05-10 {
+    description "Initial revision.";
+  }
+
+  identity config-apply {
+    base ncs:plan-state;
+  }
+
+  ncs:plan-outline sr-policy-nano-plan {
+    ncs:component-type "ncs:self" {
+      ncs:state "ncs:init";
+
+      ncs:state "cisco-sr-te-cfp-sr-policies-nano-services:config-apply" {
+        ncs:create {
+          // this applies config on device
+          ncs:nano-callback;
+        }
+      }
+
+      ncs:state "ncs:ready" {
+        ncs:create {
+          // mark state as failed in case device transaction is invalidated
+          // this is needed due to CQ, where in device's last-transaction-id is set to INVALIDATED
+          // in case of CQ failures. During redeploy's we do not want the service to go to 'reached'
+          // state unless the device transaction is fixed.
+          ncs:nano-callback;
+        }
+      }
+    }
+  }
+
+  ncs:service-behavior-tree sr-policies-servicepoint {
+    ncs:plan-outline-ref "cisco-sr-te-cfp-sr-policies-nano-services:sr-policy-nano-plan";
+    ncs:plan-location "/cisco-sr-te-cfp-internal:sr-te/cisco-sr-te-cfp-sr-policies-internal:policies/
+                                          cisco-sr-te-cfp-sr-policies-internal:policy-plan";
+
+    ncs:selector {
+      ncs:variable "NAME" {
+        ncs:value-expr "name";
+      }
+      ncs:variable "HEAD_END" {
+        ncs:value-expr "head-end";
+      }
+      ncs:create-component "'self'" {
+        ncs:component-type-ref "ncs:self";
+      }
+    }
+  }
+}

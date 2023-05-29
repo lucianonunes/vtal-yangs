@@ -1,0 +1,204 @@
+module core-fp-common {
+  namespace "http://com/cisco/corefpcommon";
+  prefix core-fp-common;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-kicker {
+    prefix kicker;
+  }
+
+  revision 2020-08-25 {
+    description "Added cfp-local-user who has read and write permissions.
+                  All core-fps should use this common local user for there maapi sessions.";
+  }
+
+  revision 2020-07-08 {
+    description "Added: Dispatch Map models for LSA
+                Modified: typedef name escape slash character to fix compilation warning error.";
+  }
+  revision 2019-10-24 {
+	  description "variables added at global, provider and tenant level";
+  }
+  revision 2017-06-09 {
+	  description "Provider/Tenant name takes dot,common and hyphen";
+  }
+  revision 2017-04-10 {
+	  description "Initial revision.";
+  }
+
+  typedef name {
+    type string {
+      pattern "[a-zA-Z0-9.\\-_]+";
+    }
+  }
+
+  grouping variables {
+    list var {
+      tailf:info "Variable Information";
+      key name;
+
+      leaf name {
+        type string {
+          pattern "[a-zA-Z0-9!#$%&=:/_\\\\|\\.\\-\\^\\?\\*\\+\\{\\}\\(\\)]+";
+        }
+        tailf:info "Variable name";
+      }
+      choice valtype {
+        mandatory true;
+        leaf value {
+          type string;
+          tailf:info "Variable value";
+        }
+        leaf encrypted-value {
+          type tailf:aes-cfb-128-encrypted-string;
+          tailf:suppress-echo true;
+          tailf:info "Variable value encrypted.";
+        }
+      }
+    }
+  }
+
+  list provider-infrastructure {
+    tailf:info "Provider Information";
+    key provider;
+
+    leaf provider {
+      tailf:info "Provider Name";
+      type name;
+    }
+
+    uses variables;
+
+    list tenant-infrastructure {
+      tailf:info "Tenant Information";
+      key tenant;
+
+      leaf tenant {
+        tailf:info "Tenant Name";
+        type name;
+      }
+
+      uses variables;
+    }
+  }
+
+  container global-var {
+    tailf:info "Global variables";
+    uses variables;
+  }
+
+  list dispatch-map {
+    tailf:info "Device to RFS node mapping for LSA.
+                Only device list without RFS node mapping
+                indicates the presence of this list on RFS node";
+    description "Device to RFS node mapping for LSA.
+                Only device list without RFS node mapping
+                indicates the presence of this list on RFS node";
+    key device;
+    leaf device {
+      tailf:info "The list of managed devices";
+      description "The list of managed devices";
+      type string;
+    }
+    leaf ned-id {
+      tailf:info "ned-id of the device";
+      description "ned-id of the device";
+      type string;
+    }
+    leaf rfs-node {
+      tailf:info "RFS node on which the device resides";
+      description "RFS node on which the device resides";
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+    }
+  }
+
+  leaf cfp-local-user {
+     tailf:info "Map NCS user with sufficient permissions to read and to write into the cdb.";
+     type string;
+     default "admin";
+  }
+
+  leaf auto-populate-dispatch-map {
+    tailf:info "In LSA setups, if this flag is set to true, any device creation/deletion in NSO
+                /devices/device tree will auto populate the dispatch map on RFS NSO node & send a
+                notification for this on dispatch-map-events stream.
+                This flag should not be set to true on CFS NSO nodes.";
+    description "In LSA setups, if this flag is set to true, any device creation/deletion in NSO
+                /devices/device tree will auto populate the dispatch map on RFS NSO node & send a
+                notification for this on dispatch-map-events stream.
+                This flag should not be set to true on CFS NSO nodes.";
+    type boolean;
+    default false;
+  }
+
+  container cfp-common-actions {
+    tailf:action rfs-dispatch-map-netconf-notification-handler {
+      tailf:hidden full;
+      tailf:info "CFS level action to tap into RFS notifications for dispatch map
+                  & update dispatch map on CFS node";
+      description "CFS level action to tap into RFS notifications for dispatch map
+                  & update dispatch map on CFS node";
+      tailf:actionpoint rfs-dispatch-map-netconf-notification-handler;
+      input {
+        uses kicker:action-input-params;
+      }
+      output {
+      }
+    }
+
+    tailf:action sync-dispatch-map {
+      tailf:info "RFS level action to sync the dispatch-map with existing devices &
+                  send notification to CFS for the same.";
+      description "RFS level action to sync the dispatch-map with existing devices &
+                  send notification to CFS for the same.";
+      tailf:actionpoint sync-dispatch-map;
+      input {
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+  }
+
+  // Notification Stream to send dispatch map updated to CFS node
+  notification dispatch-map-events {
+    list device {
+      key name;
+      leaf name {
+        type string;
+      }
+      leaf ned-id {
+        type string;
+      }
+      leaf operation {
+        type enumeration {
+          enum created {
+            tailf:code-name "device_created";
+          }
+          enum modified {
+            tailf:code-name "device_modified";
+          }
+          enum deleted {
+            tailf:code-name "device_deleted";
+          }
+        }
+      }
+    }
+  }
+}

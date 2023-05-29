@@ -1,0 +1,202 @@
+module cisco-sr-te-cfp-internal {
+  namespace "http://cisco.com/ns/nso/cfp/cisco-tsdn-sr-te-internal";
+  prefix cisco-sr-te-cfp-internal;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+
+  description "SR-TE core function pack internal model";
+
+  revision 2022-08-12 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.40";
+  }
+
+  revision 2022-05-04 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.39";
+  }
+
+  revision 2022-01-13 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.38";
+  }
+
+  revision 2021-11-22 {
+	description
+	  "Removed: core-fp-common reference
+	   Modified : reading from dispatch-map to device tree";
+  }
+
+  revision 2021-11-17 {
+    description
+      "Modified: default under cfp-configurations -> iosxr-default-ned-id";
+  }
+
+  revision 2021-02-15 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.33";
+  }
+
+  revision 2020-12-11 {
+    description "Modified default value for iosxr-default-ned-id to cisco-iosxr-cli-7.32";
+  }
+
+  revision 2020-11-09 {
+    description "Added leaf sync-direction as mandatory input to error-recovery action";
+  }
+
+  revision 2020-06-23 {
+    description "Initial revision.";
+  }
+
+  container sr-te {
+    tailf:hidden tsdn;
+    tailf:info "Segment Routing configurations";
+    description "Segment Routing configurations";
+
+    tailf:action cleanup {
+      tailf:actionpoint cisco-sr-te-cfp-cleanup-internal;
+      tailf:info "Clean up SR-TE service configuration and operational data";
+      description "Clean up SR-TE service configuration and operational data";
+      input {
+        leaf service {
+          type string;
+          mandatory true;
+        }
+        leaf-list devices {
+          tailf:info "Clean up SR-TE service configuration for given devices";
+          description "Clean up SR-TE service configuration for given devices";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+        }
+        leaf service-type {
+          type enumeration {
+            enum sr-policy;
+            enum sr-odn;
+          }
+          mandatory true;
+        }
+        leaf no-networking {
+          type boolean;
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+
+    tailf:action error-recovery {
+      tailf:actionpoint cisco-sr-te-cfp-error-recovery-internal;
+      tailf:info "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      description "Action to recover a service during create/update/delete from a transient failures
+                  like device connection issues once the device is reachable again.
+                  For create/update failures, this action issues a sync on the device
+                  & redeploys the service with reconcile option.
+                  For delete failures, this action issues a sync on the device &
+                  redeploys zombie services.";
+      input {
+        leaf service {
+          tailf:info "Service to recover";
+          description "Service to recover";
+          type string;
+          mandatory true;
+        }
+
+        leaf sync-direction {
+          tailf:info "sync device with sync-from or sync-to";
+          description "sync device with sync-from or sync-to";
+          type enumeration {
+            enum sync-from;
+            enum sync-to;
+          }
+          mandatory true;
+        }
+
+        leaf-list devices {
+          tailf:info "Recover all devices under given service.";
+          description "Recover all devices under given service.";
+          type leafref {
+            tailf:no-leafref-check;
+            path "/ncs:devices/ncs:device/ncs:name";
+          }
+        }
+        leaf service-type {
+          type enumeration {
+            enum sr-policy;
+            enum sr-odn;
+          }
+          mandatory true;
+        }
+      }
+      output {
+        leaf success {
+          type boolean;
+          mandatory true;
+        }
+        leaf detail {
+          type string;
+        }
+      }
+    }
+  }
+
+  container cfp-configurations {
+    tailf:hidden tsdn;
+    leaf sr-validation-enabled {
+      tailf:info "If set to true, following validations are done for sr-policies service:
+                  1. The length of the explicit paths does not exceed the Maximum
+                      Segment Depth (MSD) of the head-end.
+                  If no MSD is found, validation is skipped.";
+      description "If set to true, following validations are done for sr-policies service:
+                  1. The length of the explicit paths does not exceed the Maximum
+                      Segment Depth (MSD) of the head-end.
+                  If no MSD is found, validation is skipped.";
+      type boolean;
+      default true;
+    }
+
+    leaf iosxr-default-ned-id {
+      tailf:info "NED ID of the default IOSXR Device.";
+      description "NED ID of the default IOSXR Device.";
+      tailf:hidden tsdn;
+      type string;
+      default "cisco-iosxr-cli-7.40:cisco-iosxr-cli-7.40";
+    }
+
+    list dynamic-device-mapping {
+      tailf:info "Dynamic Device Mapping for multi-vendor support";
+      description "Dynamic Device Mapping for multi-vendor support";
+      key "ned-id";
+      leaf ned-id {
+        tailf:info "Device NED ID, eg ned:netconf";
+        description "Device NED ID, eg ned:netconf";
+        type string;
+        tailf:cli-allow-range;
+      }
+      leaf python-impl-class-name {
+        tailf:info "Device Python implementation class, eg module.class";
+        description "Device Python implementation class, eg module.class";
+        type string;
+        mandatory true;
+      }
+    }
+  }
+}

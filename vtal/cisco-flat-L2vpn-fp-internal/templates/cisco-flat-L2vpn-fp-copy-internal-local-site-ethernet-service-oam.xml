@@ -1,0 +1,32 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0">
+  <flat-L2vpn-internal-local-site-service xmlns="http://cisco.com/ns/nso/fp/examples/cisco-tsdn-flat-L2vpn-internal-local-site">
+    <name>{$SERVICE_NAME}</name>
+    <pe>{$PE}</pe>
+    <flat-L2vpn-p2p when="{flat-L2vpn-p2p}">
+      <local-site>
+        <?if {flat-L2vpn-p2p/local-site/ethernet-service-oam}?>
+          <ethernet-service-oam>
+            <?copy-tree {flat-L2vpn-p2p/local-site/ethernet-service-oam}?>
+            <?set REMOTE_MEP_ID={flat-L2vpn-p2p/remote-site/ethernet-service-oam/y-1731/mep-id}?>
+            <?foreach {flat-L2vpn-p2p/local-site/ethernet-service-oam/y-1731}?>
+              <?expand copy-site-ethernet-service-oam?>
+            <?end?>
+          </ethernet-service-oam>
+        <?end?>
+      </local-site>
+    </flat-L2vpn-p2p>
+    <flat-L2vpn-evpn-vpws when="{flat-L2vpn-evpn-vpws}">
+      <local-site>
+        <?if {flat-L2vpn-evpn-vpws/local-site/ethernet-service-oam}?>
+          <ethernet-service-oam>
+            <?copy-tree {flat-L2vpn-evpn-vpws/local-site/ethernet-service-oam}?>
+            <?set REMOTE_MEP_ID={flat-L2vpn-evpn-vpws/remote-site/ethernet-service-oam/y-1731/mep-id}?>
+            <?foreach {flat-L2vpn-evpn-vpws/local-site/ethernet-service-oam/y-1731}?>
+              <?expand copy-site-ethernet-service-oam?>
+            <?end?>
+          </ethernet-service-oam>
+        <?end?>
+      </local-site>
+    </flat-L2vpn-evpn-vpws>
+  </flat-L2vpn-internal-local-site-service>
+</config-template>

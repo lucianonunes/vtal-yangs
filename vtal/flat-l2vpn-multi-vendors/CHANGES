@@ -1,0 +1,13 @@
+flat-l2vpn-multi-vendors [oct 06, 2020]
+=============================================
+
+    1. Added the following templates to support IOSXE.
+        a. cisco-flat-L2vpn-fp-xe-cli-p2p-template.xml
+        b. cisco-flat-L2vpn-fp-no-shutdown-iosxe-cli.xml
+
+flat-l2vpn-multi-vendors [Jan 08, 2020]
+=============================================
+    
+    1. Updated the following templates to handle new interfaces
+        a. cisco-flat-L2vpn-fp-cli-evpn-vpws-template.xml
+        b. cisco-flat-L2vpn-fp-cli-p2p-template.xml
